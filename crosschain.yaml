@@ -1,0 +1,96 @@
+crosschain:
+  chains:
+  - asset: ETH
+    net: testnet
+    url: 'https://ropsten.infura.io/v3'
+    auth: '...'
+    provider: infura
+    chain_id: 3
+    chain_name: Ethereum (Ropsten)
+    explorer_url: 'https://ropsten.etherscan.io'
+    decimals: 18
+  # EVM with ERC20
+  - asset: BNB
+    net: testnet
+    url: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+    chain_id: 97
+    chain_name: Binance Smart Chain (Testnet)
+    explorer_url: 'https://testnet.bscscan.com'
+    decimals: 18
+  - asset: MATIC
+    net: testnet
+    url: 'https://rpc-mumbai.matic.today'
+    chain_id: 80001
+    chain_name: Polygon (Mumbai)
+    explorer_url: 'https://mumbai.polygonscan.com'
+    decimals: 18
+  # Solana
+  - asset: SOL
+    net: devnet
+    url: 'https://api.devnet.solana.com'
+    decimals: 9
+  # Cosmos-based
+  - asset: ATOM
+    net: testnet
+    url: 'https://rpc.sentry-01.theta-testnet.polypore.xyz'
+    chain_id_str: 'theta-testnet-001'
+    chain_prefix: 'cosmos'
+    chain_coin: 'uatom'
+    chain_name: Cosmos (Theta Testnet)
+    explorer_url: 'https://explorer.theta-testnet.polypore.xyz'
+    decimals: 6
+  # Tokens
+  - asset: DAI
+    chain: ETH
+    net: testnet
+    decimals: 18
+    contract: 0xc2118d4d90b274016cb7a54c03ef52e6c537d957
+  - asset: USDC
+    chain: ETH
+    net: testnet
+    decimals: 6
+    contract: 0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c
+  - asset: WETH
+    chain: ETH
+    net: testnet
+    decimals: 18
+    contract: 0xc778417E063141139Fce010982780140Aa0cD5Ab
+  - asset: USDC
+    chain: SOL
+    net: testnet
+    decimals: 6
+    contract: 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+  tasks:
+    - name: Wrap
+      chain: ETH
+      assets: ["WETH"]
+      approvals: 1
+      operations:
+      - function: deposit
+        signature: d0e30db0
+        payable: true
+    - name: Unwrap
+      chain: ETH
+      assets: ["WETH"]
+      approvals: 1
+      operations:
+      - function: withdraw
+        signature: 2e1a7d4d
+        params:
+        - name: qty
+          type: uint256
+          bind: amount
+    # example to show that erc20.transfer can be written as task
+    - name: Transfer
+      chain: ETH
+      assets: ["USDC", "WETH"]
+      approvals: 1
+      operations:
+      - function: transfer
+        signature: a9059cbb
+        params:
+        - name: addr
+          type: address
+        - name: qty
+          type: uint256
+          bind: amount
