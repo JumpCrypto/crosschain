@@ -116,7 +116,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	require := s.Require()
 	client, _ := NewClient(xc.AssetConfig{})
 	from := xc.Address("from")
-	input, err := client.FetchTxInput(s.Ctx, from)
+	input, err := client.FetchTxInput(s.Ctx, from, "")
 	require.NotNil(input)
 	require.EqualError(err, "not implemented")
 }

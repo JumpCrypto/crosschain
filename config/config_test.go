@@ -38,7 +38,7 @@ func (s *CrosschainTestSuite) TestGetSecretEnv() {
 func (s *CrosschainTestSuite) TestGetSecretFile() {
 	require := s.Require()
 	secret, err := GetSecret("file:../LICENSE")
-	require.Contains(secret, "Jump")
+	require.Contains(secret, "Apache License")
 	require.Nil(err)
 }
 

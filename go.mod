@@ -5,8 +5,8 @@ go 1.19
 require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.45.9
-	github.com/gagliardetto/binary v0.7.1
-	github.com/gagliardetto/solana-go v1.6.0
+	github.com/gagliardetto/binary v0.7.6
+	github.com/gagliardetto/solana-go v1.7.1
 	github.com/mr-tron/base58 v1.2.0
 	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/viper v1.13.0

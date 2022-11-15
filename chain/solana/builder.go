@@ -6,6 +6,7 @@ import (
 	xc "github.com/jumpcrypto/crosschain"
 
 	"github.com/gagliardetto/solana-go"
+	ata "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/programs/token"
 )
@@ -58,7 +59,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 				accountTo,
 			).Build(),
 		},
-		input.(TxInput).RecentBlockHash,
+		input.(*TxInput).RecentBlockHash,
 		solana.TransactionPayer(accountFrom),
 	)
 	if err != nil {
@@ -74,6 +75,7 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 	if txBuilder.Asset.Type != xc.AssetTypeToken {
 		return nil, errors.New("asset is not of type token")
 	}
+	txInput := input.(*TxInput)
 
 	contract := txBuilder.Asset.Contract
 	decimals := uint8(txBuilder.Asset.Decimals)
@@ -88,22 +90,24 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 		return nil, err
 	}
 
-	ataFromStr, err := FindAssociatedTokenAddress(string(from), string(contract))
-	if err != nil {
-		return nil, err
-	}
-	ataFrom, err := solana.PublicKeyFromBase58(ataFromStr)
+	accountTo, err := solana.PublicKeyFromBase58(string(to))
 	if err != nil {
 		return nil, err
 	}
 
-	ataToStr, err := FindAssociatedTokenAddress(string(to), string(contract))
+	ataFromStr, err := FindAssociatedTokenAddress(string(from), string(contract))
 	if err != nil {
 		return nil, err
 	}
-	ataTo, err := solana.PublicKeyFromBase58(ataToStr)
-	if err != nil {
-		return nil, err
+	ataFrom := solana.MustPublicKeyFromBase58(ataFromStr)
+
+	ataTo := accountTo
+	if !txInput.ToIsATA {
+		ataToStr, err := FindAssociatedTokenAddress(string(to), string(contract))
+		if err != nil {
+			return nil, err
+		}
+		ataTo = solana.MustPublicKeyFromBase58(ataToStr)
 	}
 
 	// txLog := map[string]string{
@@ -117,21 +121,32 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 	// }
 	// log.Print(txLog)
 
-	tx, err := solana.NewTransaction(
-		[]solana.Instruction{
-			token.NewTransferCheckedInstruction(
-				amount.Uint64(),
-				decimals,
-				ataFrom,
-				accountContract,
-				ataTo,
+	instructions := []solana.Instruction{}
+	if txInput.ShouldCreateATA {
+		instructions = append(instructions,
+			ata.NewCreateInstruction(
 				accountFrom,
-				[]solana.PublicKey{
-					accountFrom,
-				},
+				accountTo,
+				accountContract,
 			).Build(),
-		},
-		input.(TxInput).RecentBlockHash,
+		)
+	}
+	instructions = append(instructions,
+		token.NewTransferCheckedInstruction(
+			amount.Uint64(),
+			decimals,
+			ataFrom,
+			accountContract,
+			ataTo,
+			accountFrom,
+			[]solana.PublicKey{
+				accountFrom,
+			},
+		).Build(),
+	)
+	tx, err := solana.NewTransaction(
+		instructions,
+		txInput.RecentBlockHash,
 		solana.TransactionPayer(accountFrom),
 	)
 	if err != nil {

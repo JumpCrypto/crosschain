@@ -18,24 +18,66 @@ import (
 // Client for Solana
 type Client struct {
 	SolClient *rpc.Client
+	Asset     xc.AssetConfig
 }
 
 // TxInput for Solana
 type TxInput struct {
 	xc.TxInput
 	RecentBlockHash solana.Hash
+	ToIsATA         bool
+	ShouldCreateATA bool
 }
 
 // NewClient returns a new JSON-RPC Client to the Solana node
-func NewClient(cfg xc.AssetConfig) (*Client, error) {
-	solClient := rpc.New(cfg.URL)
+func NewClient(asset xc.AssetConfig) (*Client, error) {
+	solClient := rpc.New(asset.URL)
 	return &Client{
 		SolClient: solClient,
+		Asset:     asset,
 	}, nil
 }
 
 // FetchTxInput returns tx input for a Solana tx, namely a RecentBlockHash
-func (client *Client) FetchTxInput(ctx context.Context, from xc.Address) (xc.TxInput, error) {
+func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.Address) (xc.TxInput, error) {
+	txInput := &TxInput{}
+	asset := client.Asset
+
+	// get account info - check if to is an owner or ata
+	accountTo, err := solana.PublicKeyFromBase58(string(to))
+	if err != nil {
+		return nil, err
+	}
+	res, err := client.SolClient.GetAccountInfo(context.Background(), accountTo)
+	if err != nil {
+		// ignore
+	} else {
+		ownerAddr := res.Value.Owner.String()
+		sysAddr := "11111111111111111111111111111111"
+		if ownerAddr != sysAddr {
+			// The field "to" is not an owner address, therefore is a (possibly custom) ATA
+			txInput.ToIsATA = true
+		}
+	}
+
+	// for tokens, get ata account info
+	if asset.Type == xc.AssetTypeToken {
+		ataTo := accountTo
+		if !txInput.ToIsATA {
+			ataToStr, err := FindAssociatedTokenAddress(string(to), string(asset.Contract))
+			if err != nil {
+				return nil, err
+			}
+			ataTo = solana.MustPublicKeyFromBase58(ataToStr)
+		}
+		_, err = client.SolClient.GetAccountInfo(context.Background(), ataTo)
+		if err != nil {
+			// if the ATA doesn't exist yet, we will create when sending tokens
+			txInput.ShouldCreateATA = true
+		}
+	}
+
+	// get recent block hash (i.e. nonce)
 	// GetRecentBlockhash will be deprecated - GetLatestBlockhash already tested, just switch
 	// recent, err := client.SolClient.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
 	recent, err := client.SolClient.GetRecentBlockhash(context.Background(), rpc.CommitmentFinalized)
@@ -45,9 +87,8 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address) (xc.TxI
 	if recent == nil || recent.Value == nil {
 		return nil, errors.New("error fetching blockhash")
 	}
-	return TxInput{
-		RecentBlockHash: recent.Value.Blockhash,
-	}, nil
+	txInput.RecentBlockHash = recent.Value.Blockhash
+	return txInput, nil
 }
 
 // SubmitTx submits a Solana tx

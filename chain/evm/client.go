@@ -27,7 +27,7 @@ func NewLegacyClient(cfg xc.AssetConfig) (*Client, error) {
 }
 
 // FetchTxInput returns tx input for a EVM tx
-func (client *Client) FetchTxInput(ctx context.Context, from xc.Address) (xc.TxInput, error) {
+func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Address) (xc.TxInput, error) {
 	return TxInput{}, errors.New("not implemented")
 }
 
