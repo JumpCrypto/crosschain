@@ -3,6 +3,7 @@ package solana
 import (
 	"crypto/ed25519"
 
+	"github.com/btcsuite/btcutil/base58"
 	xc "github.com/jumpcrypto/crosschain"
 )
 
@@ -13,6 +14,11 @@ type Signer struct {
 // NewSigner creates a new Solana Signer
 func NewSigner(asset xc.AssetConfig) (xc.Signer, error) {
 	return Signer{}, nil
+}
+
+// ImportPrivateKey imports a Solana private key
+func (signer Signer) ImportPrivateKey(privateKey string) (xc.PrivateKey, error) {
+	return xc.PrivateKey(base58.Decode(privateKey)), nil
 }
 
 // Sign a Solana tx

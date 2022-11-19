@@ -5,5 +5,6 @@ type PrivateKey []byte
 
 // Signer is signer that can sign tx
 type Signer interface {
+	ImportPrivateKey(privateKey string) (PrivateKey, error)
 	Sign(privateKey PrivateKey, data TxDataToSign) (TxSignature, error)
 }
