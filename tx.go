@@ -4,9 +4,19 @@ package crosschain
 type TxInput interface {
 }
 
+// TxStatus is the status of a tx on chain, currently success or failure.
+type TxStatus uint8
+
+// TxStatus values
+const (
+	TxStatusSuccess TxStatus = 0
+	TxStatusFailure TxStatus = 1
+)
+
 // TxInfo is a unified view of common tx info across multiple blockchains. Use it as an example to build your own.
 type TxInfo struct {
 	TxID            string
+	ExplorerURL     string
 	From            Address
 	To              Address
 	ToAlt           Address
@@ -16,6 +26,7 @@ type TxInfo struct {
 	BlockIndex      int64
 	BlockTime       int64
 	Confirmations   int64
+	Status          TxStatus
 }
 
 // TxHash is a tx hash or id

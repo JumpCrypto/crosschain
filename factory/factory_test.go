@@ -22,7 +22,7 @@ func (s *CrosschainTestSuite) SetupTest() {
 		xc.MATIC,
 		xc.BNB,
 		xc.SOL,
-		xc.ATOM,
+		// xc.ATOM,
 	}
 	for _, native := range s.TestNativeAssets {
 		assetConfig, _ := s.Factory.GetAssetConfig("", string(native))
@@ -144,6 +144,9 @@ func (s *CrosschainTestSuite) TestMustAddress() {
 func (s *CrosschainTestSuite) TestMustPrivateKey() {
 	require := s.Require()
 	for _, asset := range s.TestAssetConfigs {
+		if asset.NativeAsset != xc.SOL {
+			continue
+		}
 		privateKey := s.Factory.MustPrivateKey(asset, "myprivatekey")
 		require.NotNil(privateKey, "Error on: "+asset.NativeAsset)
 	}
