@@ -10,7 +10,7 @@ import (
 
 	cosmClient "github.com/cosmos/cosmos-sdk/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	terraApp "github.com/terra-money/core/v2/app"
+	terraApp "github.com/terra-money/core/app"
 )
 
 // Client for Cosmos

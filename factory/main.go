@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/btcsuite/btcutil/base58"
 	"github.com/shopspring/decimal"
 	"gopkg.in/yaml.v2"
 
@@ -222,9 +221,16 @@ func (f *Factory) MustAmountBlockchain(cfg AssetConfig, humanAmountStr string) A
 }
 
 // MustPrivateKey coverts a string into PrivateKey, panic if error
-func (f *Factory) MustPrivateKey(cfg AssetConfig, privateKey string) PrivateKey {
-	// this is Solana only
-	return PrivateKey(base58.Decode(privateKey))
+func (f *Factory) MustPrivateKey(cfg AssetConfig, privateKeyStr string) PrivateKey {
+	signer, err := f.NewSigner(cfg)
+	if err != nil {
+		panic(err)
+	}
+	privateKey, err := signer.ImportPrivateKey(privateKeyStr)
+	if err != nil {
+		panic(err)
+	}
+	return privateKey
 }
 
 func assetsFromConfig(configMap map[string]interface{}) []AssetConfig {
@@ -279,7 +285,7 @@ func newClient(cfg AssetConfig) (Client, error) {
 		return evm.NewLegacyClient(cfg)
 	case SOL:
 		return solana.NewClient(cfg)
-	case ATOM, LUNA:
+	case ATOM, LUNA, XPLA:
 		return cosmos.NewClient(cfg)
 	}
 	return nil, errors.New("unsupported asset")
@@ -293,7 +299,7 @@ func newTxBuilder(cfg AssetConfig) (TxBuilder, error) {
 		return evm.NewTxBuilder(cfg)
 	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
 		return evm.NewTxBuilder(cfg)
-	case ATOM, LUNA:
+	case ATOM, LUNA, XPLA:
 		return cosmos.NewTxBuilder(cfg)
 	case SOL:
 		return solana.NewTxBuilder(cfg)
@@ -309,7 +315,7 @@ func newSigner(cfg AssetConfig) (Signer, error) {
 		return evm.NewSigner(cfg)
 	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
 		return evm.NewSigner(cfg)
-	case ATOM, LUNA:
+	case ATOM, LUNA, XPLA:
 		return cosmos.NewSigner(cfg)
 	case SOL:
 		return solana.NewSigner(cfg)
@@ -325,7 +331,7 @@ func newAddressBuilder(cfg AssetConfig) (AddressBuilder, error) {
 		return evm.NewAddressBuilder(cfg)
 	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
 		return evm.NewAddressBuilder(cfg)
-	case ATOM, LUNA:
+	case ATOM, LUNA, XPLA:
 		return cosmos.NewAddressBuilder(cfg)
 	case SOL:
 		return solana.NewAddressBuilder(cfg)

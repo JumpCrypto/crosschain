@@ -12,3 +12,9 @@ type Client interface {
 // GasEstimator is a specific Client that can estimate gas - not implemented yet
 type GasEstimator interface {
 }
+
+// ClientBalance is a specific Client that can fetch balances - not implemented yet
+type ClientBalance interface {
+	FetchBalance(ctx context.Context, address Address) (AmountBlockchain, error)
+	FetchNativeBalance(ctx context.Context, address Address) (AmountBlockchain, error)
+}

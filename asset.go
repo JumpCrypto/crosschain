@@ -37,6 +37,7 @@ const (
 	OptETH = NativeAsset("OptETH") // Optimism
 	ROSE   = NativeAsset("ROSE")   // Rose (Oasis)
 	SOL    = NativeAsset("SOL")    // Solana
+	XPLA   = NativeAsset("XPLA")   // XPLA
 )
 
 // AssetType is the type of an asset, either native or token
@@ -69,7 +70,8 @@ func (asset Asset) AssetType() AssetType {
 		MATIC,
 		OptETH,
 		ROSE,
-		SOL:
+		SOL,
+		XPLA:
 		return AssetTypeNative
 	default:
 		return AssetTypeToken
@@ -107,7 +109,8 @@ func (native NativeAsset) ChainType() ChainType {
 		MATIC,
 		OptETH,
 		ROSE,
-		SOL:
+		SOL,
+		XPLA:
 		return ChainTypeAccount
 	default:
 		return ChainTypeUnknown
@@ -131,16 +134,19 @@ type AssetConfig struct {
 	//     net = "mainnet"
 	//     contract = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 	//     decimals = 6
-	Asset       string `yaml:"asset"`
-	Net         string `yaml:"net"`
-	URL         string `yaml:"url"`
-	Auth        string `yaml:"auth"`
-	Provider    string `yaml:"provider"`
-	ChainID     int64  `yaml:"chain_id"`
-	ChainIDStr  string `yaml:"chain_id_str"`
-	ChainName   string `yaml:"chain_name"`
-	ChainPrefix string `yaml:"chain_prefix"`
-	ExplorerURL string `yaml:"explorer_url"`
+	Asset           string `yaml:"asset"`
+	Net             string `yaml:"net"`
+	URL             string `yaml:"url"`
+	FcdURL          string `yaml:"fcd_url"`
+	Auth            string `yaml:"auth"`
+	Provider        string `yaml:"provider"`
+	ChainID         int64  `yaml:"chain_id"`
+	ChainIDStr      string `yaml:"chain_id_str"`
+	ChainName       string `yaml:"chain_name"`
+	ChainPrefix     string `yaml:"chain_prefix"`
+	ChainCoin       string `yaml:"chain_coin"`
+	ChainCoinHDPath uint32 `yaml:"chain_coin_hd_path"`
+	ExplorerURL     string `yaml:"explorer_url"`
 
 	// Tokens
 	Chain    string `yaml:"chain"`

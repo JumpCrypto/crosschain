@@ -28,6 +28,8 @@ crosschain:
   - asset: SOL
     net: devnet
     url: 'https://api.devnet.solana.com'
+    chain_name: Solana (Devnet)
+    explorer_url: 'https://explorer.solana.com'
     decimals: 9
   # Cosmos-based
   - asset: ATOM
@@ -36,9 +38,39 @@ crosschain:
     chain_id_str: 'theta-testnet-001'
     chain_prefix: 'cosmos'
     chain_coin: 'uatom'
+    chain_coin_hd_path: 118
     chain_name: Cosmos (Theta Testnet)
     explorer_url: 'https://explorer.theta-testnet.polypore.xyz'
     decimals: 6
+  - asset: XPLA
+    net: testnet
+    url: 'https://cube-rpc.xpla.dev'
+    fcd_url: 'https://cube-fcd.xpla.dev'
+    chain_id_str: 'cube_47-5'
+    chain_prefix: 'xpla'
+    chain_coin: 'axpla'
+    chain_coin_hd_path: 60
+    chain_name: XPLA (Testnet)
+    explorer_url: 'https://explorer.xpla.io/testnet'
+    decimals: 18
+  - asset: LUNA
+    net: testnet
+    url: 'https://terra-testnet-rpc.polkachu.com'
+    fcd_url: 'https://pisco-fcd.terra.dev'
+    chain_id_str: 'pisco-1'
+    chain_prefix: 'terra'
+    chain_coin: 'uluna'
+    chain_coin_hd_path: 330
+    chain_name: Terra (Testnet)
+    explorer_url: 'https://finder.terra.money/testnet'
+    decimals: 6
+  # Aptos
+  - asset: APTOS
+    net: devnet
+    url: 'https://fullnode.devnet.aptoslabs.com'
+    chain_name: Aptos (Devnet)
+    explorer_url: 'https://explorer.devnet.aptos.dev'
+    decimals: 8
   # Tokens
   - asset: DAI
     chain: ETH

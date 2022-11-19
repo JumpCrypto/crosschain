@@ -29,6 +29,12 @@ func NewAmountBlockchainFromUint64(u64 uint64) AmountBlockchain {
 	return AmountBlockchain(*bigInt)
 }
 
+// NewAmountBlockchainFromStr creates a new AmountBlockchain from a string
+func NewAmountBlockchainFromStr(str string) AmountBlockchain {
+	bigInt, _ := new(big.Int).SetString(str, 10)
+	return AmountBlockchain(*bigInt)
+}
+
 func (amount AmountHumanReadable) String() string {
 	return decimal.Decimal(amount).String()
 }

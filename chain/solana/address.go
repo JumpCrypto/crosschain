@@ -3,8 +3,8 @@ package solana
 import (
 	"fmt"
 
+	"github.com/btcsuite/btcutil/base58"
 	xc "github.com/jumpcrypto/crosschain"
-	"github.com/mr-tron/base58"
 )
 
 // AddressBuilder for Solana
