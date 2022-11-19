@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	xc "github.com/jumpcrypto/crosschain"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -23,6 +22,7 @@ func TestExampleTestSuite(t *testing.T) {
 
 // Address
 
+/*
 func (s *CrosschainTestSuite) TestNewAddressBuilder() {
 	require := s.Require()
 	builder, err := NewAddressBuilder(xc.AssetConfig{})
@@ -183,3 +183,4 @@ func (s *CrosschainTestSuite) TestTxAddSignature() {
 	err := tx.AddSignature(xc.TxSignature{})
 	require.EqualError(err, "not implemented")
 }
+*/
