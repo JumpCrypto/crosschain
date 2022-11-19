@@ -172,6 +172,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	result.Fee = xc.NewAmountBlockchainFromUint64(meta.Fee)
 
 	result.TxID = string(txHash)
+	result.ExplorerURL = client.Asset.ExplorerURL + "/tx/" + result.TxID + "?cluster=" + client.Asset.Net
 	tx.ParseTransfer()
 
 	// first, check associated token account
@@ -188,7 +189,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	result.From = tx.From()
 	result.To = tx.To()
 	result.ContractAddress = tx.ContractAddress()
-	result.Amount = tx.Value()
+	result.Amount = tx.Amount()
 
 	return result, nil
 }
@@ -253,4 +254,49 @@ func FindAssociatedTokenAddress(addr string, contract string) (string, error) {
 		return "", err
 	}
 	return associatedAddr.String(), nil
+}
+
+// FetchNativeBalance fetches account balance for a Solana address
+func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
+	zero := xc.NewAmountBlockchainFromUint64(0)
+	out, err := client.SolClient.GetBalance(
+		context.Background(),
+		solana.MustPublicKeyFromBase58(string(address)),
+		rpc.CommitmentFinalized,
+	)
+	if err != nil {
+		return zero, fmt.Errorf("failed to get balance for '%v': %v", address, err)
+	}
+
+	return xc.NewAmountBlockchainFromUint64(out.Value), nil
+}
+
+// FetchBalance fetches token balance for a Solana address
+func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
+	if client.Asset.Type == xc.AssetTypeNative {
+		return client.FetchNativeBalance(ctx, address)
+	}
+
+	zero := xc.NewAmountBlockchainFromUint64(0)
+	ataStr, err := FindAssociatedTokenAddress(string(address), client.Asset.Contract)
+	if err != nil {
+		return zero, err
+	}
+	ata := solana.MustPublicKeyFromBase58(ataStr)
+
+	out, err := client.SolClient.GetTokenAccountBalance(
+		ctx,
+		ata,
+		rpc.CommitmentFinalized,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "could not find account") {
+			// account not found => balance is 0
+			return zero, nil
+		}
+		return zero, fmt.Errorf("failed to get balance for '%v': %v", address, err)
+	}
+
+	balance := xc.NewAmountBlockchainFromStr(out.Value.Amount)
+	return balance, nil
 }
