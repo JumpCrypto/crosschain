@@ -126,8 +126,8 @@ func (tx Tx) ToAlt() xc.Address {
 	return xc.Address("")
 }
 
-// Value or amount
-func (tx Tx) Value() xc.AmountBlockchain {
+// Amount returns the tx amount
+func (tx Tx) Amount() xc.AmountBlockchain {
 	switch tf := tx.parsedTransfer.(type) {
 	case *system.Transfer:
 		return xc.NewAmountBlockchainFromUint64(*tf.Lamports)
@@ -170,15 +170,14 @@ func (tx Tx) RecentBlockhash() string {
 func (tx Tx) getSystemTransfer() (*system.Transfer, error) {
 	if tx.SolTx != nil {
 		message := tx.SolTx.Message
-		if len(message.Instructions) >= 1 {
-			i0 := message.Instructions[0]
-			inst, err := system.DecodeInstruction(i0.ResolveInstructionAccounts(&message), i0.Data)
+		for _, instruction := range message.Instructions {
+			inst, err := system.DecodeInstruction(instruction.ResolveInstructionAccounts(&message), instruction.Data)
 			if err != nil {
-				return nil, err
+				continue
 			}
 			castedInst, ok := inst.Impl.(*system.Transfer)
 			if !ok {
-				return nil, fmt.Errorf("the instruction is not a *system.Transfer")
+				continue
 			}
 			return castedInst, nil
 		}
@@ -192,12 +191,10 @@ func (tx Tx) getTokenTransferChecked() (*token.TransferChecked, error) {
 		for _, instruction := range message.Instructions {
 			inst, err := token.DecodeInstruction(instruction.ResolveInstructionAccounts(&message), instruction.Data)
 			if err != nil {
-				// return nil, err
 				continue
 			}
 			castedInst, ok := inst.Impl.(*token.TransferChecked)
 			if !ok {
-				// return nil, fmt.Errorf("the instruction is not a *token.TransferChecked")
 				continue
 			}
 			return castedInst, nil
@@ -213,12 +210,10 @@ func (tx Tx) getTokenTransfer() (*token.Transfer, error) {
 		for _, instruction := range message.Instructions {
 			inst, err := token.DecodeInstruction(instruction.ResolveInstructionAccounts(&message), instruction.Data)
 			if err != nil {
-				// return nil, err
 				continue
 			}
 			castedInst, ok := inst.Impl.(*token.Transfer)
 			if !ok {
-				// return nil, fmt.Errorf("the instruction is not a *token.Transfer")
 				continue
 			}
 			return castedInst, nil

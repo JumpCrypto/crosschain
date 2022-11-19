@@ -105,7 +105,7 @@ func (s *CrosschainTestSuite) TestTx() {
 		require.Equal(v.hash, string(tx.Hash()))
 		require.Equal(v.from, string(tx.From()))
 		require.Equal(v.to, string(tx.To()))
-		require.Equal(v.amount, tx.Value().String())
+		require.Equal(v.amount, tx.Amount().String())
 		require.Equal(v.contract, string(tx.ContractAddress()))
 		require.Equal(v.ata, string(tx.ToAlt()))
 		require.Equal(v.recentBlockhash, string(tx.RecentBlockhash()))
