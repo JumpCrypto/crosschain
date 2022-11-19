@@ -28,8 +28,8 @@ go run ./examples/transfer/main.go
 - [ ] Ethereum
 - [ ] EVMs: Polygon, Binance Smart Chain, ...
 - [x] Solana
-- [ ] Cosmos
-- [ ] Cosmos derived: Terra
+- [x] Cosmos
+- [x] Cosmos derived: Terra
 - [ ] Aptos
 
 ### Assets
