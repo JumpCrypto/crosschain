@@ -32,11 +32,12 @@ func main() {
 	// e.g., nonce for Ethereum, recent block for Solana, gas data, ...
 	// (network needed)
 	client, _ := xc.NewClient(asset)
-	input, err := client.FetchTxInput(ctx, from)
+
+	input, err := client.FetchTxInput(ctx, from, to)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(input)
+	fmt.Printf("%+v\n", input)
 
 	// create tx
 	// (no network, no private key needed)
@@ -49,7 +50,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(tx)
+	fmt.Printf("%+v\n", tx)
 	fmt.Printf("signing: %x\n", sighash)
 
 	// sign the tx sighash
@@ -73,14 +74,16 @@ func main() {
 
 	// submit the tx, wait a bit, fetch the tx info
 	// (network needed)
+	fmt.Printf("tx id: %s\n", tx.Hash())
 	err = client.SubmitTx(ctx, tx)
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(10 * time.Second)
+	fmt.Println("Zzz...")
+	time.Sleep(20 * time.Second)
 	info, err := client.FetchTxInfo(ctx, tx.Hash())
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(info)
+	fmt.Printf("%+v\n", info)
 }
