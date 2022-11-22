@@ -145,6 +145,14 @@ func (s *CrosschainTestSuite) TestNewSigner() {
 	require.EqualError(err, "not implemented")
 }
 
+func (s *CrosschainTestSuite) TestImportPrivateKey() {
+	require := s.Require()
+	signer, _ := NewSigner(xc.AssetConfig{})
+	key, err := signer.ImportPrivateKey("key")
+	require.NotNil(key)
+	require.EqualError(err, "not implemented")
+}
+
 func (s *CrosschainTestSuite) TestSign() {
 	require := s.Require()
 	signer, _ := NewSigner(xc.AssetConfig{})

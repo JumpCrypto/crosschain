@@ -13,6 +13,14 @@ func (s *CrosschainTestSuite) TestNewSigner() {
 	require.NotNil(signer)
 }
 
+func (s *CrosschainTestSuite) TestImportPrivateKey() {
+	require := s.Require()
+	signer, _ := NewSigner(xc.AssetConfig{})
+	key, err := signer.ImportPrivateKey("key")
+	require.Equal(key, xc.PrivateKey{0x2, 0x3d, 0xa6})
+	require.Nil(err)
+}
+
 func (s *CrosschainTestSuite) TestSign() {
 	require := s.Require()
 
