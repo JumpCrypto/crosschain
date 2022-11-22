@@ -1,8 +1,7 @@
 # Crosschain
 
-<!-- # [![Go Reference](https://pkg.go.dev/badge/github.com/jumpcrypto/crosschain.svg)](https://pkg.go.dev/github.com/jumpcrypto/crosschain) -->
-
-**Disclaimer. This alpha software has been open sourced. All software and code are provided “as is,” without any warranty of any kind, and should be used at your own risk.**
+[![Go Reference](https://pkg.go.dev/badge/github.com/jumpcrypto/crosschain.svg)](https://pkg.go.dev/github.com/jumpcrypto/crosschain)
+[![Coverage Status](https://coveralls.io/repos/github/JumpCrypto/crosschain/badge.svg?branch=main)](https://coveralls.io/github/JumpCrypto/crosschain?branch=main)
 
 A Go library to interact with multiple blockchains.
 
@@ -31,6 +30,7 @@ go run ./examples/transfer/main.go
 - [x] Solana
 - [ ] Cosmos
 - [ ] Cosmos derived: Terra
+- [ ] Aptos
 
 ### Assets
 
@@ -49,3 +49,5 @@ go run ./examples/transfer/main.go
 We welcome contribution, whether in form of bug fixed, documentation, new chains, new functionality.
 
 Just open an issue to discuss what you'd like to contribute and then submit a PR.
+
+**Disclaimer. This alpha software has been open sourced. All software and code are provided “as is,” without any warranty of any kind, and should be used at your own risk.**
