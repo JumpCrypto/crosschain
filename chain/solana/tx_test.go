@@ -126,10 +126,15 @@ func (s *CrosschainTestSuite) TestTx() {
 			require.Equal(0, len(tx.SolTx.Signatures))
 			require.Equal("", string(tx.Hash()))
 
-			// // readd signature
+			// readd signature
 			err = tx.AddSignature(sig)
 			require.Nil(err)
 			require.Equal(v.hash, string(tx.Hash()))
+
+			// serialize
+			serialized, err := tx.Serialize()
+			require.Nil(err)
+			require.Equal(v.bin, hex.EncodeToString(serialized))
 		}
 	}
 }
@@ -164,4 +169,18 @@ func (s *CrosschainTestSuite) TestTxAddSignatureErr() {
 	bytes := make([]byte, 64)
 	err = tx.AddSignature(bytes)
 	require.EqualError(err, "transaction not initialized")
+}
+
+func (s *CrosschainTestSuite) TestTxSerialize() {
+	require := s.Require()
+
+	tx := Tx{}
+	serialized, err := tx.Serialize()
+	require.EqualError(err, "transaction not initialized")
+	require.Nil(serialized)
+
+	tx = Tx{SolTx: &solana.Transaction{}}
+	serialized, err = tx.Serialize()
+	require.Nil(err)
+	require.Equal(serialized, []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0})
 }

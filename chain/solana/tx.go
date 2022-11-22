@@ -222,3 +222,10 @@ func (tx Tx) getTokenTransfer() (*token.Transfer, error) {
 	}
 	return nil, fmt.Errorf("no tx set")
 }
+
+func (tx Tx) Serialize() ([]byte, error) {
+	if tx.SolTx == nil {
+		return nil, errors.New("transaction not initialized")
+	}
+	return tx.SolTx.MarshalBinary()
+}
