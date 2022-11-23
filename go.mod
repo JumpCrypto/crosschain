@@ -3,10 +3,10 @@ module github.com/jumpcrypto/crosschain
 go 1.19
 
 require (
-	github.com/btcsuite/btcd v0.22.1
+	github.com/btcsuite/btcd v0.22.3
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.45.11
-	github.com/ethereum/go-ethereum v1.10.19
+	github.com/ethereum/go-ethereum v1.10.26
 	github.com/evmos/ethermint v0.19.3
 	github.com/gagliardetto/binary v0.7.6
 	github.com/gagliardetto/solana-go v1.7.1

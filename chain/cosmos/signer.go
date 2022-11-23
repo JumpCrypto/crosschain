@@ -33,10 +33,7 @@ func (signer Signer) ImportPrivateKey(privateKeyOrMnemonic string) (xc.PrivateKe
 		if err != nil {
 			return nil, err
 		}
-		keyHex, err = kb.UnsafeExportPrivKeyHex("key")
-		if err != nil {
-			return nil, err
-		}
+		keyHex, _ = kb.UnsafeExportPrivKeyHex("key")
 	}
 	key, err := hex.DecodeString(keyHex)
 	if err != nil {

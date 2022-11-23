@@ -37,6 +37,11 @@ func (s *CrosschainTestSuite) TestImportPrivateKey() {
 	key, err = signer.ImportPrivateKey("key")
 	require.Nil(key)
 	require.ErrorContains(err, "encoding/hex: invalid byte")
+
+	// note: result depends on the HD path, that in turn depends on the chain
+	key, err = signer.ImportPrivateKey("hello world")
+	require.Nil(key)
+	require.ErrorContains(err, "Invalid mnemonic")
 }
 
 func (s *CrosschainTestSuite) TestSign() {
