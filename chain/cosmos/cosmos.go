@@ -24,7 +24,6 @@ func getPublicKey(asset xc.AssetConfig, publicKeyBytes []byte) cryptotypes.PubKe
 		return &ethsecp256k1.PubKey{Key: publicKeyBytes}
 	}
 	return &secp256k1.PubKey{Key: publicKeyBytes}
-
 }
 
 func getSighash(asset xc.AssetConfig, sigData []byte) []byte {

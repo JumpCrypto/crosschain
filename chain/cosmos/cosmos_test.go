@@ -2,9 +2,14 @@ package cosmos
 
 import (
 	"context"
+	"encoding/hex"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"github.com/stretchr/testify/suite"
+
+	xc "github.com/jumpcrypto/crosschain"
 )
 
 type CrosschainTestSuite struct {
@@ -20,167 +25,58 @@ func TestExampleTestSuite(t *testing.T) {
 	suite.Run(t, new(CrosschainTestSuite))
 }
 
-// Address
-
-/*
-func (s *CrosschainTestSuite) TestNewAddressBuilder() {
+func (s *CrosschainTestSuite) TestIsNativeAsset() {
 	require := s.Require()
-	builder, err := NewAddressBuilder(xc.AssetConfig{})
-	require.NotNil(builder)
-	require.EqualError(err, "not implemented")
+
+	is := isNativeAsset(xc.AssetConfig{Type: xc.AssetTypeNative})
+	require.True(is)
+
+	is = isNativeAsset(xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "uluna"})
+	require.True(is)
+
+	is = isNativeAsset(xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "a-valid-long-contract"})
+	require.False(is)
+
+	// edge cases
+	is = isNativeAsset(xc.AssetConfig{})
+	require.True(is)
+
+	is = isNativeAsset(xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "uluna"})
+	require.True(is)
 }
 
-func (s *CrosschainTestSuite) TestGetAddressFromPublicKey() {
+func (s *CrosschainTestSuite) TestIsEVMOS() {
 	require := s.Require()
-	builder, _ := NewAddressBuilder(xc.AssetConfig{})
-	address, err := builder.GetAddressFromPublicKey([]byte{})
-	require.Equal(xc.Address(""), address)
-	require.EqualError(err, "not implemented")
+	is := isEVMOS(xc.AssetConfig{})
+	require.False(is)
+
+	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.ATOM})
+	require.False(is)
+
+	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.LUNA})
+	require.False(is)
+
+	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.XPLA})
+	require.True(is)
 }
 
-func (s *CrosschainTestSuite) TestGetAllPossibleAddressesFromPublicKey() {
+func (s *CrosschainTestSuite) TestGetPublicKey() {
 	require := s.Require()
-	builder, _ := NewAddressBuilder(xc.AssetConfig{})
-	addresses, err := builder.GetAllPossibleAddressesFromPublicKey([]byte{})
-	require.NotNil(addresses)
-	require.EqualError(err, "not implemented")
+
+	pubKey := getPublicKey(xc.AssetConfig{NativeAsset: xc.LUNA}, []byte{})
+	require.Exactly(&secp256k1.PubKey{Key: []byte{}}, pubKey)
+
+	pubKey = getPublicKey(xc.AssetConfig{NativeAsset: xc.XPLA}, []byte{})
+	require.Exactly(&ethsecp256k1.PubKey{Key: []byte{}}, pubKey)
 }
 
-// TxBuilder
-
-func (s *CrosschainTestSuite) TestNewTxBuilder() {
+func (s *CrosschainTestSuite) TestGetSighash() {
 	require := s.Require()
-	builder, err := NewTxBuilder(xc.AssetConfig{})
-	require.NotNil(builder)
-	require.EqualError(err, "not implemented")
+
+	sighash := getSighash(xc.AssetConfig{NativeAsset: xc.LUNA}, []byte{})
+	// echo -n '' | openssl dgst -sha256
+	require.Exactly("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", hex.EncodeToString(sighash))
+
+	sighash = getSighash(xc.AssetConfig{NativeAsset: xc.XPLA}, []byte{})
+	require.Exactly("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", hex.EncodeToString(sighash))
 }
-
-func (s *CrosschainTestSuite) TestNewNativeTransfer() {
-	require := s.Require()
-	builder, _ := NewTxBuilder(xc.AssetConfig{})
-	from := xc.Address("from")
-	to := xc.Address("to")
-	amount := xc.AmountBlockchain{}
-	input := TxInput{}
-	tf, err := builder.(xc.TxTokenBuilder).NewNativeTransfer(from, to, amount, input)
-	require.Nil(tf)
-	require.EqualError(err, "not implemented")
-}
-
-func (s *CrosschainTestSuite) TestNewTokenTransfer() {
-	require := s.Require()
-	builder, _ := NewTxBuilder(xc.AssetConfig{})
-	from := xc.Address("from")
-	to := xc.Address("to")
-	amount := xc.AmountBlockchain{}
-	input := TxInput{}
-	tf, err := builder.(xc.TxTokenBuilder).NewTokenTransfer(from, to, amount, input)
-	require.Nil(tf)
-	require.EqualError(err, "not implemented")
-}
-
-func (s *CrosschainTestSuite) TestNewTransfer() {
-	require := s.Require()
-	builder, _ := NewTxBuilder(xc.AssetConfig{})
-	from := xc.Address("from")
-	to := xc.Address("to")
-	amount := xc.AmountBlockchain{}
-	input := TxInput{}
-	tf, err := builder.NewTransfer(from, to, amount, input)
-	require.Nil(tf)
-	require.EqualError(err, "not implemented")
-}
-
-func (s *CrosschainTestSuite) TestNewTransfer_Token() {
-	require := s.Require()
-	builder, _ := NewTxBuilder(xc.AssetConfig{Type: xc.AssetTypeToken})
-	from := xc.Address("from")
-	to := xc.Address("to")
-	amount := xc.AmountBlockchain{}
-	input := TxInput{}
-	tf, err := builder.NewTransfer(from, to, amount, input)
-	require.Nil(tf)
-	require.EqualError(err, "not implemented")
-}
-
-// Client
-
-func (s *CrosschainTestSuite) TestNewClient() {
-	require := s.Require()
-	client, err := NewClient(xc.AssetConfig{})
-	require.Nil(err)
-	require.NotNil(client)
-}
-
-func (s *CrosschainTestSuite) TestFetchTxInput() {
-	require := s.Require()
-	client, _ := NewClient(xc.AssetConfig{})
-	from := xc.Address("from")
-	input, err := client.FetchTxInput(s.Ctx, from, "")
-	require.NotNil(input)
-	require.EqualError(err, "not implemented")
-}
-
-func (s *CrosschainTestSuite) TestSubmitTx() {
-	require := s.Require()
-	client, _ := NewClient(xc.AssetConfig{})
-	err := client.SubmitTx(s.Ctx, Tx{})
-	require.EqualError(err, "not implemented")
-}
-
-func (s *CrosschainTestSuite) TestFetchTxInfo() {
-	require := s.Require()
-	client, _ := NewClient(xc.AssetConfig{})
-	info, err := client.FetchTxInfo(s.Ctx, xc.TxHash("hash"))
-	require.NotNil(info)
-	require.EqualError(err, "not implemented")
-}
-
-// Signer
-
-func (s *CrosschainTestSuite) TestNewSigner() {
-	require := s.Require()
-	signer, err := NewSigner(xc.AssetConfig{})
-	require.NotNil(signer)
-	require.EqualError(err, "not implemented")
-}
-
-func (s *CrosschainTestSuite) TestImportPrivateKey() {
-	require := s.Require()
-	signer, _ := NewSigner(xc.AssetConfig{})
-	key, err := signer.ImportPrivateKey("key")
-	require.NotNil(key)
-	require.EqualError(err, "not implemented")
-}
-
-func (s *CrosschainTestSuite) TestSign() {
-	require := s.Require()
-	signer, _ := NewSigner(xc.AssetConfig{})
-	sig, err := signer.Sign(xc.PrivateKey{}, xc.TxDataToSign{})
-	require.NotNil(sig)
-	require.EqualError(err, "not implemented")
-}
-
-// Tx
-
-func (s *CrosschainTestSuite) TestTxHash() {
-	require := s.Require()
-	tx := Tx{}
-	require.Equal(xc.TxHash("not implemented"), tx.Hash())
-}
-
-func (s *CrosschainTestSuite) TestTxSighash() {
-	require := s.Require()
-	tx := Tx{}
-	sighash, err := tx.Sighash()
-	require.NotNil(sighash)
-	require.EqualError(err, "not implemented")
-}
-
-func (s *CrosschainTestSuite) TestTxAddSignature() {
-	require := s.Require()
-	tx := Tx{}
-	err := tx.AddSignature(xc.TxSignature{})
-	require.EqualError(err, "not implemented")
-}
-*/
