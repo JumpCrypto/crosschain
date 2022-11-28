@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/btcsuite/btcd v0.22.3
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45
 	github.com/cosmos/cosmos-sdk v0.45.11
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/evmos/ethermint v0.19.3
@@ -15,6 +16,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tendermint v0.34.23
 	github.com/terra-money/core v0.5.20
+	golang.org/x/crypto v0.1.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -135,7 +137,6 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect

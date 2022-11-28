@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	. "github.com/jumpcrypto/crosschain"
+	"github.com/jumpcrypto/crosschain/chain/aptos"
 	"github.com/jumpcrypto/crosschain/chain/cosmos"
 	"github.com/jumpcrypto/crosschain/chain/evm"
 	"github.com/jumpcrypto/crosschain/chain/solana"
@@ -283,10 +284,12 @@ func newClient(cfg AssetConfig) (Client, error) {
 		return evm.NewClient(cfg)
 	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
 		return evm.NewLegacyClient(cfg)
-	case SOL:
-		return solana.NewClient(cfg)
 	case ATOM, LUNA, XPLA:
 		return cosmos.NewClient(cfg)
+	case SOL:
+		return solana.NewClient(cfg)
+	case APTOS:
+		return aptos.NewClient(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
@@ -303,6 +306,8 @@ func newTxBuilder(cfg AssetConfig) (TxBuilder, error) {
 		return cosmos.NewTxBuilder(cfg)
 	case SOL:
 		return solana.NewTxBuilder(cfg)
+	case APTOS:
+		return aptos.NewTxBuilder(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
@@ -319,6 +324,8 @@ func newSigner(cfg AssetConfig) (Signer, error) {
 		return cosmos.NewSigner(cfg)
 	case SOL:
 		return solana.NewSigner(cfg)
+	case APTOS:
+		return aptos.NewSigner(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
@@ -335,6 +342,8 @@ func newAddressBuilder(cfg AssetConfig) (AddressBuilder, error) {
 		return cosmos.NewAddressBuilder(cfg)
 	case SOL:
 		return solana.NewAddressBuilder(cfg)
+	case APTOS:
+		return aptos.NewAddressBuilder(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
@@ -395,7 +404,8 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 	// hex formatted addresses
 	case ETH,
 		AVAX, ArbETH, CELO, MATIC, OptETH,
-		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
+		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH,
+		APTOS:
 		if strings.HasPrefix(address, "0x") {
 			return strings.ToLower(address)
 		}

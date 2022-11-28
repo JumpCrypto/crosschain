@@ -21,6 +21,7 @@ const (
 
 	// Account-based
 	ACA    = NativeAsset("ACA")    // Acala
+	APTOS  = NativeAsset("APTOS")  // APTOS
 	ArbETH = NativeAsset("ArbETH") // Arbitrum Ether
 	ATOM   = NativeAsset("ATOM")   // Atom (Cosmos)
 	AurETH = NativeAsset("AurETH") // Aurora
@@ -55,6 +56,7 @@ func (asset Asset) AssetType() AssetType {
 	case BCH, BTC, DOGE:
 		return AssetTypeNative
 	case ACA,
+		APTOS,
 		ArbETH,
 		ATOM,
 		AurETH,
@@ -94,6 +96,7 @@ func (native NativeAsset) ChainType() ChainType {
 	case BCH, BTC, DOGE:
 		return ChainTypeUTXO
 	case ACA,
+		APTOS,
 		ArbETH,
 		ATOM,
 		AurETH,
