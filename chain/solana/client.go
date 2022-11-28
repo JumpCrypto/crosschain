@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
+	"log"
 	"strings"
 
 	xc "github.com/jumpcrypto/crosschain"
@@ -43,16 +43,33 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.A
 	txInput := &TxInput{}
 	asset := client.Asset
 
+	// get recent block hash (i.e. nonce)
+	// GetRecentBlockhash will be deprecated - GetLatestBlockhash already tested, just switch
+	// recent, err := client.SolClient.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
+	recent, err := client.SolClient.GetRecentBlockhash(ctx, rpc.CommitmentFinalized)
+	if err != nil {
+		return nil, err
+	}
+	if recent == nil || recent.Value == nil {
+		return nil, errors.New("error fetching blockhash")
+	}
+	txInput.RecentBlockHash = recent.Value.Blockhash
+
+	if asset.Type != xc.AssetTypeToken {
+		return txInput, nil
+	}
+
 	// get account info - check if to is an owner or ata
 	accountTo, err := solana.PublicKeyFromBase58(string(to))
 	if err != nil {
 		return nil, err
 	}
-	res, err := client.SolClient.GetAccountInfo(context.Background(), accountTo)
+	res, err := client.SolClient.GetAccountInfo(ctx, accountTo)
 	if err != nil {
-		// ignore
+		txInput.ToIsATA = true
 	} else {
 		ownerAddr := res.Value.Owner.String()
+		log.Println("owner", ownerAddr)
 		sysAddr := "11111111111111111111111111111111"
 		if ownerAddr != sysAddr {
 			// The field "to" is not an owner address, therefore is a (possibly custom) ATA
@@ -61,33 +78,20 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.A
 	}
 
 	// for tokens, get ata account info
-	if asset.Type == xc.AssetTypeToken {
-		ataTo := accountTo
-		if !txInput.ToIsATA {
-			ataToStr, err := FindAssociatedTokenAddress(string(to), string(asset.Contract))
-			if err != nil {
-				return nil, err
-			}
-			ataTo = solana.MustPublicKeyFromBase58(ataToStr)
-		}
-		_, err = client.SolClient.GetAccountInfo(context.Background(), ataTo)
+	ataTo := accountTo
+	if !txInput.ToIsATA {
+		ataToStr, err := FindAssociatedTokenAddress(string(to), string(asset.Contract))
 		if err != nil {
-			// if the ATA doesn't exist yet, we will create when sending tokens
-			txInput.ShouldCreateATA = true
+			return nil, err
 		}
+		ataTo = solana.MustPublicKeyFromBase58(ataToStr)
+	}
+	_, err = client.SolClient.GetAccountInfo(ctx, ataTo)
+	if err != nil {
+		// if the ATA doesn't exist yet, we will create when sending tokens
+		txInput.ShouldCreateATA = true
 	}
 
-	// get recent block hash (i.e. nonce)
-	// GetRecentBlockhash will be deprecated - GetLatestBlockhash already tested, just switch
-	// recent, err := client.SolClient.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
-	recent, err := client.SolClient.GetRecentBlockhash(context.Background(), rpc.CommitmentFinalized)
-	if err != nil {
-		return nil, err
-	}
-	if recent == nil || recent.Value == nil {
-		return nil, errors.New("error fetching blockhash")
-	}
-	txInput.RecentBlockHash = recent.Value.Blockhash
 	return txInput, nil
 }
 
@@ -95,7 +99,7 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.A
 func (client *Client) SubmitTx(ctx context.Context, txInput xc.Tx) error {
 	tx := txInput.(*Tx)
 	_, err := client.SolClient.SendTransactionWithOpts(
-		context.Background(),
+		ctx,
 		tx.SolTx,
 		rpc.TransactionOpts{
 			SkipPreflight:       false,
@@ -130,7 +134,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	}
 
 	res, err := client.SolClient.GetTransaction(
-		context.Background(),
+		ctx,
 		txSig,
 		&rpc.GetTransactionOpts{
 			Encoding:   solana.EncodingBase64,
@@ -161,8 +165,8 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 		}
 
 		// GetRecentBlockhash will be deprecated - GetLatestBlockhash already tested, just switch
-		// recent, err := client.SolClient.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
-		recent, err := client.SolClient.GetRecentBlockhash(context.Background(), rpc.CommitmentFinalized)
+		// recent, err := client.SolClient.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
+		recent, err := client.SolClient.GetRecentBlockhash(ctx, rpc.CommitmentFinalized)
 		if err != nil {
 			// ignore
 		} else {
@@ -194,51 +198,6 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	return result, nil
 }
 
-// AccountBalance returns the SOL balance for an account
-func (client *Client) AccountBalance(ctx context.Context, addr xc.Address) (xc.AmountBlockchain, error) {
-	out, err := client.SolClient.GetBalance(
-		context.Background(),
-		solana.MustPublicKeyFromBase58(string(addr)),
-		rpc.CommitmentFinalized,
-	)
-	if err != nil {
-		return xc.NewAmountBlockchainFromUint64(0), fmt.Errorf("failed to get balance for '%v': %v", addr, err)
-	}
-	if out == nil {
-		return xc.NewAmountBlockchainFromUint64(0), nil
-	}
-
-	return xc.NewAmountBlockchainFromUint64(out.Value), nil
-}
-
-// TokenBalance returns the token balance for an account and token
-func (client *Client) TokenBalance(ctx context.Context, addr xc.Address, contract string) (xc.AmountBlockchain, error) {
-	address := solana.MustPublicKeyFromBase58(string(addr))
-	mint := solana.MustPublicKeyFromBase58(contract)
-	associatedAddr, _, err := solana.FindAssociatedTokenAddress(address, mint)
-	if err != nil {
-		return xc.NewAmountBlockchainFromUint64(0), fmt.Errorf("failed to get ATT for '%v': %v", addr, err)
-	}
-	out, err := client.SolClient.GetTokenAccountBalance(
-		context.Background(),
-		associatedAddr,
-		rpc.CommitmentFinalized,
-	)
-	if err != nil {
-		if strings.Contains(err.Error(), "could not find account") {
-			// account not found => balance is 0
-			return xc.NewAmountBlockchainFromUint64(0), nil
-		}
-		return xc.NewAmountBlockchainFromUint64(0), fmt.Errorf("failed to get balance for '%v': %v", addr, err)
-	}
-	if out == nil || out.Value == nil {
-		return xc.NewAmountBlockchainFromUint64(0), nil
-	}
-
-	balance, err := strconv.ParseUint(out.Value.Amount, 10, 64)
-	return xc.NewAmountBlockchainFromUint64(balance), err
-}
-
 // FindAssociatedTokenAddress returns the associated token account (ATA) for a given account and token
 func FindAssociatedTokenAddress(addr string, contract string) (string, error) {
 	address, err := solana.PublicKeyFromBase58(addr)
@@ -260,12 +219,15 @@ func FindAssociatedTokenAddress(addr string, contract string) (string, error) {
 func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
 	zero := xc.NewAmountBlockchainFromUint64(0)
 	out, err := client.SolClient.GetBalance(
-		context.Background(),
+		ctx,
 		solana.MustPublicKeyFromBase58(string(address)),
 		rpc.CommitmentFinalized,
 	)
 	if err != nil {
 		return zero, fmt.Errorf("failed to get balance for '%v': %v", address, err)
+	}
+	if out == nil {
+		return xc.NewAmountBlockchainFromUint64(0), nil
 	}
 
 	return xc.NewAmountBlockchainFromUint64(out.Value), nil
@@ -295,6 +257,9 @@ func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.
 			return zero, nil
 		}
 		return zero, fmt.Errorf("failed to get balance for '%v': %v", address, err)
+	}
+	if out == nil || out.Value == nil {
+		return xc.NewAmountBlockchainFromUint64(0), nil
 	}
 
 	balance := xc.NewAmountBlockchainFromStr(out.Value.Amount)

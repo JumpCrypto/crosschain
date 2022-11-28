@@ -1,75 +1,14 @@
 package solana
 
 import (
-	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"log"
-	"net/http"
-
-	"net/http/httptest"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	xc "github.com/jumpcrypto/crosschain"
+	"github.com/jumpcrypto/crosschain/test"
 )
-
-func wrapRPCResult(res string) string {
-	return `{"jsonrpc":"2.0","result":` + res + `,"id":0}`
-}
-
-func wrapRPCError(err string) string {
-	return `{"jsonrpc":"2.0","error":` + err + `,"id":0}`
-}
-
-type MockJSONRPCServer struct {
-	*httptest.Server
-	body    []byte
-	counter int
-}
-
-func MockJSONRPC(s *CrosschainTestSuite, response interface{}) (mock *MockJSONRPCServer, close func()) {
-	require := s.Require()
-	mock = &MockJSONRPCServer{
-		Server: httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			curResponse := response
-			if a, ok := response.([]string); ok {
-				curResponse = a[mock.counter]
-			}
-			mock.counter++
-
-			// error => send RPC error
-			if e, ok := curResponse.(error); ok {
-				rw.WriteHeader(400)
-				rw.Write([]byte(wrapRPCError(e.Error())))
-				return
-			}
-
-			// string => convert to JSON
-			if s, ok := curResponse.(string); ok {
-				curResponse = json.RawMessage(wrapRPCResult(s))
-			}
-
-			var err error
-			mock.body, err = ioutil.ReadAll(req.Body)
-			log.Println("rpc>>", string(mock.body))
-			require.NoError(err)
-
-			// JSON input, or serializable into JSON
-			var responseBody []byte
-			if v, ok := curResponse.(json.RawMessage); ok {
-				responseBody = v
-			} else {
-				responseBody, err = json.Marshal(curResponse)
-				require.NoError(err)
-			}
-			log.Println("<<rpc", string(responseBody))
-			rw.Write(responseBody)
-		})),
-	}
-	return mock, func() { mock.Close() }
-}
 
 func (s *CrosschainTestSuite) TestNewClient() {
 	require := s.Require()
@@ -121,52 +60,22 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	}{
 		{
 			xc.AssetConfig{},
-			[]string{
-				// valid owner account
-				`{"context":{"apiVersion":"1.13.3","slot":175635504},"value":{"data":["","base64"],"executable":false,"lamports":1860881440,"owner":"11111111111111111111111111111111","rentEpoch":371}}`,
-				// valid blockhash
-				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-			},
+			// valid blockhash
+			`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
 			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
 			false,
-			false,
-			"",
-		},
-		{
-			xc.AssetConfig{},
-			[]string{
-				// empty owner account
-				`{"context":{"apiVersion":"1.13.3","slot":175636079},"value":null}`,
-				// valid blockhash
-				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-			},
-			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
-			false,
-			false,
-			"",
-		},
-		{
-			xc.AssetConfig{},
-			[]string{
-				// valid ATA
-				`{"context":{"apiVersion":"1.13.3","slot":175635873},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqctdvBIL2OuEzV5LBqS2x3308rEBwESq+xcukVQUYDkgpg6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":0}}`,
-				// valid blockhash
-				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-			},
-			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
-			true,
 			false,
 			"",
 		},
 		{
 			xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
 			[]string{
+				// valid blockhash
+				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
 				// valid owner account
 				`{"context":{"apiVersion":"1.13.3","slot":175635504},"value":{"data":["","base64"],"executable":false,"lamports":1860881440,"owner":"11111111111111111111111111111111","rentEpoch":371}}`,
 				// valid ATA
 				`{"context":{"apiVersion":"1.13.3","slot":175635873},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqctdvBIL2OuEzV5LBqS2x3308rEBwESq+xcukVQUYDkgpg6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":0}}`,
-				// valid blockhash
-				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
 			},
 			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
 			false,
@@ -176,12 +85,12 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 		{
 			xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
 			[]string{
+				// valid blockhash
+				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
 				// valid owner account
 				`{"context":{"apiVersion":"1.13.3","slot":175635504},"value":{"data":["","base64"],"executable":false,"lamports":1860881440,"owner":"11111111111111111111111111111111","rentEpoch":371}}`,
 				// empty ATA
 				`{"context":{"apiVersion":"1.13.3","slot":175636079},"value":null}`,
-				// valid blockhash
-				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
 			},
 			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
 			false,
@@ -189,10 +98,38 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"",
 		},
 		{
+			xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
+			[]string{
+				// valid blockhash
+				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
+				// valid ATA
+				`{"context":{"apiVersion":"1.13.3","slot":175635873},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqctdvBIL2OuEzV5LBqS2x3308rEBwESq+xcukVQUYDkgpg6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":0}}`,
+				// valid ATA
+				`{"context":{"apiVersion":"1.13.3","slot":175635873},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqctdvBIL2OuEzV5LBqS2x3308rEBwESq+xcukVQUYDkgpg6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":0}}`,
+			},
+			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
+			true,
+			false,
+			"",
+		},
+		{
+			xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
+			[]string{
+				// valid blockhash
+				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
+				// empty ATA
+				`{"context":{"apiVersion":"1.13.3","slot":175636079},"value":null}`,
+				// empty ATA
+				`{"context":{"apiVersion":"1.13.3","slot":175636079},"value":null}`,
+			},
+			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
+			true,
+			true,
+			"",
+		},
+		{
 			xc.AssetConfig{},
 			[]string{
-				// empty owner account
-				`{"context":{"apiVersion":"1.13.3","slot":175636079},"value":null}`,
 				// invalid blockhash
 				`{"context":{"slot":83986105},"value":{"blockhash":"error","feeCalculator":{"lamportsPerSignature":5000}}}`,
 			},
@@ -200,6 +137,19 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			false,
 			false,
 			"rpc.GetRecentBlockhashResult",
+		},
+		{
+			xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "invalid-contract"},
+			[]string{
+				// valid blockhash
+				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
+				// valid owner account
+				`{"context":{"apiVersion":"1.13.3","slot":175635504},"value":{"data":["","base64"],"executable":false,"lamports":1860881440,"owner":"11111111111111111111111111111111","rentEpoch":371}}`,
+			},
+			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
+			true,
+			true,
+			"decode: invalid base58 digit",
 		},
 		{
 			xc.AssetConfig{},
@@ -228,7 +178,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	}
 
 	for _, v := range vectors {
-		server, close := MockJSONRPC(s, v.resp)
+		server, close := test.MockJSONRPC(&s.Suite, v.resp)
 		defer close()
 
 		v.asset.URL = server.URL
@@ -295,12 +245,12 @@ func (s *CrosschainTestSuite) TestAccountBalance() {
 	}
 
 	for _, v := range vectors {
-		server, close := MockJSONRPC(s, v.resp)
+		server, close := test.MockJSONRPC(&s.Suite, v.resp)
 		defer close()
 
 		client, _ := NewClient(xc.AssetConfig{URL: server.URL})
 		from := xc.Address("Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
-		balance, err := client.AccountBalance(s.Ctx, from)
+		balance, err := client.FetchNativeBalance(s.Ctx, from)
 
 		if v.err != "" {
 			require.Equal("0", balance.String())
@@ -344,12 +294,12 @@ func (s *CrosschainTestSuite) TestTokenBalance() {
 	}
 
 	for _, v := range vectors {
-		server, close := MockJSONRPC(s, v.resp)
+		server, close := test.MockJSONRPC(&s.Suite, v.resp)
 		defer close()
 
-		client, _ := NewClient(xc.AssetConfig{URL: server.URL})
+		client, _ := NewClient(xc.AssetConfig{URL: server.URL, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"})
 		from := xc.Address("Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
-		balance, err := client.TokenBalance(s.Ctx, from, "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU")
+		balance, err := client.FetchBalance(s.Ctx, from)
 
 		if v.err != "" {
 			require.Equal("0", balance.String())
@@ -480,10 +430,32 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 			xc.TxInfo{},
 			"custom RPC error",
 		},
+		{
+			"",
+			"",
+			xc.TxInfo{},
+			"zero length string",
+		},
+		{
+			"invalid-sig",
+			"",
+			xc.TxInfo{},
+			"invalid base58 digit",
+		},
+		{
+			// 1 SOL
+			"5U2YvvKUS6NUrDAJnABHjx2szwLCVmg8LCRK9BDbZwVAbf2q5j8D9Sc9kUoqanoqpn6ZpDguY3rip9W7N7vwCjSw",
+			[]string{
+				`{"blockTime":1650017168,"meta":{"err":null,"fee":5000,"innerInstructions":[],"loadedAddresses":{"readonly":[],"writable":[]},"logMessages":["Program 11111111111111111111111111111111 invoke [1]","Program 11111111111111111111111111111111 success"],"postBalances":[19921026477997237,1869985000,1],"postTokenBalances":[],"preBalances":[19921027478002237,869985000,1],"preTokenBalances":[],"rewards":[],"status":{"Ok":null}},"slot":128184605,"transaction":["invalid-binary","base64"]}`,
+				`{"context":{"slot":128184606},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
+			},
+			xc.TxInfo{},
+			"illegal base64 data",
+		},
 	}
 
 	for _, v := range vectors {
-		server, close := MockJSONRPC(s, v.resp)
+		server, close := test.MockJSONRPC(&s.Suite, v.resp)
 		defer close()
 
 		client, _ := NewClient(xc.AssetConfig{URL: server.URL})
