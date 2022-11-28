@@ -331,7 +331,10 @@ func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address
 		Denom:   client.Asset.ChainCoin,
 	})
 	if err != nil {
-		return zero, fmt.Errorf("failed to get account balance : '%v': %v", address, err)
+		return zero, fmt.Errorf("failed to get account balance: '%v': %v", address, err)
+	}
+	if balResp == nil || balResp.GetBalance() == nil {
+		return zero, fmt.Errorf("failed to get account balance: '%v': %v", address, err)
 	}
 	balance := balResp.GetBalance().Amount.BigInt()
 	return xc.AmountBlockchain(*balance), nil
