@@ -10,7 +10,7 @@ import (
 
 type CrosschainTestSuite struct {
 	suite.Suite
-	Factory          Factory
+	Factory          *Factory
 	TestNativeAssets []xc.NativeAsset
 	TestAssetConfigs []xc.AssetConfig
 }

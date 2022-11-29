@@ -132,6 +132,6 @@ func (f *TestFactory) MustPrivateKey(asset xc.AssetConfig, privateKeyStr string)
 func NewDefaultFactory() TestFactory {
 	f := factory.NewDefaultFactory()
 	return TestFactory{
-		DefaultFactory: &f,
+		DefaultFactory: f,
 	}
 }
