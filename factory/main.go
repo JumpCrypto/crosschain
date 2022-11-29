@@ -242,12 +242,17 @@ func assetsFromConfig(configMap map[string]interface{}) []AssetConfig {
 }
 
 // NewDefaultFactory creates a new Factory
-func NewDefaultFactory() Factory {
+func NewDefaultFactory() *Factory {
 	// Use our config file loader
 	cfg := config.RequireConfig("crosschain")
+	return NewDefaultFactoryWithConfig(cfg)
+}
+
+// NewDefaultFactoryWithConfig creates a new Factory given a config map
+func NewDefaultFactoryWithConfig(cfg map[string]interface{}) *Factory {
 	assetsList := assetsFromConfig(cfg)
 	assetsMap := AssetsToMap(assetsList)
-	return Factory{
+	return &Factory{
 		AllAssets: &assetsMap,
 	}
 }
