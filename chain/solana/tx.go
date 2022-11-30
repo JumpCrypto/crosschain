@@ -223,6 +223,7 @@ func (tx Tx) getTokenTransfer() (*token.Transfer, error) {
 	return nil, fmt.Errorf("no tx set")
 }
 
+// Serialize returns the serialized tx
 func (tx Tx) Serialize() ([]byte, error) {
 	if tx.SolTx == nil {
 		return []byte{}, errors.New("transaction not initialized")
