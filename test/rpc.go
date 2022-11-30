@@ -19,6 +19,7 @@ func wrapRPCError(err string) string {
 	return `{"jsonrpc":"2.0","error":` + err + `,"id":0}`
 }
 
+// MockJSONRPCServer is a mocked RPC server
 type MockJSONRPCServer struct {
 	*httptest.Server
 	body     []byte
@@ -26,6 +27,7 @@ type MockJSONRPCServer struct {
 	Response interface{}
 }
 
+// MockJSONRPC creates a new MockJSONRPCServer given a response, or array of responses
 func MockJSONRPC(s *suite.Suite, response interface{}) (mock *MockJSONRPCServer, close func()) {
 	require := s.Require()
 	mock = &MockJSONRPCServer{
@@ -73,6 +75,7 @@ func MockJSONRPC(s *suite.Suite, response interface{}) (mock *MockJSONRPCServer,
 	return mock, func() { mock.Close() }
 }
 
+// MockHTTPServer is a mocked HTTP server
 type MockHTTPServer struct {
 	*httptest.Server
 	body     []byte
@@ -80,6 +83,7 @@ type MockHTTPServer struct {
 	Response interface{}
 }
 
+// MockHTTP creates a new MockHTTPServer given a response, or array of responses
 func MockHTTP(s *suite.Suite, response interface{}) (mock *MockHTTPServer, close func()) {
 	require := s.Require()
 	mock = &MockHTTPServer{
