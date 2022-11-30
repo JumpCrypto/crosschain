@@ -30,7 +30,7 @@ go run ./examples/transfer/main.go
 - [x] Solana
 - [x] Cosmos
 - [x] Cosmos derived: Terra, XPLA, ...
-- [ ] Aptos
+- [x] Aptos
 
 ### Assets
 
