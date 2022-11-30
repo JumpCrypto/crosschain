@@ -55,7 +55,7 @@ func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.
 	return xc.AmountBlockchain(*balance), nil
 }
 
-// FetchBalance fetches the native asset balance for an Aptos address
+// FetchNativeBalance fetches the native asset balance for an Aptos address
 func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
 	balance, err := client.AptosClient.AptosBalanceOf(string(address))
 	if err != nil {
