@@ -48,6 +48,9 @@ func (tx Tx) AddSignature(signature xc.TxSignature) error {
 
 // Serialize serializes a Tx
 func (tx Tx) Serialize() []byte {
+	if tx.CosmosTxEncoder == nil || tx.CosmosTxBuilder == nil {
+		return []byte{}
+	}
 	serialized, _ := tx.CosmosTxEncoder(tx.CosmosTxBuilder.GetTx())
 	return serialized
 }
