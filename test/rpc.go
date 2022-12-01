@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -45,7 +46,11 @@ func MockJSONRPC(s *suite.Suite, response interface{}) (mock *MockJSONRPCServer,
 
 			// string => convert to JSON
 			if s, ok := curResponse.(string); ok {
-				curResponse = json.RawMessage(wrapRPCResult(s))
+				if strings.Contains(s, "jsonrpc") {
+					curResponse = json.RawMessage(s)
+				} else {
+					curResponse = json.RawMessage(wrapRPCResult(s))
+				}
 			}
 
 			var err error
