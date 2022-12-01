@@ -29,7 +29,7 @@ go run ./examples/transfer/main.go
 - [ ] EVMs: Polygon, Binance Smart Chain, ...
 - [x] Solana
 - [x] Cosmos
-- [x] Cosmos derived: Terra
+- [x] Cosmos derived: Terra, XPLA, ...
 - [ ] Aptos
 
 ### Assets
