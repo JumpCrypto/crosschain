@@ -143,7 +143,7 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Ad
 // SubmitTx submits a Cosmos tx
 func (client *Client) SubmitTx(ctx context.Context, txInput xc.Tx) error {
 	tx := txInput.(*Tx)
-	txBytes := tx.Serialize()
+	txBytes, _ := tx.Serialize()
 	txID := tx.Hash()
 
 	res, err := client.Ctx.BroadcastTx(txBytes)
@@ -194,7 +194,8 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	}
 
 	tx := &Tx{
-		CosmosTx: decodedTx,
+		CosmosTx:        decodedTx,
+		CosmosTxEncoder: client.Ctx.TxConfig.TxEncoder(),
 	}
 
 	result.TxID = string(txHash)
