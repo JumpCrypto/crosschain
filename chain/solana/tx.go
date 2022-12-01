@@ -225,7 +225,7 @@ func (tx Tx) getTokenTransfer() (*token.Transfer, error) {
 
 func (tx Tx) Serialize() ([]byte, error) {
 	if tx.SolTx == nil {
-		return nil, errors.New("transaction not initialized")
+		return []byte{}, errors.New("transaction not initialized")
 	}
 	return tx.SolTx.MarshalBinary()
 }

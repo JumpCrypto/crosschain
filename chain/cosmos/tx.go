@@ -2,6 +2,7 @@ package cosmos
 
 import (
 	"encoding/hex"
+	"errors"
 
 	xc "github.com/jumpcrypto/crosschain"
 
@@ -25,17 +26,27 @@ type Tx struct {
 
 // Hash returns the tx hash or id
 func (tx Tx) Hash() xc.TxHash {
-	txID := tmhash.Sum(tx.Serialize())
+	serialized, err := tx.Serialize()
+	if err != nil || serialized == nil || len(serialized) == 0 {
+		return ""
+	}
+	txID := tmhash.Sum(serialized)
 	return xc.TxHash(hex.EncodeToString(txID))
 }
 
 // Sighash returns the tx payload to sign, aka sighash
 func (tx Tx) Sighash() (xc.TxDataToSign, error) {
+	if tx.TxDataToSign == nil {
+		return nil, errors.New("transaction not initialized")
+	}
 	return xc.TxDataToSign(tx.TxDataToSign), nil
 }
 
 // AddSignature adds a signature to Tx
 func (tx Tx) AddSignature(signature xc.TxSignature) error {
+	if tx.SigsV2 == nil || len(tx.SigsV2) < 1 || tx.CosmosTxBuilder == nil {
+		return errors.New("transaction not initialized")
+	}
 	data := tx.SigsV2[0].Data
 	signMode := data.(*signingtypes.SingleSignatureData).SignMode
 	tx.SigsV2[0].Data = &signingtypes.SingleSignatureData{
@@ -47,12 +58,22 @@ func (tx Tx) AddSignature(signature xc.TxSignature) error {
 }
 
 // Serialize serializes a Tx
-func (tx Tx) Serialize() []byte {
-	if tx.CosmosTxEncoder == nil || tx.CosmosTxBuilder == nil {
-		return []byte{}
+func (tx Tx) Serialize() ([]byte, error) {
+	if tx.CosmosTxEncoder == nil {
+		return []byte{}, errors.New("transaction not initialized")
 	}
-	serialized, _ := tx.CosmosTxEncoder(tx.CosmosTxBuilder.GetTx())
-	return serialized
+
+	// if CosmosTxBuilder is set, prioritize GetTx()
+	txToEncode := tx.CosmosTx
+	if tx.CosmosTxBuilder != nil {
+		txToEncode = tx.CosmosTxBuilder.GetTx()
+	}
+
+	if txToEncode == nil {
+		return []byte{}, errors.New("transaction not initialized")
+	}
+	serialized, err := tx.CosmosTxEncoder(txToEncode)
+	return serialized, err
 }
 
 // ParseTransfer parses a Tx as a transfer

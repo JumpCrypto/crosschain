@@ -177,7 +177,7 @@ func (s *CrosschainTestSuite) TestTxSerialize() {
 	tx := Tx{}
 	serialized, err := tx.Serialize()
 	require.EqualError(err, "transaction not initialized")
-	require.Nil(serialized)
+	require.Equal(serialized, []byte{})
 
 	tx = Tx{SolTx: &solana.Transaction{}}
 	serialized, err = tx.Serialize()
