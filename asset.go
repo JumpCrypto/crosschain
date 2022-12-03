@@ -28,6 +28,7 @@ const (
 	AVAX   = NativeAsset("AVAX")   // Avalanche
 	BNB    = NativeAsset("BNB")    // Binance Coin
 	CELO   = NativeAsset("CELO")   // Celo
+	CHZ    = NativeAsset("CHZ")    // Chiliz
 	ETC    = NativeAsset("ETC")    // Ethereum Classic
 	ETH    = NativeAsset("ETH")    // Ether
 	FTM    = NativeAsset("FTM")    // Fantom
@@ -63,6 +64,7 @@ func (asset Asset) AssetType() AssetType {
 		AVAX,
 		BNB,
 		CELO,
+		CHZ,
 		ETC,
 		ETH,
 		FTM,
@@ -103,6 +105,7 @@ func (native NativeAsset) ChainType() ChainType {
 		AVAX,
 		BNB,
 		CELO,
+		CHZ,
 		ETC,
 		ETH,
 		FTM,
