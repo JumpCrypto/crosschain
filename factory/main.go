@@ -287,7 +287,7 @@ func newClient(cfg AssetConfig) (Client, error) {
 		return evm.NewClient(cfg)
 	case AVAX, ArbETH, CELO, MATIC, OptETH:
 		return evm.NewClient(cfg)
-	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
+	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ:
 		return evm.NewLegacyClient(cfg)
 	case ATOM, LUNA, XPLA:
 		return cosmos.NewClient(cfg)
@@ -305,7 +305,7 @@ func newTxBuilder(cfg AssetConfig) (TxBuilder, error) {
 		return evm.NewTxBuilder(cfg)
 	case AVAX, ArbETH, CELO, MATIC, OptETH:
 		return evm.NewTxBuilder(cfg)
-	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
+	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ:
 		return evm.NewTxBuilder(cfg)
 	case ATOM, LUNA, XPLA:
 		return cosmos.NewTxBuilder(cfg)
@@ -323,7 +323,7 @@ func newSigner(cfg AssetConfig) (Signer, error) {
 		return evm.NewSigner(cfg)
 	case AVAX, ArbETH, CELO, MATIC, OptETH:
 		return evm.NewSigner(cfg)
-	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
+	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ:
 		return evm.NewSigner(cfg)
 	case ATOM, LUNA, XPLA:
 		return cosmos.NewSigner(cfg)
@@ -341,7 +341,7 @@ func newAddressBuilder(cfg AssetConfig) (AddressBuilder, error) {
 		return evm.NewAddressBuilder(cfg)
 	case AVAX, ArbETH, CELO, MATIC, OptETH:
 		return evm.NewAddressBuilder(cfg)
-	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH:
+	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ:
 		return evm.NewAddressBuilder(cfg)
 	case ATOM, LUNA, XPLA:
 		return cosmos.NewAddressBuilder(cfg)
@@ -409,7 +409,7 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 	// hex formatted addresses
 	case ETH,
 		AVAX, ArbETH, CELO, MATIC, OptETH,
-		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH,
+		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ,
 		APTOS:
 		if strings.HasPrefix(address, "0x") {
 			return strings.ToLower(address)
