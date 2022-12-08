@@ -47,7 +47,7 @@ type FactoryContext interface {
 
 // Factory is the main Factory implementation, holding the config
 type Factory struct {
-	AllAssets *sync.Map
+	AllAssets sync.Map
 }
 
 var _ FactoryContext = &Factory{}
@@ -253,7 +253,7 @@ func NewDefaultFactoryWithConfig(cfg map[string]interface{}) *Factory {
 	assetsList := assetsFromConfig(cfg)
 	assetsMap := AssetsToMap(assetsList)
 	return &Factory{
-		AllAssets: &assetsMap,
+		AllAssets: assetsMap,
 	}
 }
 
