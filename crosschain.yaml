@@ -2,12 +2,12 @@ crosschain:
   chains:
   - asset: ETH
     net: testnet
-    url: 'https://ropsten.infura.io/v3'
+    url: 'https://goerli.infura.io/v3'
     auth: '...'
     provider: infura
-    chain_id: 3
-    chain_name: Ethereum (Ropsten)
-    explorer_url: 'https://ropsten.etherscan.io'
+    chain_id: 5
+    chain_name: Ethereum (Goerli)
+    explorer_url: 'https://goerli.etherscan.io'
     decimals: 18
   # EVM with ERC20
   - asset: BNB

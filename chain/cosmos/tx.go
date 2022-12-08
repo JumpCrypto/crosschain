@@ -34,27 +34,31 @@ func (tx Tx) Hash() xc.TxHash {
 	return xc.TxHash(hex.EncodeToString(txID))
 }
 
-// Sighash returns the tx payload to sign, aka sighash
-func (tx Tx) Sighash() (xc.TxDataToSign, error) {
+// Sighashes returns the tx payload to sign, aka sighash
+func (tx Tx) Sighashes() ([]xc.TxDataToSign, error) {
 	if tx.TxDataToSign == nil {
 		return nil, errors.New("transaction not initialized")
 	}
-	return xc.TxDataToSign(tx.TxDataToSign), nil
+	return []xc.TxDataToSign{tx.TxDataToSign}, nil
 }
 
-// AddSignature adds a signature to Tx
-func (tx Tx) AddSignature(signature xc.TxSignature) error {
+// AddSignatures adds a signature to Tx
+func (tx Tx) AddSignatures(signatures ...xc.TxSignature) error {
 	if tx.SigsV2 == nil || len(tx.SigsV2) < 1 || tx.CosmosTxBuilder == nil {
 		return errors.New("transaction not initialized")
 	}
-	data := tx.SigsV2[0].Data
-	signMode := data.(*signingtypes.SingleSignatureData).SignMode
-	tx.SigsV2[0].Data = &signingtypes.SingleSignatureData{
-		SignMode:  signMode,
-		Signature: signature,
+	if len(signatures) != len(tx.SigsV2) {
+		return errors.New("invalid signatures size")
 	}
-	tx.CosmosTxBuilder.SetSignatures(tx.SigsV2...)
-	return nil
+	for i, signature := range signatures {
+		data := tx.SigsV2[i].Data
+		signMode := data.(*signingtypes.SingleSignatureData).SignMode
+		tx.SigsV2[i].Data = &signingtypes.SingleSignatureData{
+			SignMode:  signMode,
+			Signature: signature,
+		}
+	}
+	return tx.CosmosTxBuilder.SetSignatures(tx.SigsV2...)
 }
 
 // Serialize serializes a Tx

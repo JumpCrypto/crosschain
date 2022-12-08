@@ -41,6 +41,6 @@ type TxSignature []byte
 // Tx is a transaction
 type Tx interface {
 	Hash() TxHash
-	Sighash() (TxDataToSign, error)
-	AddSignature(TxSignature) error
+	Sighashes() ([]TxDataToSign, error)
+	AddSignatures(...TxSignature) error
 }

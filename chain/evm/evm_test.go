@@ -169,17 +169,17 @@ func (s *CrosschainTestSuite) TestTxHash() {
 	require.Equal(xc.TxHash("not implemented"), tx.Hash())
 }
 
-func (s *CrosschainTestSuite) TestTxSighash() {
+func (s *CrosschainTestSuite) TestTxSighashes() {
 	require := s.Require()
 	tx := Tx{}
-	sighash, err := tx.Sighash()
-	require.NotNil(sighash)
+	sighashes, err := tx.Sighashes()
+	require.NotNil(sighashes)
 	require.EqualError(err, "not implemented")
 }
 
 func (s *CrosschainTestSuite) TestTxAddSignature() {
 	require := s.Require()
 	tx := Tx{}
-	err := tx.AddSignature(xc.TxSignature{})
+	err := tx.AddSignatures([]xc.TxSignature{}...)
 	require.EqualError(err, "not implemented")
 }
