@@ -3,8 +3,10 @@ package cosmos
 import (
 	"encoding/hex"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	ethermintCodec "github.com/evmos/ethermint/encoding/codec"
+	xc "github.com/jumpcrypto/crosschain"
 	terraApp "github.com/terra-money/core/app"
 )
 
@@ -77,27 +79,27 @@ func (s *CrosschainTestSuite) TestTxHashErr() {
 	require.Equal("", string(hash))
 }
 
-func (s *CrosschainTestSuite) TestTxSighashErr() {
+func (s *CrosschainTestSuite) TestTxSighashesErr() {
 	require := s.Require()
 
 	tx := Tx{}
-	sighash, err := tx.Sighash()
+	sighashes, err := tx.Sighashes()
 	require.EqualError(err, "transaction not initialized")
-	require.Nil(sighash)
+	require.Nil(sighashes)
 }
 
-func (s *CrosschainTestSuite) TestTxAddSignatureErr() {
+func (s *CrosschainTestSuite) TestTxAddSignaturesErr() {
 	require := s.Require()
 	cosmosCfg := terraApp.MakeEncodingConfig()
 
 	tx := Tx{}
-	err := tx.AddSignature([]byte{})
+	err := tx.AddSignatures([]xc.TxSignature{}...)
 	require.EqualError(err, "transaction not initialized")
 
 	tx = Tx{
 		SigsV2: []signing.SignatureV2{},
 	}
-	err = tx.AddSignature([]byte{})
+	err = tx.AddSignatures([]xc.TxSignature{}...)
 	require.EqualError(err, "transaction not initialized")
 
 	tx = Tx{
@@ -106,31 +108,33 @@ func (s *CrosschainTestSuite) TestTxAddSignatureErr() {
 		},
 		// missing Builder
 	}
-	err = tx.AddSignature([]byte{})
+	err = tx.AddSignatures([]xc.TxSignature{}...)
 	require.EqualError(err, "transaction not initialized")
 
 	tx = Tx{
 		SigsV2: []signing.SignatureV2{
 			{
-				Data: &signing.SingleSignatureData{
-					SignMode:  0,
-					Signature: nil,
-				},
+				PubKey:   &secp256k1.PubKey{},
+				Data:     &signing.SingleSignatureData{SignMode: 0, Signature: nil},
+				Sequence: 0,
 			},
 		},
 		CosmosTxBuilder: cosmosCfg.TxConfig.NewTxBuilder(),
 	}
-	err = tx.AddSignature([]byte{})
-	// require.EqualError(err, "invalid signature (0): ")
+	err = tx.AddSignatures([]xc.TxSignature{}...)
+	require.EqualError(err, "invalid signatures size")
+
+	err = tx.AddSignatures(xc.TxSignature{1, 2, 3})
 	require.Nil(err)
 
-	err = tx.AddSignature([]byte{1, 2, 3})
-	// require.EqualError(err, "invalid signature (3): 010203")
+	err = tx.AddSignatures([]xc.TxSignature{{1, 2, 3}}...)
 	require.Nil(err)
 
 	bytes := make([]byte, 64)
-	err = tx.AddSignature(bytes)
-	// require.EqualError(err, "transaction not initialized")
+	err = tx.AddSignatures(xc.TxSignature(bytes))
+	require.Nil(err)
+
+	err = tx.AddSignatures([]xc.TxSignature{bytes}...)
 	require.Nil(err)
 }
 

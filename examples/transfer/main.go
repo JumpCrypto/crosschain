@@ -46,10 +46,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	sighash, err := tx.Sighash()
+	sighashes, err := tx.Sighashes()
 	if err != nil {
 		panic(err)
 	}
+	sighash := sighashes[0]
 	fmt.Printf("%+v\n", tx)
 	fmt.Printf("signing: %x\n", sighash)
 
@@ -67,7 +68,7 @@ func main() {
 
 	// complete the tx by adding its signature
 	// (no network, no private key needed)
-	err = tx.AddSignature(signature)
+	err = tx.AddSignatures(signature)
 	if err != nil {
 		panic(err)
 	}

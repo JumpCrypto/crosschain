@@ -5,6 +5,7 @@ import (
 
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	xc "github.com/jumpcrypto/crosschain"
 )
 
 func (s *CrosschainTestSuite) TestTx() {
@@ -110,14 +111,14 @@ func (s *CrosschainTestSuite) TestTx() {
 		require.Equal(v.ata, string(tx.ToAlt()))
 		require.Equal(v.recentBlockhash, string(tx.RecentBlockhash()))
 
-		// sighash
-		sighash, err := tx.Sighash()
+		// sighashes
+		sighashes, err := tx.Sighashes()
 		if v.hash == "" {
 			require.EqualError(err, "transaction not initialized")
 			require.Nil(tx.SolTx)
 		} else {
 			require.Nil(err)
-			require.Equal(v.sighash, hex.EncodeToString(sighash))
+			require.Equal(v.sighash, hex.EncodeToString(sighashes[0]))
 
 			// remove signature
 			require.Equal(1, len(tx.SolTx.Signatures))
@@ -127,7 +128,7 @@ func (s *CrosschainTestSuite) TestTx() {
 			require.Equal("", string(tx.Hash()))
 
 			// readd signature
-			err = tx.AddSignature(sig)
+			err = tx.AddSignatures(sig)
 			require.Nil(err)
 			require.Equal(v.hash, string(tx.Hash()))
 
@@ -147,28 +148,41 @@ func (s *CrosschainTestSuite) TestTxHashErr() {
 	require.Equal("", string(hash))
 }
 
-func (s *CrosschainTestSuite) TestTxSighashErr() {
+func (s *CrosschainTestSuite) TestTxSighashesErr() {
 	require := s.Require()
 
 	tx := Tx{}
-	sighash, err := tx.Sighash()
+	sighashes, err := tx.Sighashes()
 	require.EqualError(err, "transaction not initialized")
-	require.Nil(sighash)
+	require.Nil(sighashes)
 }
 
 func (s *CrosschainTestSuite) TestTxAddSignatureErr() {
 	require := s.Require()
 
 	tx := Tx{}
-	err := tx.AddSignature([]byte{})
-	require.EqualError(err, "invalid signature (0): ")
+	err := tx.AddSignatures([]xc.TxSignature{}...)
+	require.EqualError(err, "transaction not initialized")
 
-	err = tx.AddSignature([]byte{1, 2, 3})
-	require.EqualError(err, "invalid signature (3): 010203")
+	err = tx.AddSignatures([]xc.TxSignature{{1, 2, 3}}...)
+	require.EqualError(err, "transaction not initialized")
 
 	bytes := make([]byte, 64)
-	err = tx.AddSignature(bytes)
+	err = tx.AddSignatures([]xc.TxSignature{bytes}...)
 	require.EqualError(err, "transaction not initialized")
+
+	tx = Tx{SolTx: &solana.Transaction{}}
+	err = tx.AddSignatures([]xc.TxSignature{{1, 2, 3}}...)
+	require.EqualError(err, "invalid signature (3): 010203")
+
+	bytes = make([]byte, 64)
+	err = tx.AddSignatures([]xc.TxSignature{bytes}...)
+	require.Nil(err)
+	require.Equal(1, len(tx.SolTx.Signatures))
+
+	err = tx.AddSignatures([]xc.TxSignature{}...)
+	require.Nil(err)
+	require.Equal(0, len(tx.SolTx.Signatures))
 }
 
 func (s *CrosschainTestSuite) TestTxSerialize() {

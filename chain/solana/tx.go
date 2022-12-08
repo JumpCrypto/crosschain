@@ -29,8 +29,8 @@ func (tx Tx) Hash() xc.TxHash {
 	return xc.TxHash("")
 }
 
-// Sighash returns the tx payload to sign, aka sighash
-func (tx Tx) Sighash() (xc.TxDataToSign, error) {
+// Sighashes returns the tx payload to sign, aka sighashes
+func (tx Tx) Sighashes() ([]xc.TxDataToSign, error) {
 	if tx.SolTx == nil {
 		return nil, errors.New("transaction not initialized")
 	}
@@ -38,20 +38,22 @@ func (tx Tx) Sighash() (xc.TxDataToSign, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to encode message for signing: %w", err)
 	}
-	return xc.TxDataToSign(messageContent), nil
+	return []xc.TxDataToSign{messageContent}, nil
 }
 
-// AddSignature adds a signature to Tx
-func (tx Tx) AddSignature(signature xc.TxSignature) error {
-	if len(signature) != solana.SignatureLength {
-		return fmt.Errorf("invalid signature (%d): %x", len(signature), signature)
-	}
+// AddSignatures adds a signature to Tx
+func (tx Tx) AddSignatures(signatures ...xc.TxSignature) error {
 	if tx.SolTx == nil {
 		return errors.New("transaction not initialized")
 	}
-	buffer := [solana.SignatureLength]byte{}
-	copy(buffer[:], signature)
-	tx.SolTx.Signatures = append(tx.SolTx.Signatures, buffer)
+	solSignatures := make([]solana.Signature, len(signatures))
+	for i, signature := range signatures {
+		if len(signature) != solana.SignatureLength {
+			return fmt.Errorf("invalid signature (%d): %x", len(signature), signature)
+		}
+		copy(solSignatures[i][:], signature)
+	}
+	tx.SolTx.Signatures = solSignatures
 	return nil
 }
 

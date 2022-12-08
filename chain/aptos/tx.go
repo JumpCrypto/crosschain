@@ -15,12 +15,12 @@ func (tx Tx) Hash() xc.TxHash {
 	return xc.TxHash("not implemented")
 }
 
-// Sighash returns the tx payload to sign, aka sighash
-func (tx Tx) Sighash() (xc.TxDataToSign, error) {
-	return xc.TxDataToSign{}, errors.New("not implemented")
+// Sighashes returns the tx payload to sign, aka sighash
+func (tx Tx) Sighashes() ([]xc.TxDataToSign, error) {
+	return []xc.TxDataToSign{}, errors.New("not implemented")
 }
 
-// AddSignature adds a signature to Tx
-func (tx Tx) AddSignature(xc.TxSignature) error {
+// AddSignatures adds a signature to Tx
+func (tx Tx) AddSignatures(...xc.TxSignature) error {
 	return errors.New("not implemented")
 }
