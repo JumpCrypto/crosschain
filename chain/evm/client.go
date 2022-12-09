@@ -13,7 +13,6 @@ type Client struct {
 
 // TxInput for EVM
 type TxInput struct {
-	xc.TxInput
 }
 
 // NewClient returns a new EVM Client

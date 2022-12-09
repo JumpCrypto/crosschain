@@ -23,6 +23,11 @@ func (amount AmountBlockchain) Uint64() uint64 {
 	return bigInt.Uint64()
 }
 
+// Cmp compares amount with other, via the underlying big.Int.Cmp()
+func (amount *AmountBlockchain) Cmp(other AmountBlockchain) int {
+	return (*big.Int)(amount).Cmp((*big.Int)(&other))
+}
+
 // NewAmountBlockchainFromUint64 creates a new AmountBlockchain from a uint64
 func NewAmountBlockchainFromUint64(u64 uint64) AmountBlockchain {
 	bigInt := new(big.Int).SetUint64(u64)

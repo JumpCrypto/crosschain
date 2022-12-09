@@ -124,6 +124,19 @@ func (native NativeAsset) ChainType() ChainType {
 	}
 }
 
+// Driver is the type of a chain
+type Driver string
+
+// List of supported Driver
+const (
+	DriverAptos     = Driver("aptos")
+	DriverBitcoin   = Driver("bitcoin")
+	DriverCosmos    = Driver("cosmos")
+	DriverEVM       = Driver("evm")
+	DriverEVMLegacy = Driver("evm-legacy")
+	DriverSolana    = Driver("solana")
+)
+
 // AssetID is an internal identifier for each asset
 // Examples: ETH, USDC, USDC.SOL - see tests for details
 type AssetID string

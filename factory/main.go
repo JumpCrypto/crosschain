@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -24,6 +25,9 @@ type FactoryContext interface {
 	NewTxBuilder(asset AssetConfig) (TxBuilder, error)
 	NewSigner(asset AssetConfig) (Signer, error)
 	NewAddressBuilder(asset AssetConfig) (AddressBuilder, error)
+
+	MarshalTxInput(input TxInput) ([]byte, error)
+	UnmarshalTxInput(data []byte) (TxInput, error)
 
 	GetAddressFromPublicKey(asset AssetConfig, publicKey []byte) (Address, error)
 	GetAllPossibleAddressesFromPublicKey(asset AssetConfig, publicKey []byte) ([]PossibleAddress, error)
@@ -143,6 +147,16 @@ func (f *Factory) NewSigner(cfg AssetConfig) (Signer, error) {
 // NewAddressBuilder creates a new AddressBuilder
 func (f *Factory) NewAddressBuilder(cfg AssetConfig) (AddressBuilder, error) {
 	return newAddressBuilder(cfg)
+}
+
+// MarshalTxInput marshalls a TxInput struct
+func (f *Factory) MarshalTxInput(input TxInput) ([]byte, error) {
+	return marshalTxInput(input)
+}
+
+// UnmarshalTxInput unmarshalls data into a TxInput struct
+func (f *Factory) UnmarshalTxInput(data []byte) (TxInput, error) {
+	return unmarshalTxInput(data)
 }
 
 // GetAddressFromPublicKey returns an Address given a public key
@@ -351,6 +365,39 @@ func newAddressBuilder(cfg AssetConfig) (AddressBuilder, error) {
 		return aptos.NewAddressBuilder(cfg)
 	}
 	return nil, errors.New("unsupported asset")
+}
+
+func marshalTxInput(txInput TxInput) ([]byte, error) {
+	return json.Marshal(txInput)
+}
+
+func unmarshalTxInput(data []byte) (TxInput, error) {
+	var env TxInputEnvelope
+	buf := []byte(data)
+	err := json.Unmarshal(buf, &env)
+	if err != nil {
+		return nil, err
+	}
+	switch env.Type {
+	case DriverAptos:
+		var txInput aptos.TxInput
+		err := json.Unmarshal(buf, &txInput)
+		return &txInput, err
+	case DriverCosmos:
+		var txInput cosmos.TxInput
+		err := json.Unmarshal(buf, &txInput)
+		return &txInput, err
+	case DriverEVM, DriverEVMLegacy:
+		var txInput evm.TxInput
+		err := json.Unmarshal(buf, &txInput)
+		return &txInput, err
+	case DriverSolana:
+		var txInput solana.TxInput
+		err := json.Unmarshal(buf, &txInput)
+		return &txInput, err
+	default:
+		return nil, fmt.Errorf("invalid TxInput type: %s", env.Type)
+	}
 }
 
 func getAddressFromPublicKey(cfg AssetConfig, publicKey []byte) (Address, error) {

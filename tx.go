@@ -4,6 +4,16 @@ package crosschain
 type TxInput interface {
 }
 
+type TxInputEnvelope struct {
+	Type Driver `json:"type"`
+}
+
+func NewTxInputEnvelope(envType Driver) *TxInputEnvelope {
+	return &TxInputEnvelope{
+		Type: envType,
+	}
+}
+
 // TxStatus is the status of a tx on chain, currently success or failure.
 type TxStatus uint8
 

@@ -8,15 +8,22 @@ import (
 	xc "github.com/jumpcrypto/crosschain"
 )
 
+// TxInput for Aptos
+type TxInput struct {
+	xc.TxInputEnvelope
+}
+
+// NewTxInput returns a new Aptos TxInput
+func NewTxInput() *TxInput {
+	return &TxInput{
+		TxInputEnvelope: *xc.NewTxInputEnvelope(xc.DriverAptos),
+	}
+}
+
 // Client for Aptos
 type Client struct {
 	Asset       xc.AssetConfig
 	AptosClient *aptosclient.RestClient
-}
-
-// TxInput for Aptos
-type TxInput struct {
-	xc.TxInput
 }
 
 // NewClient returns a new Aptos Client

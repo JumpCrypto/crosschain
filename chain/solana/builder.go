@@ -13,7 +13,6 @@ import (
 
 // TxBuilder for Solana
 type TxBuilder struct {
-	xc.TxBuilder
 	Asset xc.AssetConfig
 }
 

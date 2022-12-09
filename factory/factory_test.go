@@ -3,7 +3,10 @@ package factory
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	xc "github.com/jumpcrypto/crosschain"
+	"github.com/jumpcrypto/crosschain/chain/cosmos"
+	"github.com/jumpcrypto/crosschain/chain/solana"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/suite"
 )
@@ -211,16 +214,16 @@ func (s *CrosschainTestSuite) TestConvertAmountStrToBlockchain() {
 		amount, err := s.Factory.ConvertAmountStrToBlockchain(asset, "10.3")
 
 		if asset.Decimals == 6 {
-			expected = xc.NewAmountBlockchainFromUint64(10300000)
+			expected = xc.NewAmountBlockchainFromUint64(10_300_000)
 		}
 		if asset.Decimals == 9 {
-			expected = xc.NewAmountBlockchainFromUint64(10300000000)
+			expected = xc.NewAmountBlockchainFromUint64(10_300_000_000)
 		}
 		if asset.Decimals == 12 {
-			expected = xc.NewAmountBlockchainFromUint64(10300000000 * 1000)
+			expected = xc.NewAmountBlockchainFromUint64(10_300_000_000_000)
 		}
 		if asset.Decimals == 18 {
-			expected = xc.NewAmountBlockchainFromUint64(10300000000 * 1000000000)
+			expected = xc.NewAmountBlockchainFromUint64(10_300_000_000_000_000_000)
 		}
 
 		require.Nil(err)
@@ -235,8 +238,13 @@ func (s *CrosschainTestSuite) TestConvertAmountStrToBlockchain() {
 func (s *CrosschainTestSuite) TestConvertAmountStrToBlockchainErr() {
 	require := s.Require()
 	for _, asset := range s.TestAssetConfigs {
-		_, err := s.Factory.ConvertAmountStrToBlockchain(asset, "err")
+		amount, err := s.Factory.ConvertAmountStrToBlockchain(asset, "")
+		require.EqualError(err, "can't convert  to decimal")
+		require.Equal(xc.NewAmountBlockchainFromUint64(0), amount)
+
+		_, err = s.Factory.ConvertAmountStrToBlockchain(asset, "err")
 		require.EqualError(err, "can't convert err to decimal: exponent is not numeric")
+		require.Equal(xc.NewAmountBlockchainFromUint64(0), amount)
 	}
 }
 
@@ -344,4 +352,45 @@ func (s *CrosschainTestSuite) TestConfig() {
 	require := s.Require()
 	cfg := s.Factory.Config()
 	require.NotNil(cfg)
+}
+
+func (s *CrosschainTestSuite) TestTxInputSerDeser() {
+	require := s.Require()
+
+	// Solana
+	inputSolana := solana.NewTxInput()
+	inputSolana.RecentBlockHash = [32]byte{1, 2, 3}
+	inputSolana.ToIsATA = true
+	inputSolana.ShouldCreateATA = true
+	ser, err := s.Factory.MarshalTxInput(inputSolana)
+	require.Nil(err)
+
+	deser, err := s.Factory.UnmarshalTxInput(ser)
+	require.Nil(err)
+	typedSolana := deser.(*solana.TxInput)
+	require.NotNil(typedSolana)
+	require.Equal(inputSolana, typedSolana)
+
+	// Cosmos
+	inputCosmos := cosmos.NewTxInput()
+	inputCosmos.FromAddress = "from"
+	inputCosmos.FromPublicKey = &secp256k1.PubKey{
+		Key: []byte{1, 2, 3},
+	}
+	inputCosmos.AccountNumber = 1
+	inputCosmos.Sequence = 2
+	inputCosmos.GasLimit = 3
+	inputCosmos.GasPrice = 4.5
+	inputCosmos.Memo = "memo"
+	ser, err = s.Factory.MarshalTxInput(inputCosmos)
+	require.Nil(err)
+
+	deser, err = s.Factory.UnmarshalTxInput(ser)
+	require.Nil(err)
+	typedCosmos := deser.(*cosmos.TxInput)
+	require.NotNil(typedCosmos)
+	expected := inputCosmos
+	// note: FromPublicKey is not serialized
+	expected.FromPublicKey = nil
+	require.Equal(expected, typedCosmos)
 }

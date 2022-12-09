@@ -8,7 +8,6 @@ import (
 
 // TxBuilder for EVM
 type TxBuilder struct {
-	xc.TxBuilder
 	Asset xc.AssetConfig
 }
 
