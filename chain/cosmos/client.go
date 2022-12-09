@@ -26,23 +26,30 @@ import (
 	wasmtypes "github.com/terra-money/core/x/wasm/types"
 )
 
-// Client for Cosmos
-type Client struct {
-	Asset  xc.AssetConfig
-	Ctx    client.Context
-	Prefix string
-}
-
 // TxInput for Cosmos
 type TxInput struct {
-	xc.TxInput
+	xc.TxInputEnvelope
 	FromAddress   string
-	FromPublicKey cryptotypes.PubKey
+	FromPublicKey cryptotypes.PubKey `json:"-"`
 	AccountNumber uint64
 	Sequence      uint64
 	GasLimit      uint64
 	GasPrice      float64
 	Memo          string
+}
+
+// NewTxInput returns a new Cosmos TxInput
+func NewTxInput() *TxInput {
+	return &TxInput{
+		TxInputEnvelope: *xc.NewTxInputEnvelope(xc.DriverCosmos),
+	}
+}
+
+// Client for Cosmos
+type Client struct {
+	Asset  xc.AssetConfig
+	Ctx    client.Context
+	Prefix string
 }
 
 // NewClient returns a new Client

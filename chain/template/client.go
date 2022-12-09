@@ -13,7 +13,6 @@ type Client struct {
 
 // TxInput for Template
 type TxInput struct {
-	xc.TxInput
 }
 
 // NewClient returns a new Template Client

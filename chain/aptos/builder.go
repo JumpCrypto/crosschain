@@ -8,7 +8,6 @@ import (
 
 // TxBuilder for Template
 type TxBuilder struct {
-	xc.TxBuilder
 	Asset xc.AssetConfig
 }
 

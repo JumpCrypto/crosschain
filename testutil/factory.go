@@ -51,6 +51,16 @@ func (f *TestFactory) NewAddressBuilder(asset xc.AssetConfig) (xc.AddressBuilder
 
 }
 
+// MarshalTxInput marshalls a TxInput struct
+func (f *TestFactory) MarshalTxInput(input xc.TxInput) ([]byte, error) {
+	return f.DefaultFactory.MarshalTxInput(input)
+}
+
+// UnmarshalTxInput unmarshalls data into a TxInput struct
+func (f *TestFactory) UnmarshalTxInput(data []byte) (xc.TxInput, error) {
+	return f.DefaultFactory.UnmarshalTxInput(data)
+}
+
 // GetAddressFromPublicKey returns an Address given a public key
 func (f *TestFactory) GetAddressFromPublicKey(asset xc.AssetConfig, publicKey []byte) (xc.Address, error) {
 	if f.GetAddressFromPublicKeyFunc != nil {

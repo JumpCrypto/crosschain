@@ -15,18 +15,25 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 )
 
+// TxInput for Solana
+type TxInput struct {
+	xc.TxInputEnvelope
+	RecentBlockHash solana.Hash
+	ToIsATA         bool
+	ShouldCreateATA bool
+}
+
+// NewTxInput returns a new Solana TxInput
+func NewTxInput() *TxInput {
+	return &TxInput{
+		TxInputEnvelope: *xc.NewTxInputEnvelope(xc.DriverSolana),
+	}
+}
+
 // Client for Solana
 type Client struct {
 	SolClient *rpc.Client
 	Asset     xc.AssetConfig
-}
-
-// TxInput for Solana
-type TxInput struct {
-	xc.TxInput
-	RecentBlockHash solana.Hash
-	ToIsATA         bool
-	ShouldCreateATA bool
 }
 
 // NewClient returns a new JSON-RPC Client to the Solana node
@@ -40,7 +47,7 @@ func NewClient(asset xc.AssetConfig) (*Client, error) {
 
 // FetchTxInput returns tx input for a Solana tx, namely a RecentBlockHash
 func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.Address) (xc.TxInput, error) {
-	txInput := &TxInput{}
+	txInput := NewTxInput()
 	asset := client.Asset
 
 	// get recent block hash (i.e. nonce)
