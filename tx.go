@@ -48,6 +48,15 @@ type TxDataToSign []byte
 // TxSignature is a tx signature
 type TxSignature []byte
 
+// NewTxSignatures creates a new array of TxSignature, useful to cast [][]byte into []TxSignature
+func NewTxSignatures(data [][]byte) []TxSignature {
+	ret := make([]TxSignature, len(data))
+	for i, sig := range data {
+		ret[i] = TxSignature(sig)
+	}
+	return ret
+}
+
 // Tx is a transaction
 type Tx interface {
 	Hash() TxHash
