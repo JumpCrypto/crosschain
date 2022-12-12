@@ -3,7 +3,6 @@ package factory
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	xc "github.com/jumpcrypto/crosschain"
 	"github.com/jumpcrypto/crosschain/chain/cosmos"
 	"github.com/jumpcrypto/crosschain/chain/solana"
@@ -373,10 +372,7 @@ func (s *CrosschainTestSuite) TestTxInputSerDeser() {
 
 	// Cosmos
 	inputCosmos := cosmos.NewTxInput()
-	inputCosmos.Chain = xc.LUNA
-	inputCosmos.FromPublicKey = &secp256k1.PubKey{
-		Key: []byte{1, 2, 3},
-	}
+	inputCosmos.FromPublicKey = []byte{1, 2, 3}
 	inputCosmos.AccountNumber = 1
 	inputCosmos.Sequence = 2
 	inputCosmos.GasLimit = 3
@@ -390,7 +386,5 @@ func (s *CrosschainTestSuite) TestTxInputSerDeser() {
 	typedCosmos := deser.(*cosmos.TxInput)
 	require.NotNil(typedCosmos)
 	expected := inputCosmos
-	// note: FromPublicKey is not serialized
-	expected.FromPublicKey = nil
 	require.Equal(expected, typedCosmos)
 }

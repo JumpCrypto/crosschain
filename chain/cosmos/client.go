@@ -16,7 +16,6 @@ import (
 	xc "github.com/jumpcrypto/crosschain"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -29,17 +28,16 @@ import (
 // TxInput for Cosmos
 type TxInput struct {
 	xc.TxInputEnvelope
-	Chain         xc.NativeAsset
 	AccountNumber uint64
 	Sequence      uint64
 	GasLimit      uint64
 	GasPrice      float64
 	Memo          string
-	FromPublicKey cryptotypes.PubKey `json:"-"`
+	FromPublicKey []byte
 }
 
 func (txInput *TxInput) SetPublicKey(publicKeyBytes xc.PublicKey) error {
-	txInput.FromPublicKey = getPublicKey(txInput.Chain, publicKeyBytes)
+	txInput.FromPublicKey = publicKeyBytes
 	return nil
 }
 
@@ -129,7 +127,6 @@ func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 // FetchTxInput returns tx input for a Cosmos tx
 func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Address) (xc.TxInput, error) {
 	txInput := NewTxInput()
-	txInput.Chain = client.Asset.NativeAsset
 
 	account, err := client.GetAccount(ctx, from)
 	if err != nil || account == nil {
@@ -183,6 +180,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	if err != nil {
 		return result, err
 	}
+	log.Println(resultRaw)
 
 	blockResultRaw, err := client.Ctx.Client.Block(ctx, &resultRaw.Height)
 	if err != nil {
@@ -279,8 +277,8 @@ func (client *Client) estimateGasFcd(ctx context.Context) (float64, error) {
 		return 0, err
 	}
 
-	// add 20% premium for reliability
-	return gasPrice * 1.2, nil
+	// add 12x premium for reliability
+	return gasPrice * 12.0, nil
 }
 
 // EstimateGas estimates gas price for a Cosmos chain
