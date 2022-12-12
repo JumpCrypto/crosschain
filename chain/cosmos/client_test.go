@@ -24,131 +24,166 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	require := s.Require()
 
 	vectors := []struct {
-		asset   xc.AssetConfig
-		from    string
-		to      string
-		resp    interface{}
-		respGas interface{}
-		txInput TxInput
-		err     string
+		asset     xc.AssetConfig
+		from      string
+		pubKeyStr string
+		to        string
+		resp      interface{}
+		respGas   interface{}
+		txInput   *TxInput
+		err       string
 	}{
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
 			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`{"jsonrpc":"2.0","id":0,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"CqABCiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBJ8Cix0ZXJyYTFkcDNxMzA1aGd0dHQ4bjM0cnQ4cmc5eHBhbmM0Mno0eWU3dXBmZxJGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQL89yTJff+sICHvoYGML+87y7dTyiKROo21557Eo97g0RjZhgEgAw==","proofOps":null,"height":"2803726","codespace":""}}}`,
 			`{"uluna": "0.015"}`,
-			TxInput{
-				FromAddress:   "terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
-				FromPublicKey: &secp256k1.PubKey{Key: ignoreError(base64.StdEncoding.DecodeString("Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR"))},
-				AccountNumber: 17241,
-				Sequence:      3,
-				GasLimit:      0,
-				GasPrice:      0.018,
-				Memo:          "",
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+				FromPublicKey:   &secp256k1.PubKey{Key: ignoreError(base64.StdEncoding.DecodeString("Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR"))},
+				AccountNumber:   17241,
+				Sequence:        3,
+				GasLimit:        0,
+				GasPrice:        0.018,
+				Memo:            "",
 			},
 			"",
 		},
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.XPLA, ChainCoin: "axpla", ChainPrefix: "xpla"},
+			"xpla1hdvf6vv5amc7wp84js0ls27apekwxpr0ge96kg",
 			"AreNsVEsIEpsORnscZlxzo7Xha4JRK0a7v6rJwPR5U0C",
 			"xpla1a8f3wnn7qwvwdzxkc9w849kfzhrr6gdvy4c8wv",
 			`{"jsonrpc":"2.0","id":0,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"CqgBCiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBKDAQoreHBsYTFoZHZmNnZ2NWFtYzd3cDg0anMwbHMyN2FwZWt3eHByMGdlOTZrZxJPCigvZXRoZXJtaW50LmNyeXB0by52MS5ldGhzZWNwMjU2azEuUHViS2V5EiMKIQK3jbFRLCBKbDkZ7HGZcc6O14WuCUStGu7+qycD0eVNAhiiCyAE","proofOps":null,"height":"1359950","codespace":""}}}`,
 			`{"axpla":"850000000000"}`,
-			TxInput{
-				FromAddress:   "xpla1hdvf6vv5amc7wp84js0ls27apekwxpr0ge96kg",
-				FromPublicKey: &ethsecp256k1.PubKey{Key: ignoreError(base64.StdEncoding.DecodeString("AreNsVEsIEpsORnscZlxzo7Xha4JRK0a7v6rJwPR5U0C"))},
-				AccountNumber: 1442,
-				Sequence:      4,
-				GasLimit:      0,
-				GasPrice:      1.02e12,
-				Memo:          "",
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.XPLA,
+				FromPublicKey:   &ethsecp256k1.PubKey{Key: ignoreError(base64.StdEncoding.DecodeString("AreNsVEsIEpsORnscZlxzo7Xha4JRK0a7v6rJwPR5U0C"))},
+				AccountNumber:   1442,
+				Sequence:        4,
+				GasLimit:        0,
+				GasPrice:        1.02e12,
+				Memo:            "",
 			},
 			"",
 		},
 		// error getting account from RPC
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			"",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			``,
 			`{"uluna": "0.015"}`,
-			TxInput{},
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+			},
 			"failed to get account data",
 		},
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			"",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`null`,
 			`{"uluna": "0.015"}`,
-			TxInput{},
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+			},
 			"failed to get account data",
 		},
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			"",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`{}`,
 			`{"uluna": "0.015"}`,
-			TxInput{},
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+			},
 			"failed to get account data",
 		},
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			"",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			errors.New(`{"message": "custom RPC error", "code": 123}`),
 			`{"uluna": "0.015"}`,
-			TxInput{},
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+			},
 			"failed to get account data",
 		},
 		// error getting gas
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			"",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`{"jsonrpc":"2.0","id":0,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"CqABCiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBJ8Cix0ZXJyYTFkcDNxMzA1aGd0dHQ4bjM0cnQ4cmc5eHBhbmM0Mno0eWU3dXBmZxJGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQL89yTJff+sICHvoYGML+87y7dTyiKROo21557Eo97g0RjZhgEgAw==","proofOps":null,"height":"2803726","codespace":""}}}`,
 			``,
-			TxInput{},
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+				AccountNumber:   17241,
+				Sequence:        3,
+			},
 			"failed to estimate gas",
 		},
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			"",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`{"jsonrpc":"2.0","id":0,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"CqABCiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBJ8Cix0ZXJyYTFkcDNxMzA1aGd0dHQ4bjM0cnQ4cmc5eHBhbmM0Mno0eWU3dXBmZxJGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQL89yTJff+sICHvoYGML+87y7dTyiKROo21557Eo97g0RjZhgEgAw==","proofOps":null,"height":"2803726","codespace":""}}}`,
 			`null`,
-			TxInput{},
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+				AccountNumber:   17241,
+				Sequence:        3,
+			},
 			"failed to estimate gas",
 		},
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			"",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`{"jsonrpc":"2.0","id":0,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"CqABCiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBJ8Cix0ZXJyYTFkcDNxMzA1aGd0dHQ4bjM0cnQ4cmc5eHBhbmM0Mno0eWU3dXBmZxJGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQL89yTJff+sICHvoYGML+87y7dTyiKROo21557Eo97g0RjZhgEgAw==","proofOps":null,"height":"2803726","codespace":""}}}`,
 			`{}`,
-			TxInput{},
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+				AccountNumber:   17241,
+				Sequence:        3,
+			},
 			"failed to estimate gas",
 		},
 		{
 			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR",
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			"",
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`{"jsonrpc":"2.0","id":0,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"CqABCiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBJ8Cix0ZXJyYTFkcDNxMzA1aGd0dHQ4bjM0cnQ4cmc5eHBhbmM0Mno0eWU3dXBmZxJGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQL89yTJff+sICHvoYGML+87y7dTyiKROo21557Eo97g0RjZhgEgAw==","proofOps":null,"height":"2803726","codespace":""}}}`,
 			errors.New(`{"message": "custom HTTP error", "code": 123}`),
-			TxInput{},
+			&TxInput{
+				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
+				Chain:           xc.LUNA,
+				AccountNumber:   17241,
+				Sequence:        3,
+			},
 			"failed to estimate gas",
-		},
-		// error parsing pub key
-		{
-			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: xc.LUNA, ChainCoin: "uluna", ChainPrefix: "terra"},
-			"Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3u",
-			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
-			`{"jsonrpc":"2.0","id":0,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"CqABCiAvY29zbW9zLmF1dGgudjFiZXRhMS5CYXNlQWNjb3VudBJ8Cix0ZXJyYTFkcDNxMzA1aGd0dHQ4bjM0cnQ4cmc5eHBhbmM0Mno0eWU3dXBmZxJGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQL89yTJff+sICHvoYGML+87y7dTyiKROo21557Eo97g0RjZhgEgAw==","proofOps":null,"height":"2803726","codespace":""}}}`,
-			`{"uluna": "0.015"}`,
-			TxInput{},
-			"invalid public key",
 		},
 	}
 
@@ -166,11 +201,16 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 		input, err := client.FetchTxInput(s.Ctx, from, to)
 
 		if v.err != "" {
-			require.Nil(input)
+			require.Equal(v.txInput, input)
 			require.ErrorContains(err, v.err)
 		} else {
 			require.Nil(err)
 			require.NotNil(input)
+
+			if v.pubKeyStr != "" {
+				input.(xc.TxInputWithPublicKey).SetPublicKeyFromStr(v.pubKeyStr)
+			}
+
 			require.Equal(v.txInput, input)
 		}
 	}

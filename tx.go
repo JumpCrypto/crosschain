@@ -4,6 +4,13 @@ package crosschain
 type TxInput interface {
 }
 
+// TxInputWithPublicKey is input data to a tx for chains that need to explicitly set the public key, e.g. Cosmos
+type TxInputWithPublicKey interface {
+	TxInput
+	SetPublicKey(PublicKey) error
+	SetPublicKeyFromStr(string) error
+}
+
 type TxInputEnvelope struct {
 	Type Driver `json:"type"`
 }

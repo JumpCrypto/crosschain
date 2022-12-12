@@ -48,7 +48,7 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 
 // NewNativeTransfer creates a new transfer for a native asset
 func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
-	txInput := input.(TxInput)
+	txInput := input.(*TxInput)
 	asset := txBuilder.Asset
 	amountInt := big.Int(amount)
 
@@ -57,7 +57,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 	}
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: txInput.FromAddress,
+		FromAddress: string(from),
 		ToAddress:   string(to),
 		Amount: types.Coins{
 			{
@@ -72,7 +72,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 
 // NewTokenTransfer creates a new transfer for a token asset
 func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
-	txInput := input.(TxInput)
+	txInput := input.(*TxInput)
 	asset := txBuilder.Asset
 
 	// Terra Classic: most tokens are actually native tokens
@@ -88,7 +88,7 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 
 	contractTransferMsg := fmt.Sprintf(`{"transfer": {"amount": "%s", "recipient": "%s"}}`, amount.String(), to)
 	msgSend := &wasmtypes.MsgExecuteContract{
-		Sender:     txInput.FromAddress,
+		Sender:     string(from),
 		Contract:   asset.Contract,
 		ExecuteMsg: json.RawMessage(contractTransferMsg),
 	}
@@ -115,7 +115,7 @@ func accAddressFromBech32WithPrefix(address string, prefix string) ([]byte, erro
 }
 
 // createTxWithMsg creates a new Tx given Cosmos Msg
-func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input TxInput, msg types.Msg) (xc.Tx, error) {
+func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input *TxInput, msg types.Msg) (xc.Tx, error) {
 	asset := txBuilder.Asset
 	cosmosTxConfig := txBuilder.CosmosTxConfig
 	cosmosBuilder := txBuilder.CosmosTxBuilder
@@ -125,7 +125,7 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 		return nil, err
 	}
 
-	_, err = accAddressFromBech32WithPrefix(input.FromAddress, asset.ChainPrefix)
+	_, err = accAddressFromBech32WithPrefix(string(from), asset.ChainPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -176,6 +176,6 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 		CosmosTxBuilder: cosmosBuilder,
 		CosmosTxEncoder: cosmosTxConfig.TxEncoder(),
 		SigsV2:          sigsV2,
-		TxDataToSign:    getSighash(asset, sighashData),
+		TxDataToSign:    getSighash(asset.NativeAsset, sighashData),
 	}, nil
 }

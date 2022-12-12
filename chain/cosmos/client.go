@@ -29,13 +29,26 @@ import (
 // TxInput for Cosmos
 type TxInput struct {
 	xc.TxInputEnvelope
-	FromAddress   string
-	FromPublicKey cryptotypes.PubKey `json:"-"`
+	Chain         xc.NativeAsset
 	AccountNumber uint64
 	Sequence      uint64
 	GasLimit      uint64
 	GasPrice      float64
 	Memo          string
+	FromPublicKey cryptotypes.PubKey `json:"-"`
+}
+
+func (txInput *TxInput) SetPublicKey(publicKeyBytes xc.PublicKey) error {
+	txInput.FromPublicKey = getPublicKey(txInput.Chain, publicKeyBytes)
+	return nil
+}
+
+func (txInput *TxInput) SetPublicKeyFromStr(publicKeyStr string) error {
+	publicKeyBytes, err := base64.StdEncoding.DecodeString(publicKeyStr)
+	if err != nil {
+		return fmt.Errorf("invalid public key %v: %v", publicKeyStr, err)
+	}
+	return txInput.SetPublicKey(publicKeyBytes)
 }
 
 // NewTxInput returns a new Cosmos TxInput
@@ -115,36 +128,23 @@ func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // FetchTxInput returns tx input for a Cosmos tx
 func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Address) (xc.TxInput, error) {
-	asset := client.Asset
+	txInput := NewTxInput()
+	txInput.Chain = client.Asset.NativeAsset
 
-	fromPublicKeyBytes, err := base64.StdEncoding.DecodeString(string(from))
-	if err != nil {
-		return nil, fmt.Errorf("invalid public key %v: %v", from, err)
-	}
-
-	addressBuilder, _ := NewAddressBuilder(asset)
-	fromAddress, err := addressBuilder.GetAddressFromPublicKey(fromPublicKeyBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get address from public key %v: %v", from, err)
-	}
-
-	account, err := client.GetAccount(ctx, xc.Address(fromAddress))
+	account, err := client.GetAccount(ctx, from)
 	if err != nil || account == nil {
-		return nil, fmt.Errorf("failed to get account data for %v: %v", fromAddress, err)
+		return txInput, fmt.Errorf("failed to get account data for %v: %v", from, err)
 	}
+	txInput.AccountNumber = account.GetAccountNumber()
+	txInput.Sequence = account.GetSequence()
 
 	gasPrice, err := client.EstimateGas(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to estimate gas: %v", err)
+		return txInput, fmt.Errorf("failed to estimate gas: %v", err)
 	}
+	txInput.GasPrice = gasPrice
 
-	return TxInput{
-		FromAddress:   string(fromAddress),
-		FromPublicKey: getPublicKey(asset, fromPublicKeyBytes),
-		AccountNumber: account.GetAccountNumber(),
-		Sequence:      account.GetSequence(),
-		GasPrice:      gasPrice,
-	}, nil
+	return txInput, nil
 }
 
 // SubmitTx submits a Cosmos tx
