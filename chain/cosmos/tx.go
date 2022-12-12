@@ -3,7 +3,9 @@ package cosmos
 import (
 	"encoding/hex"
 	"errors"
+	"math/big"
 
+	"github.com/btcsuite/btcd/btcec"
 	xc "github.com/jumpcrypto/crosschain"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -42,6 +44,29 @@ func (tx Tx) Sighashes() ([]xc.TxDataToSign, error) {
 	return []xc.TxDataToSign{tx.TxDataToSign}, nil
 }
 
+func signatureFromBytes(sigStr []byte) *btcec.Signature {
+	return &btcec.Signature{
+		R: new(big.Int).SetBytes(sigStr[:32]),
+		S: new(big.Int).SetBytes(sigStr[32:64]),
+	}
+}
+
+// Serialize signature to R || S.
+// R, S are padded to 32 bytes respectively.
+func serializeSig(sig *btcec.Signature) []byte {
+	rBytes := sig.R.Bytes()
+	sBytes := sig.S.Bytes()
+	sigBytes := make([]byte, 64)
+	// 0 pad the byte arrays from the left if they aren't big enough.
+	copy(sigBytes[32-len(rBytes):32], rBytes)
+	copy(sigBytes[64-len(sBytes):64], sBytes)
+	return sigBytes
+}
+
+func reserializeSig(signature []byte) []byte {
+	return serializeSig(signatureFromBytes(signature))
+}
+
 // AddSignatures adds a signature to Tx
 func (tx Tx) AddSignatures(signatures ...xc.TxSignature) error {
 	if tx.SigsV2 == nil || len(tx.SigsV2) < 1 || tx.CosmosTxBuilder == nil {
@@ -55,7 +80,7 @@ func (tx Tx) AddSignatures(signatures ...xc.TxSignature) error {
 		signMode := data.(*signingtypes.SingleSignatureData).SignMode
 		tx.SigsV2[i].Data = &signingtypes.SingleSignatureData{
 			SignMode:  signMode,
-			Signature: signature,
+			Signature: reserializeSig(signature),
 		}
 	}
 	return tx.CosmosTxBuilder.SetSignatures(tx.SigsV2...)
