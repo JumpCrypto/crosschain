@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	xc "github.com/jumpcrypto/crosschain"
 	"github.com/jumpcrypto/crosschain/test"
 )
@@ -42,8 +40,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			`{"uluna": "0.015"}`,
 			&TxInput{
 				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
-				FromPublicKey:   &secp256k1.PubKey{Key: ignoreError(base64.StdEncoding.DecodeString("Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR"))},
+				FromPublicKey:   ignoreError(base64.StdEncoding.DecodeString("Avz3JMl9/6wgIe+hgYwv7zvLt1PKIpE6jbXnnsSj3uDR")),
 				AccountNumber:   17241,
 				Sequence:        3,
 				GasLimit:        0,
@@ -61,8 +58,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			`{"axpla":"850000000000"}`,
 			&TxInput{
 				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.XPLA,
-				FromPublicKey:   &ethsecp256k1.PubKey{Key: ignoreError(base64.StdEncoding.DecodeString("AreNsVEsIEpsORnscZlxzo7Xha4JRK0a7v6rJwPR5U0C"))},
+				FromPublicKey:   ignoreError(base64.StdEncoding.DecodeString("AreNsVEsIEpsORnscZlxzo7Xha4JRK0a7v6rJwPR5U0C")),
 				AccountNumber:   1442,
 				Sequence:        4,
 				GasLimit:        0,
@@ -79,10 +75,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			``,
 			`{"uluna": "0.015"}`,
-			&TxInput{
-				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
-			},
+			&TxInput{TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"}},
 			"failed to get account data",
 		},
 		{
@@ -92,10 +85,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`null`,
 			`{"uluna": "0.015"}`,
-			&TxInput{
-				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
-			},
+			&TxInput{TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"}},
 			"failed to get account data",
 		},
 		{
@@ -105,10 +95,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			`{}`,
 			`{"uluna": "0.015"}`,
-			&TxInput{
-				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
-			},
+			&TxInput{TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"}},
 			"failed to get account data",
 		},
 		{
@@ -118,10 +105,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 			errors.New(`{"message": "custom RPC error", "code": 123}`),
 			`{"uluna": "0.015"}`,
-			&TxInput{
-				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
-			},
+			&TxInput{TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"}},
 			"failed to get account data",
 		},
 		// error getting gas
@@ -134,7 +118,6 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			``,
 			&TxInput{
 				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
 				AccountNumber:   17241,
 				Sequence:        3,
 			},
@@ -149,7 +132,6 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			`null`,
 			&TxInput{
 				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
 				AccountNumber:   17241,
 				Sequence:        3,
 			},
@@ -164,7 +146,6 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			`{}`,
 			&TxInput{
 				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
 				AccountNumber:   17241,
 				Sequence:        3,
 			},
@@ -179,7 +160,6 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			errors.New(`{"message": "custom HTTP error", "code": 123}`),
 			&TxInput{
 				TxInputEnvelope: xc.TxInputEnvelope{Type: "cosmos"},
-				Chain:           xc.LUNA,
 				AccountNumber:   17241,
 				Sequence:        3,
 			},
