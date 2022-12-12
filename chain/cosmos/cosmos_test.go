@@ -47,36 +47,36 @@ func (s *CrosschainTestSuite) TestIsNativeAsset() {
 
 func (s *CrosschainTestSuite) TestIsEVMOS() {
 	require := s.Require()
-	is := isEVMOS(xc.AssetConfig{})
+	is := isEVMOS(xc.ETH)
 	require.False(is)
 
-	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.ATOM})
+	is = isEVMOS(xc.ATOM)
 	require.False(is)
 
-	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.LUNA})
+	is = isEVMOS(xc.LUNA)
 	require.False(is)
 
-	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.XPLA})
+	is = isEVMOS(xc.XPLA)
 	require.True(is)
 }
 
 func (s *CrosschainTestSuite) TestGetPublicKey() {
 	require := s.Require()
 
-	pubKey := getPublicKey(xc.AssetConfig{NativeAsset: xc.LUNA}, []byte{})
+	pubKey := getPublicKey(xc.LUNA, []byte{})
 	require.Exactly(&secp256k1.PubKey{Key: []byte{}}, pubKey)
 
-	pubKey = getPublicKey(xc.AssetConfig{NativeAsset: xc.XPLA}, []byte{})
+	pubKey = getPublicKey(xc.XPLA, []byte{})
 	require.Exactly(&ethsecp256k1.PubKey{Key: []byte{}}, pubKey)
 }
 
 func (s *CrosschainTestSuite) TestGetSighash() {
 	require := s.Require()
 
-	sighash := getSighash(xc.AssetConfig{NativeAsset: xc.LUNA}, []byte{})
+	sighash := getSighash(xc.LUNA, []byte{})
 	// echo -n '' | openssl dgst -sha256
 	require.Exactly("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", hex.EncodeToString(sighash))
 
-	sighash = getSighash(xc.AssetConfig{NativeAsset: xc.XPLA}, []byte{})
+	sighash = getSighash(xc.XPLA, []byte{})
 	require.Exactly("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", hex.EncodeToString(sighash))
 }

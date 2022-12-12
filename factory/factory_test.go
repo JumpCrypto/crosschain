@@ -373,7 +373,7 @@ func (s *CrosschainTestSuite) TestTxInputSerDeser() {
 
 	// Cosmos
 	inputCosmos := cosmos.NewTxInput()
-	inputCosmos.FromAddress = "from"
+	inputCosmos.Chain = xc.LUNA
 	inputCosmos.FromPublicKey = &secp256k1.PubKey{
 		Key: []byte{1, 2, 3},
 	}
