@@ -47,7 +47,7 @@ func (s *CrosschainTestSuite) TestGetAddressFromPublicKeyErr() {
 
 func (s *CrosschainTestSuite) TestGetAllPossibleAddressesFromPublicKey() {
 	require := s.Require()
-	builder, _ := NewAddressBuilder(xc.AssetConfig{NativeAsset: xc.LUNA, ChainPrefix: "terra"})
+	builder, _ := NewAddressBuilder(xc.AssetConfig{NativeAsset: "LUNA", ChainPrefix: "terra"})
 	bytes, _ := hex.DecodeString("E0651D94176024B0C137C23A782D50291C04C8B5BCEDD4A7CD066BF4C0D21B22")
 	addresses, err := builder.GetAllPossibleAddressesFromPublicKey(bytes)
 	require.Nil(err)

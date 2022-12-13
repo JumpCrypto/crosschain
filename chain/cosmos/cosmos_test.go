@@ -47,19 +47,19 @@ func (s *CrosschainTestSuite) TestIsNativeAsset() {
 
 func (s *CrosschainTestSuite) TestIsEVMOS() {
 	require := s.Require()
-	is := isEVMOS(xc.AssetConfig{NativeAsset: xc.ETH, Driver: string(xc.DriverEVM)})
+	is := isEVMOS(xc.AssetConfig{NativeAsset: "ETH", Driver: string(xc.DriverEVM)})
 	require.False(is)
 
-	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.ATOM, Driver: string(xc.DriverCosmos)})
+	is = isEVMOS(xc.AssetConfig{NativeAsset: "ATOM", Driver: string(xc.DriverCosmos)})
 	require.False(is)
 
-	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.LUNA, Driver: string(xc.DriverCosmos)})
+	is = isEVMOS(xc.AssetConfig{NativeAsset: "LUNA", Driver: string(xc.DriverCosmos)})
 	require.False(is)
 
-	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.XPLA, Driver: string(xc.DriverCosmos)})
+	is = isEVMOS(xc.AssetConfig{NativeAsset: "XPLA", Driver: string(xc.DriverCosmos)})
 	require.False(is)
 
-	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.XPLA, Driver: string(xc.DriverCosmosEvmos)})
+	is = isEVMOS(xc.AssetConfig{NativeAsset: "XPLA", Driver: string(xc.DriverCosmosEvmos)})
 	require.True(is)
 }
 
