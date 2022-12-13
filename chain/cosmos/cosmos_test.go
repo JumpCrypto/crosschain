@@ -47,36 +47,39 @@ func (s *CrosschainTestSuite) TestIsNativeAsset() {
 
 func (s *CrosschainTestSuite) TestIsEVMOS() {
 	require := s.Require()
-	is := isEVMOS(xc.ETH)
+	is := isEVMOS(xc.AssetConfig{NativeAsset: xc.ETH, Driver: string(xc.DriverEVM)})
 	require.False(is)
 
-	is = isEVMOS(xc.ATOM)
+	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.ATOM, Driver: string(xc.DriverCosmos)})
 	require.False(is)
 
-	is = isEVMOS(xc.LUNA)
+	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.LUNA, Driver: string(xc.DriverCosmos)})
 	require.False(is)
 
-	is = isEVMOS(xc.XPLA)
+	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.XPLA, Driver: string(xc.DriverCosmos)})
+	require.False(is)
+
+	is = isEVMOS(xc.AssetConfig{NativeAsset: xc.XPLA, Driver: string(xc.DriverCosmosEvmos)})
 	require.True(is)
 }
 
 func (s *CrosschainTestSuite) TestGetPublicKey() {
 	require := s.Require()
 
-	pubKey := getPublicKey(xc.LUNA, []byte{})
+	pubKey := getPublicKey(xc.AssetConfig{Driver: string(xc.DriverCosmos)}, []byte{})
 	require.Exactly(&secp256k1.PubKey{Key: []byte{}}, pubKey)
 
-	pubKey = getPublicKey(xc.XPLA, []byte{})
+	pubKey = getPublicKey(xc.AssetConfig{Driver: string(xc.DriverCosmosEvmos)}, []byte{})
 	require.Exactly(&ethsecp256k1.PubKey{Key: []byte{}}, pubKey)
 }
 
 func (s *CrosschainTestSuite) TestGetSighash() {
 	require := s.Require()
 
-	sighash := getSighash(xc.LUNA, []byte{})
+	sighash := getSighash(xc.AssetConfig{Driver: string(xc.DriverCosmos)}, []byte{})
 	// echo -n '' | openssl dgst -sha256
 	require.Exactly("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", hex.EncodeToString(sighash))
 
-	sighash = getSighash(xc.XPLA, []byte{})
+	sighash = getSighash(xc.AssetConfig{Driver: string(xc.DriverCosmosEvmos)}, []byte{})
 	require.Exactly("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", hex.EncodeToString(sighash))
 }

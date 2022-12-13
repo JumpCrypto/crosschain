@@ -15,18 +15,18 @@ func isNativeAsset(asset xc.AssetConfig) bool {
 	return asset.Type == xc.AssetTypeNative || len(asset.Contract) < 8
 }
 
-func isEVMOS(asset xc.NativeAsset) bool {
-	return asset == xc.XPLA
+func isEVMOS(asset xc.AssetConfig) bool {
+	return xc.Driver(asset.Driver) == xc.DriverCosmosEvmos
 }
 
-func getPublicKey(asset xc.NativeAsset, publicKeyBytes xc.PublicKey) cryptotypes.PubKey {
+func getPublicKey(asset xc.AssetConfig, publicKeyBytes xc.PublicKey) cryptotypes.PubKey {
 	if isEVMOS(asset) {
 		return &ethsecp256k1.PubKey{Key: publicKeyBytes}
 	}
 	return &secp256k1.PubKey{Key: publicKeyBytes}
 }
 
-func getSighash(asset xc.NativeAsset, sigData []byte) []byte {
+func getSighash(asset xc.AssetConfig, sigData []byte) []byte {
 	if isEVMOS(asset) {
 		return crypto.Keccak256(sigData)
 	}

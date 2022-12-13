@@ -383,7 +383,7 @@ func unmarshalTxInput(data []byte) (TxInput, error) {
 		var txInput aptos.TxInput
 		err := json.Unmarshal(buf, &txInput)
 		return &txInput, err
-	case DriverCosmos:
+	case DriverCosmos, DriverCosmosEvmos:
 		var txInput cosmos.TxInput
 		err := json.Unmarshal(buf, &txInput)
 		return &txInput, err
