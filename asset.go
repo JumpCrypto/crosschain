@@ -24,7 +24,6 @@ const (
 	ACA    = NativeAsset("ACA")    // Acala
 	APTOS  = NativeAsset("APTOS")  // APTOS
 	ArbETH = NativeAsset("ArbETH") // Arbitrum Ether
-	ATOM   = NativeAsset("ATOM")   // Atom (Cosmos)
 	AurETH = NativeAsset("AurETH") // Aurora
 	AVAX   = NativeAsset("AVAX")   // Avalanche
 	BNB    = NativeAsset("BNB")    // Binance Coin
@@ -35,12 +34,10 @@ const (
 	FTM    = NativeAsset("FTM")    // Fantom
 	KAR    = NativeAsset("KAR")    // Karura
 	KLAY   = NativeAsset("KLAY")   // Klaytn
-	LUNA   = NativeAsset("LUNA")   // Luna (Terra)
 	MATIC  = NativeAsset("MATIC")  // Matic PoS (Polygon)
 	OptETH = NativeAsset("OptETH") // Optimism
 	ROSE   = NativeAsset("ROSE")   // Rose (Oasis)
 	SOL    = NativeAsset("SOL")    // Solana
-	XPLA   = NativeAsset("XPLA")   // XPLA
 )
 
 // AssetType is the type of an asset, either native or token
@@ -60,7 +57,6 @@ func (asset Asset) AssetType() AssetType {
 	case ACA,
 		APTOS,
 		ArbETH,
-		ATOM,
 		AurETH,
 		AVAX,
 		BNB,
@@ -71,12 +67,10 @@ func (asset Asset) AssetType() AssetType {
 		FTM,
 		KAR,
 		KLAY,
-		LUNA,
 		MATIC,
 		OptETH,
 		ROSE,
-		SOL,
-		XPLA:
+		SOL:
 		return AssetTypeNative
 	default:
 		return AssetTypeToken
@@ -101,7 +95,6 @@ func (native NativeAsset) ChainType() ChainType {
 	case ACA,
 		APTOS,
 		ArbETH,
-		ATOM,
 		AurETH,
 		AVAX,
 		BNB,
@@ -112,12 +105,10 @@ func (native NativeAsset) ChainType() ChainType {
 		FTM,
 		KAR,
 		KLAY,
-		LUNA,
 		MATIC,
 		OptETH,
 		ROSE,
-		SOL,
-		XPLA:
+		SOL:
 		return ChainTypeAccount
 	default:
 		return ChainTypeUnknown

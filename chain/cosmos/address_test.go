@@ -15,7 +15,7 @@ func (s *CrosschainTestSuite) TestNewAddressBuilder() {
 
 func (s *CrosschainTestSuite) TestGetAddressFromPublicKey() {
 	require := s.Require()
-	builder, _ := NewAddressBuilder(xc.AssetConfig{NativeAsset: xc.LUNA, ChainPrefix: "terra"})
+	builder, _ := NewAddressBuilder(xc.AssetConfig{NativeAsset: "LUNA", ChainPrefix: "terra"})
 	bytes, _ := hex.DecodeString("02FCF724C97DFFAC2021EFA1818C2FEF3BCBB753CA22913A8DB5E79EC4A3DEE0D1")
 	address, err := builder.GetAddressFromPublicKey(bytes)
 	require.Nil(err)
@@ -24,7 +24,7 @@ func (s *CrosschainTestSuite) TestGetAddressFromPublicKey() {
 
 func (s *CrosschainTestSuite) TestGetAddressFromPublicKeyEvmos() {
 	require := s.Require()
-	builder, _ := NewAddressBuilder(xc.AssetConfig{NativeAsset: xc.XPLA, ChainPrefix: "xpla", Driver: string(xc.DriverCosmosEvmos)})
+	builder, _ := NewAddressBuilder(xc.AssetConfig{NativeAsset: "XPLA", ChainPrefix: "xpla", Driver: string(xc.DriverCosmosEvmos)})
 	bytes, _ := hex.DecodeString("02E8445082A72F29B75CA48748A914DF60622A609CACFCE8ED0E35804560741D29")
 	address, err := builder.GetAddressFromPublicKey(bytes)
 	require.Nil(err)
@@ -52,7 +52,7 @@ func (s *CrosschainTestSuite) TestGetAddressFromPublicKeyErr() {
 	require.EqualError(err, "prefix cannot be empty")
 
 	// cosmos-sdk doesn't check if pubkey is on the curve
-	builder, _ = NewAddressBuilder(xc.AssetConfig{NativeAsset: xc.LUNA, ChainPrefix: "terra"})
+	builder, _ = NewAddressBuilder(xc.AssetConfig{NativeAsset: "LUNA", ChainPrefix: "terra"})
 	bytes, _ := hex.DecodeString("001122334455667788990011223344556677889900112233445566778899001122")
 	address, err = builder.GetAddressFromPublicKey(bytes)
 	require.Nil(err)
@@ -61,7 +61,7 @@ func (s *CrosschainTestSuite) TestGetAddressFromPublicKeyErr() {
 	// ethermint doesn't check if pubkey is on the curve,
 	// but it attempts to decompress the point to generate the address
 	// therefore indirectly it catches the error
-	builder, _ = NewAddressBuilder(xc.AssetConfig{NativeAsset: xc.XPLA, ChainPrefix: "xpla", Driver: string(xc.DriverCosmosEvmos)})
+	builder, _ = NewAddressBuilder(xc.AssetConfig{NativeAsset: "XPLA", ChainPrefix: "xpla", Driver: string(xc.DriverCosmosEvmos)})
 	bytes, _ = hex.DecodeString("001122334455667788990011223344556677889900112233445566778899001122")
 	address, err = builder.GetAddressFromPublicKey(bytes)
 	require.ErrorContains(err, "addresses cannot be empty")
@@ -70,7 +70,7 @@ func (s *CrosschainTestSuite) TestGetAddressFromPublicKeyErr() {
 
 func (s *CrosschainTestSuite) TestGetAllPossibleAddressesFromPublicKey() {
 	require := s.Require()
-	builder, _ := NewAddressBuilder(xc.AssetConfig{NativeAsset: xc.LUNA, ChainPrefix: "terra"})
+	builder, _ := NewAddressBuilder(xc.AssetConfig{NativeAsset: "LUNA", ChainPrefix: "terra"})
 	bytes, _ := hex.DecodeString("02E8445082A72F29B75CA48748A914DF60622A609CACFCE8ED0E35804560741D29")
 	addresses, err := builder.GetAllPossibleAddressesFromPublicKey(bytes)
 	require.Nil(err)

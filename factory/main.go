@@ -296,72 +296,58 @@ func configToEthereumURL(cfg AssetConfig) string {
 }
 
 func newClient(cfg AssetConfig) (Client, error) {
-	switch cfg.NativeAsset {
-	case ETH:
+	switch Driver(cfg.Driver) {
+	case DriverEVM:
 		return evm.NewClient(cfg)
-	case AVAX, ArbETH, CELO, MATIC, OptETH:
-		return evm.NewClient(cfg)
-	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ:
+	case DriverEVMLegacy:
 		return evm.NewLegacyClient(cfg)
-	case ATOM, LUNA, XPLA:
+	case DriverCosmos, DriverCosmosEvmos:
 		return cosmos.NewClient(cfg)
-	case SOL:
+	case DriverSolana:
 		return solana.NewClient(cfg)
-	case APTOS:
+	case DriverAptos:
 		return aptos.NewClient(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
 
 func newTxBuilder(cfg AssetConfig) (TxBuilder, error) {
-	switch cfg.NativeAsset {
-	case ETH:
+	switch Driver(cfg.Driver) {
+	case DriverEVM, DriverEVMLegacy:
 		return evm.NewTxBuilder(cfg)
-	case AVAX, ArbETH, CELO, MATIC, OptETH:
-		return evm.NewTxBuilder(cfg)
-	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ:
-		return evm.NewTxBuilder(cfg)
-	case ATOM, LUNA, XPLA:
+	case DriverCosmos, DriverCosmosEvmos:
 		return cosmos.NewTxBuilder(cfg)
-	case SOL:
+	case DriverSolana:
 		return solana.NewTxBuilder(cfg)
-	case APTOS:
+	case DriverAptos:
 		return aptos.NewTxBuilder(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
 
 func newSigner(cfg AssetConfig) (Signer, error) {
-	switch cfg.NativeAsset {
-	case ETH:
+	switch Driver(cfg.Driver) {
+	case DriverEVM, DriverEVMLegacy:
 		return evm.NewSigner(cfg)
-	case AVAX, ArbETH, CELO, MATIC, OptETH:
-		return evm.NewSigner(cfg)
-	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ:
-		return evm.NewSigner(cfg)
-	case ATOM, LUNA, XPLA:
+	case DriverCosmos, DriverCosmosEvmos:
 		return cosmos.NewSigner(cfg)
-	case SOL:
+	case DriverSolana:
 		return solana.NewSigner(cfg)
-	case APTOS:
+	case DriverAptos:
 		return aptos.NewSigner(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
 
 func newAddressBuilder(cfg AssetConfig) (AddressBuilder, error) {
-	switch cfg.NativeAsset {
-	case ETH:
+	switch Driver(cfg.Driver) {
+	case DriverEVM, DriverEVMLegacy:
 		return evm.NewAddressBuilder(cfg)
-	case AVAX, ArbETH, CELO, MATIC, OptETH:
-		return evm.NewAddressBuilder(cfg)
-	case ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ:
-		return evm.NewAddressBuilder(cfg)
-	case ATOM, LUNA, XPLA:
+	case DriverCosmos, DriverCosmosEvmos:
 		return cosmos.NewAddressBuilder(cfg)
-	case SOL:
+	case DriverSolana:
 		return solana.NewAddressBuilder(cfg)
-	case APTOS:
+	case DriverAptos:
 		return aptos.NewAddressBuilder(cfg)
 	}
 	return nil, errors.New("unsupported asset")
