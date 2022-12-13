@@ -51,19 +51,11 @@ func signatureFromBytes(sigStr []byte) *btcec.Signature {
 	}
 }
 
-// Serialize signature to R || S.
-// R, S are padded to 32 bytes respectively.
-func serializeSig(sig *btcec.Signature) []byte {
-	rBytes := sig.R.Bytes()
-	sBytes := sig.S.Bytes()
-	sigBytes := make([]byte, 64)
-	// 0 pad the byte arrays from the left if they aren't big enough.
-	copy(sigBytes[32-len(rBytes):32], rBytes)
-	copy(sigBytes[64-len(sBytes):64], sBytes)
-	return sigBytes
-}
-
 func reserializeSig(signature []byte) []byte {
+	if len(signature) <= 64 {
+		return signature
+	}
+	// this, e.g., drops the recovery bit that's typical in bitcoin/evm signatures
 	return serializeSig(signatureFromBytes(signature))
 }
 

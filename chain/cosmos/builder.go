@@ -147,7 +147,7 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 	sigMode := signingtypes.SignMode_SIGN_MODE_DIRECT
 	sigsV2 := []signingtypes.SignatureV2{
 		{
-			PubKey: getPublicKey(asset.NativeAsset, input.FromPublicKey),
+			PubKey: getPublicKey(asset, input.FromPublicKey),
 			Data: &signingtypes.SingleSignatureData{
 				SignMode:  sigMode,
 				Signature: nil,
@@ -176,6 +176,6 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 		CosmosTxBuilder: cosmosBuilder,
 		CosmosTxEncoder: cosmosTxConfig.TxEncoder(),
 		SigsV2:          sigsV2,
-		TxDataToSign:    getSighash(asset.NativeAsset, sighashData),
+		TxDataToSign:    getSighash(asset, sighashData),
 	}, nil
 }

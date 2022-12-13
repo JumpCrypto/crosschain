@@ -1,6 +1,7 @@
 crosschain:
   chains:
   - asset: ETH
+    driver: evm
     net: testnet
     url: 'https://goerli.infura.io/v3'
     auth: '...'
@@ -11,6 +12,7 @@ crosschain:
     decimals: 18
   # EVM with ERC20
   - asset: BNB
+    driver: evm
     net: testnet
     url: 'https://data-seed-prebsc-1-s1.binance.org:8545'
     chain_id: 97
@@ -18,6 +20,7 @@ crosschain:
     explorer_url: 'https://testnet.bscscan.com'
     decimals: 18
   - asset: MATIC
+    driver: evm
     net: testnet
     url: 'https://rpc-mumbai.matic.today'
     chain_id: 80001
@@ -26,6 +29,7 @@ crosschain:
     decimals: 18
   # Solana
   - asset: SOL
+    driver: solana
     net: devnet
     url: 'https://api.devnet.solana.com'
     chain_name: Solana (Devnet)
@@ -33,6 +37,7 @@ crosschain:
     decimals: 9
   # Cosmos-based
   - asset: ATOM
+    driver: cosmos
     net: testnet
     url: 'https://rpc.sentry-01.theta-testnet.polypore.xyz'
     chain_id_str: 'theta-testnet-001'
@@ -43,6 +48,7 @@ crosschain:
     explorer_url: 'https://explorer.theta-testnet.polypore.xyz'
     decimals: 6
   - asset: XPLA
+    driver: evmos
     net: testnet
     url: 'https://cube-rpc.xpla.dev'
     fcd_url: 'https://cube-fcd.xpla.dev'
@@ -54,6 +60,7 @@ crosschain:
     explorer_url: 'https://explorer.xpla.io/testnet'
     decimals: 18
   - asset: LUNA
+    driver: cosmos
     net: testnet
     url: 'https://terra-testnet-rpc.polkachu.com'
     fcd_url: 'https://pisco-fcd.terra.dev'
@@ -62,10 +69,12 @@ crosschain:
     chain_coin: 'uluna'
     chain_coin_hd_path: 330
     chain_name: Terra (Testnet)
+    chain_gas_multiplier: 12.0
     explorer_url: 'https://finder.terra.money/testnet'
     decimals: 6
   # Aptos
   - asset: APTOS
+    driver: aptos
     net: devnet
     url: 'https://fullnode.devnet.aptoslabs.com'
     chain_name: Aptos (Devnet)

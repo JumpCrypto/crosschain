@@ -277,8 +277,11 @@ func (client *Client) estimateGasFcd(ctx context.Context) (float64, error) {
 		return 0, err
 	}
 
-	// add 12x premium for reliability
-	return gasPrice * 12.0, nil
+	multiplier := 1.0
+	if asset.ChainGasMultiplier > 0 {
+		multiplier = asset.ChainGasMultiplier
+	}
+	return gasPrice * multiplier, nil
 }
 
 // EstimateGas estimates gas price for a Cosmos chain
