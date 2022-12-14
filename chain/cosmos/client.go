@@ -15,13 +15,13 @@ import (
 
 	xc "github.com/jumpcrypto/crosschain"
 
+	// injectivecryptocodec "github.com/InjectiveLabs/sdk-go/chain/crypto/codec"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ethermintCodec "github.com/evmos/ethermint/encoding/codec"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	terraApp "github.com/terra-money/core/app"
 	wasmtypes "github.com/terra-money/core/x/wasm/types"
 )
 
@@ -81,9 +81,7 @@ func NewClient(cfg xc.AssetConfig) (*Client, error) {
 		panic(err)
 	}
 
-	cosmosCfg := terraApp.MakeEncodingConfig()
-	ethermintCodec.RegisterInterfaces(cosmosCfg.InterfaceRegistry)
-
+	cosmosCfg := MakeCosmosConfig()
 	cliCtx := client.Context{}.
 		WithClient(httpClient).
 		WithCodec(cosmosCfg.Marshaler).
@@ -288,6 +286,9 @@ func (client *Client) estimateGasFcd(ctx context.Context) (float64, error) {
 func (client *Client) EstimateGas(ctx context.Context) (float64, error) {
 	if client.Asset.FcdURL != "" {
 		return client.estimateGasFcd(ctx)
+	}
+	if client.Asset.ChainGasPriceDefault > 0 {
+		return client.Asset.ChainGasPriceDefault, nil
 	}
 	return 0, errors.New("not implemented")
 }

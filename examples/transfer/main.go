@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jumpcrypto/crosschain"
 	"github.com/jumpcrypto/crosschain/factory"
 )
 
@@ -24,9 +25,16 @@ func main() {
 	// set your own private key and address
 	// you can get them, for example, from your Phantom wallet
 	fromPrivateKey := xc.MustPrivateKey(asset, "...")
+	fromPublicKeyStr := "" // only for Cosmos-based chains
 	from := xc.MustAddress(asset, "...")
 	to := xc.MustAddress(asset, "Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
 	amount := xc.MustAmountBlockchain(asset, "0.005")
+
+	// Cosmos example: Injective
+	// fromPrivateKey := xc.MustPrivateKey(asset, "...")
+	// fromPublicKeyStr := "..."
+	// from := xc.MustAddress(asset, "...")
+	// to := xc.MustAddress(asset, "inj12s2rcquss27ylmn26cgukczx76t3ep7yk6kgnz")
 
 	// to create a tx, we typically need some input from the blockchain
 	// e.g., nonce for Ethereum, recent block for Solana, gas data, ...
@@ -36,6 +44,9 @@ func main() {
 	input, err := client.FetchTxInput(ctx, from, to)
 	if err != nil {
 		panic(err)
+	}
+	if inputWithPublicKey, ok := input.(crosschain.TxInputWithPublicKey); ok {
+		inputWithPublicKey.SetPublicKeyFromStr(fromPublicKeyStr)
 	}
 	fmt.Printf("%+v\n", input)
 

@@ -12,9 +12,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ethermintCodec "github.com/evmos/ethermint/encoding/codec"
 	xc "github.com/jumpcrypto/crosschain"
-	terraApp "github.com/terra-money/core/app"
 	wasmtypes "github.com/terra-money/core/x/wasm/types"
 )
 
@@ -28,8 +26,7 @@ type TxBuilder struct {
 
 // NewTxBuilder creates a new Cosmos TxBuilder
 func NewTxBuilder(asset xc.AssetConfig) (xc.TxBuilder, error) {
-	cosmosCfg := terraApp.MakeEncodingConfig()
-	ethermintCodec.RegisterInterfaces(cosmosCfg.InterfaceRegistry)
+	cosmosCfg := MakeCosmosConfig()
 
 	return TxBuilder{
 		Asset:           asset,
@@ -53,7 +50,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 	amountInt := big.Int(amount)
 
 	if txInput.GasLimit == 0 {
-		txInput.GasLimit = 110_000
+		txInput.GasLimit = 400_000
 	}
 
 	msgSend := &banktypes.MsgSend{
