@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jumpcrypto/crosschain"
 	"github.com/jumpcrypto/crosschain/factory"
 )
 
@@ -15,18 +16,25 @@ func main() {
 
 	// get asset model, including config data
 	// asset is used to create client, builder, signer, etc.
-	asset, err := xc.GetAssetConfig("", "SOL")
+	asset, err := xc.GetAssetConfig("", "INJ")
 	if err != nil {
 		panic("unsupported asset")
 	}
 
-	panic("Please edit examples/transfer/main.go to set your testnet address and key")
+	// panic("Please edit examples/transfer/main.go to set your testnet address and key")
 	// set your own private key and address
 	// you can get them, for example, from your Phantom wallet
-	fromPrivateKey := xc.MustPrivateKey(asset, "...")
-	from := xc.MustAddress(asset, "...")
-	to := xc.MustAddress(asset, "Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
+	// fromPrivateKey := xc.MustPrivateKey(asset, "...")
+	// from := xc.MustAddress(asset, "...")
+	// to := xc.MustAddress(asset, "Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
 	amount := xc.MustAmountBlockchain(asset, "0.005")
+
+	// Injective
+	fromPrivateKey := xc.MustPrivateKey(asset, "toward can sniff flame feed increase above saddle among happy type lake penalty worth bag negative clutch absent harsh leisure whisper year confirm flock")
+	fromPublicKeyStr := "A+WBd98d8CwceaFqtrH8H/D1u/RMFLDSNI1emBl219fE"
+	_ = fromPublicKeyStr
+	from := xc.MustAddress(asset, "inj12s2rcquss27ylmn26cgukczx76t3ep7yk6kgnz")
+	to := xc.MustAddress(asset, "inj1vmcvqjgmzuyw3f42vfx8pmvknyjzmspg2u5cug")
 
 	// to create a tx, we typically need some input from the blockchain
 	// e.g., nonce for Ethereum, recent block for Solana, gas data, ...
@@ -36,6 +44,9 @@ func main() {
 	input, err := client.FetchTxInput(ctx, from, to)
 	if err != nil {
 		panic(err)
+	}
+	if inputWithPublicKey, ok := input.(crosschain.TxInputWithPublicKey); ok {
+		inputWithPublicKey.SetPublicKeyFromStr(fromPublicKeyStr)
 	}
 	fmt.Printf("%+v\n", input)
 

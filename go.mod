@@ -3,6 +3,7 @@ module github.com/jumpcrypto/crosschain
 go 1.19
 
 require (
+	github.com/InjectiveLabs/sdk-go v1.43.3
 	github.com/btcsuite/btcd v0.22.3
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45

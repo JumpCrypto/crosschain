@@ -47,6 +47,19 @@ crosschain:
     chain_name: Cosmos (Theta Testnet)
     explorer_url: 'https://explorer.theta-testnet.polypore.xyz'
     decimals: 6
+  - asset: INJ
+    driver: cosmos
+    net: testnet
+    url: 'https://k8s.testnet.tm.injective.network'
+    fcd_url: ''
+    chain_id_str: 'injective-888'
+    chain_prefix: 'inj'
+    chain_coin: 'inj'
+    chain_coin_hd_path: 60
+    chain_name: Injective (Testnet)
+    chain_gas_price_default: 500_000_000
+    explorer_url: 'https://testnet.explorer.injective.network'
+    decimals: 18
   - asset: XPLA
     driver: evmos
     net: testnet

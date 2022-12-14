@@ -146,21 +146,22 @@ type AssetConfig struct {
 	//     net = "mainnet"
 	//     contract = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 	//     decimals = 6
-	Asset              string  `yaml:"asset"`
-	Driver             string  `yaml:"driver"`
-	Net                string  `yaml:"net"`
-	URL                string  `yaml:"url"`
-	FcdURL             string  `yaml:"fcd_url"`
-	Auth               string  `yaml:"auth"`
-	Provider           string  `yaml:"provider"`
-	ChainID            int64   `yaml:"chain_id"`
-	ChainIDStr         string  `yaml:"chain_id_str"`
-	ChainName          string  `yaml:"chain_name"`
-	ChainPrefix        string  `yaml:"chain_prefix"`
-	ChainCoin          string  `yaml:"chain_coin"`
-	ChainCoinHDPath    uint32  `yaml:"chain_coin_hd_path"`
-	ChainGasMultiplier float64 `yaml:"chain_gas_multiplier"`
-	ExplorerURL        string  `yaml:"explorer_url"`
+	Asset                string  `yaml:"asset"`
+	Driver               string  `yaml:"driver"`
+	Net                  string  `yaml:"net"`
+	URL                  string  `yaml:"url"`
+	FcdURL               string  `yaml:"fcd_url"`
+	Auth                 string  `yaml:"auth"`
+	Provider             string  `yaml:"provider"`
+	ChainID              int64   `yaml:"chain_id"`
+	ChainIDStr           string  `yaml:"chain_id_str"`
+	ChainName            string  `yaml:"chain_name"`
+	ChainPrefix          string  `yaml:"chain_prefix"`
+	ChainCoin            string  `yaml:"chain_coin"`
+	ChainCoinHDPath      uint32  `yaml:"chain_coin_hd_path"`
+	ChainGasPriceDefault float64 `yaml:"chain_gas_price_default"`
+	ChainGasMultiplier   float64 `yaml:"chain_gas_multiplier"`
+	ExplorerURL          string  `yaml:"explorer_url"`
 
 	// Tokens
 	Chain    string `yaml:"chain"`
