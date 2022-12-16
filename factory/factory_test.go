@@ -259,6 +259,7 @@ func (s *CrosschainTestSuite) TestEnrichAssetConfig() {
 	require.NotNil(assetCfgEnriched)
 	require.Equal("USDC", assetCfgEnriched.Asset)
 	require.NotEqual("", assetCfgEnriched.URL)
+	require.NotEqual("", assetCfgEnriched.Driver)
 
 	assetCfg.URL = ""
 	assetCfg.Chain = "TEST"
@@ -268,6 +269,7 @@ func (s *CrosschainTestSuite) TestEnrichAssetConfig() {
 	require.Equal("USDC", assetCfgEnriched.Asset)
 	require.Equal("", assetCfgEnriched.URL)
 	require.Equal("TEST", assetCfgEnriched.Chain)
+	require.NotEqual("", assetCfgEnriched.Driver)
 
 	assetCfg.URL = ""
 	assetCfg.Chain = ""
@@ -277,6 +279,7 @@ func (s *CrosschainTestSuite) TestEnrichAssetConfig() {
 	require.Equal("USDC", assetCfgEnriched.Asset)
 	require.Equal("", assetCfgEnriched.URL)
 	require.Equal("", assetCfgEnriched.Chain)
+	require.NotEqual("", assetCfgEnriched.Driver)
 }
 
 func (s *CrosschainTestSuite) TestGetAssetID() {

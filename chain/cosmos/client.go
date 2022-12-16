@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -178,7 +177,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	if err != nil {
 		return result, err
 	}
-	log.Println(resultRaw)
+	// log.Println(resultRaw)
 
 	blockResultRaw, err := client.Ctx.Client.Block(ctx, &resultRaw.Height)
 	if err != nil {
@@ -347,7 +346,6 @@ func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address
 	if balResp == nil || balResp.GetBalance() == nil {
 		return zero, fmt.Errorf("failed to get account balance: '%v': %v", address, err)
 	}
-	log.Println(balResp)
 	balance := balResp.GetBalance().Amount.BigInt()
 	return xc.AmountBlockchain(*balance), nil
 }

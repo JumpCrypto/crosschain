@@ -64,17 +64,7 @@ func (f *Factory) cfgFromAsset(assetID AssetID) (AssetConfig, error) {
 	cfg := cfgI.(AssetConfig)
 	if cfg.Chain != "" {
 		// token
-		cfg.Type = AssetTypeToken
-		nativeAsset := cfg.Chain
-		cfg.NativeAsset = NativeAsset(nativeAsset)
-
-		chainI, _ := f.AllAssets.Load(AssetID(nativeAsset))
-		chain := chainI.(AssetConfig)
-		cfg.Net = chain.Net
-		cfg.URL = chain.URL
-		cfg.Auth = chain.Auth
-		cfg.AuthSecret = chain.AuthSecret
-		cfg.Provider = chain.Provider
+		cfg, _ = f.cfgEnrichAssetConfig(cfg)
 	} else {
 		// native asset
 		cfg.Type = AssetTypeNative
@@ -97,6 +87,7 @@ func (f *Factory) cfgEnrichAssetConfig(partialCfg AssetConfig) (AssetConfig, err
 			return cfg, fmt.Errorf("unsupported native asset: %s", nativeAsset)
 		}
 		chain := chainI.(AssetConfig)
+		cfg.Driver = chain.Driver
 		cfg.Net = chain.Net
 		cfg.URL = chain.URL
 		cfg.Auth = chain.Auth
