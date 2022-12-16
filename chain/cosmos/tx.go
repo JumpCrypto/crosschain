@@ -103,7 +103,9 @@ func (tx *Tx) ParseTransfer() {
 	for _, msg := range tx.CosmosTx.GetMsgs() {
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
-			tx.ParsedTransfer = msg
+			if tx.ParsedTransfer == nil {
+				tx.ParsedTransfer = msg
+			}
 		}
 	}
 }
