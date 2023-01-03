@@ -211,6 +211,8 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	result.ContractAddress = tx.ContractAddress()
 	result.Amount = tx.Amount()
 	result.Fee = tx.Fee()
+	result.Sources = tx.Sources()
+	result.Destinations = tx.Destinations()
 
 	result.BlockIndex = resultRaw.Height
 	result.BlockTime = blockResultRaw.Block.Header.Time.Unix()

@@ -30,6 +30,17 @@ const (
 	TxStatusFailure TxStatus = 1
 )
 
+// TxInfoEndpoint is a unified view of an endpoint (source or destination) in a TxInfo.
+type TxInfoEndpoint struct {
+	Address         Address
+	ContractAddress ContractAddress
+	Amount          AmountBlockchain
+	AmountHuman     AmountHumanReadable
+	NativeAsset     NativeAsset
+	Asset           Asset
+	AssetConfig     *AssetConfig
+}
+
 // TxInfo is a unified view of common tx info across multiple blockchains. Use it as an example to build your own.
 type TxInfo struct {
 	TxID            string
@@ -44,6 +55,8 @@ type TxInfo struct {
 	BlockTime       int64
 	Confirmations   int64
 	Status          TxStatus
+	Sources         []TxInfoEndpoint
+	Destinations    []TxInfoEndpoint
 }
 
 // TxHash is a tx hash or id

@@ -31,5 +31,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	info, _ = xc.EnrichDestinations(asset, info)
 	fmt.Printf("%+v\n", info)
 }

@@ -169,7 +169,7 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 
 	return &Tx{
 		CosmosTx:        cosmosBuilder.GetTx(),
-		ParsedTransfer:  msg,
+		ParsedTransfers: []types.Msg{msg},
 		CosmosTxBuilder: cosmosBuilder,
 		CosmosTxEncoder: cosmosTxConfig.TxEncoder(),
 		SigsV2:          sigsV2,

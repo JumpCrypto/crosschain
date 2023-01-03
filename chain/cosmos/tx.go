@@ -17,8 +17,8 @@ import (
 
 // Tx for Cosmos
 type Tx struct {
-	CosmosTx       types.Tx
-	ParsedTransfer types.Msg
+	CosmosTx        types.Tx
+	ParsedTransfers []types.Msg
 	// aux fields
 	CosmosTxBuilder client.TxBuilder
 	CosmosTxEncoder types.TxEncoder
@@ -103,45 +103,59 @@ func (tx *Tx) ParseTransfer() {
 	for _, msg := range tx.CosmosTx.GetMsgs() {
 		switch msg := msg.(type) {
 		case *banktypes.MsgSend:
-			if tx.ParsedTransfer == nil {
-				tx.ParsedTransfer = msg
-			}
+			tx.ParsedTransfers = append(tx.ParsedTransfers, msg)
 		}
 	}
 }
 
 // From returns the from address of a Tx
 func (tx Tx) From() xc.Address {
-	switch tf := tx.ParsedTransfer.(type) {
-	case *banktypes.MsgSend:
-		from := tf.FromAddress
-		return xc.Address(from)
+	for _, parsedTransfer := range tx.ParsedTransfers {
+		switch tf := parsedTransfer.(type) {
+		case *banktypes.MsgSend:
+			from := tf.FromAddress
+			return xc.Address(from)
+		}
 	}
 	return xc.Address("")
 }
 
 // To returns the to address of a Tx
 func (tx Tx) To() xc.Address {
-	switch tf := tx.ParsedTransfer.(type) {
-	case *banktypes.MsgSend:
-		to := tf.ToAddress
-		return xc.Address(to)
+	for _, parsedTransfer := range tx.ParsedTransfers {
+		switch tf := parsedTransfer.(type) {
+		case *banktypes.MsgSend:
+			to := tf.ToAddress
+			return xc.Address(to)
+		}
 	}
 	return xc.Address("")
 }
 
 // ContractAddress returns the contract address of a Tx, if any
 func (tx Tx) ContractAddress() xc.ContractAddress {
-	// not implemented
+	for _, parsedTransfer := range tx.ParsedTransfers {
+		switch tf := parsedTransfer.(type) {
+		case *banktypes.MsgSend:
+			denom := tf.Amount[0].Denom
+			// remove native assets to be coherent with other chains
+			if len(denom) < LEN_NATIVE_ASSET {
+				denom = ""
+			}
+			return xc.ContractAddress(denom)
+		}
+	}
 	return xc.ContractAddress("")
 }
 
 // Amount returns the amount of a Tx
 func (tx Tx) Amount() xc.AmountBlockchain {
-	switch tf := tx.ParsedTransfer.(type) {
-	case *banktypes.MsgSend:
-		amount := tf.Amount[0].Amount.BigInt()
-		return xc.AmountBlockchain(*amount)
+	for _, parsedTransfer := range tx.ParsedTransfers {
+		switch tf := parsedTransfer.(type) {
+		case *banktypes.MsgSend:
+			amount := tf.Amount[0].Amount.BigInt()
+			return xc.AmountBlockchain(*amount)
+		}
 	}
 	return xc.NewAmountBlockchainFromUint64(0)
 }
@@ -154,4 +168,40 @@ func (tx Tx) Fee() xc.AmountBlockchain {
 		return xc.AmountBlockchain(*fee)
 	}
 	return xc.NewAmountBlockchainFromUint64(0)
+}
+
+// Sources returns the sources of a Tx
+func (tx Tx) Sources() []xc.TxInfoEndpoint {
+	sources := []xc.TxInfoEndpoint{}
+	for _, parsedTransfer := range tx.ParsedTransfers {
+		switch tf := parsedTransfer.(type) {
+		case *banktypes.MsgSend:
+			from := tf.FromAddress
+			sources = append(sources, xc.TxInfoEndpoint{
+				Address: xc.Address(from),
+			})
+			// currently assume/support single-source transfers
+			return sources
+		}
+	}
+	return sources
+}
+
+// Destinations returns the destinations of a Tx
+func (tx Tx) Destinations() []xc.TxInfoEndpoint {
+	destinations := []xc.TxInfoEndpoint{}
+	for _, parsedTransfer := range tx.ParsedTransfers {
+		switch tf := parsedTransfer.(type) {
+		case *banktypes.MsgSend:
+			to := tf.ToAddress
+			denom := tf.Amount[0].Denom
+			amount := tf.Amount[0].Amount.BigInt()
+			destinations = append(destinations, xc.TxInfoEndpoint{
+				Address:         xc.Address(to),
+				ContractAddress: xc.ContractAddress(denom),
+				Amount:          xc.AmountBlockchain(*amount),
+			})
+		}
+	}
+	return destinations
 }

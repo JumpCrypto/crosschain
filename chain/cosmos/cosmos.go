@@ -16,6 +16,8 @@ import (
 	ethermintcodec "github.com/evmos/ethermint/encoding/codec"
 )
 
+const LEN_NATIVE_ASSET = 8
+
 func MakeCosmosConfig() params.EncodingConfig {
 	cosmosCfg := terraApp.MakeEncodingConfig()
 	ethermintcodec.RegisterInterfaces(cosmosCfg.InterfaceRegistry)
@@ -25,7 +27,7 @@ func MakeCosmosConfig() params.EncodingConfig {
 }
 
 func isNativeAsset(asset xc.AssetConfig) bool {
-	return asset.Type == xc.AssetTypeNative || len(asset.Contract) < 8
+	return asset.Type == xc.AssetTypeNative || len(asset.Contract) < LEN_NATIVE_ASSET
 }
 
 func isEVMOS(asset xc.AssetConfig) bool {
