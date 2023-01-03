@@ -41,6 +41,7 @@ type FactoryContext interface {
 	ConvertAmountStrToBlockchain(asset AssetConfig, humanAmountStr string) (AmountBlockchain, error)
 
 	EnrichAssetConfig(partialCfg AssetConfig) (AssetConfig, error)
+	EnrichDestinations(asset AssetConfig, txInfo TxInfo) (TxInfo, error)
 
 	GetAssetID(asset string, nativeAsset string) AssetID
 	GetAssetConfig(asset string, nativeAsset string) (AssetConfig, error)
@@ -99,6 +100,29 @@ func (f *Factory) cfgEnrichAssetConfig(partialCfg AssetConfig) (AssetConfig, err
 	return cfg, nil
 }
 
+func (f *Factory) cfgEnrichDestinations(asset AssetConfig, txInfo TxInfo) (TxInfo, error) {
+	result := txInfo
+	nativeAssetCfg, _ := f.cfgFromAsset(AssetID(asset.NativeAsset))
+	for i, dst := range txInfo.Destinations {
+		dst.NativeAsset = asset.NativeAsset
+		if dst.ContractAddress != "" {
+			assetCfg, err := f.cfgFromAssetByContract(string(dst.ContractAddress), string(dst.NativeAsset))
+			if err != nil {
+				// we shouldn't set the amount, if we don't know the contract
+				continue
+			}
+			dst.Asset = Asset(assetCfg.Asset)
+			dst.ContractAddress = ContractAddress(assetCfg.Contract)
+			dst.AssetConfig = &assetCfg
+		} else {
+			dst.AssetConfig = &nativeAssetCfg
+		}
+		dst.AmountHuman, _ = f.ConvertAmountToHuman(*dst.AssetConfig, dst.Amount)
+		result.Destinations[i] = dst
+	}
+	return result, nil
+}
+
 func (f *Factory) cfgFromAssetByContract(contract string, nativeAsset string) (AssetConfig, error) {
 	var res *AssetConfig
 	nativeAsset = strings.ToUpper(nativeAsset)
@@ -111,6 +135,9 @@ func (f *Factory) cfgFromAssetByContract(contract string, nativeAsset string) (A
 				res = &cfg
 				return false
 			}
+		} else if cfg.Asset == nativeAsset && cfg.ChainCoin == contract {
+			res = &cfg
+			return false
 		}
 		return true
 	})
@@ -187,6 +214,11 @@ func (f *Factory) GetAssetID(asset string, nativeAsset string) AssetID {
 // EnrichAssetConfig augments a partial AssetConfig, for example if some info is stored in a db and other in a config file
 func (f *Factory) EnrichAssetConfig(partialCfg AssetConfig) (AssetConfig, error) {
 	return f.cfgEnrichAssetConfig(partialCfg)
+}
+
+// EnrichDestinations augments a TxInfo by resolving assets and amounts in TxInfo.Destinations
+func (f *Factory) EnrichDestinations(asset AssetConfig, txInfo TxInfo) (TxInfo, error) {
+	return f.cfgEnrichDestinations(asset, txInfo)
 }
 
 // GetAssetConfig returns an AssetConfig by asset and native asset (chain)

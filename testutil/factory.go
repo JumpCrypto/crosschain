@@ -112,6 +112,11 @@ func (f *TestFactory) EnrichAssetConfig(partialCfg xc.AssetConfig) (xc.AssetConf
 	return f.DefaultFactory.EnrichAssetConfig(partialCfg)
 }
 
+// EnrichDestinations augments a TxInfo by resolving assets and amounts in TxInfo.Destinations
+func (f *TestFactory) EnrichDestinations(asset xc.AssetConfig, txInfo xc.TxInfo) (xc.TxInfo, error) {
+	return f.DefaultFactory.EnrichDestinations(asset, txInfo)
+}
+
 // PutAssetConfig adds an AssetConfig to the current Config cache
 func (f *TestFactory) PutAssetConfig(config xc.AssetConfig) (xc.AssetConfig, error) {
 	return f.DefaultFactory.PutAssetConfig(config)

@@ -239,6 +239,19 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 				BlockIndex:      2754866,
 				BlockTime:       1668891362,
 				Confirmations:   48860,
+				Status:          0,
+				Sources: []xc.TxInfoEndpoint{
+					{
+						Address: "terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
+					},
+				},
+				Destinations: []xc.TxInfoEndpoint{
+					{
+						Address:         "terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+						ContractAddress: "uluna",
+						Amount:          xc.NewAmountBlockchainFromUint64(5000000),
+					},
+				},
 			},
 			"",
 		},
@@ -266,6 +279,19 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 				BlockIndex:      1359533,
 				BlockTime:       1669849454,
 				Confirmations:   107,
+				Status:          0,
+				Sources: []xc.TxInfoEndpoint{
+					{
+						Address: "xpla1hdvf6vv5amc7wp84js0ls27apekwxpr0ge96kg",
+					},
+				},
+				Destinations: []xc.TxInfoEndpoint{
+					{
+						Address:         "xpla1a8f3wnn7qwvwdzxkc9w849kfzhrr6gdvy4c8wv",
+						ContractAddress: "axpla",
+						Amount:          xc.NewAmountBlockchainFromUint64(5000000000000000),
+					},
+				},
 			},
 			"",
 		},
