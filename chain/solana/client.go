@@ -2,6 +2,7 @@ package solana
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -102,12 +103,15 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.A
 	return txInput, nil
 }
 
-// SubmitTx submits a Solana tx
 func (client *Client) SubmitTx(ctx context.Context, txInput xc.Tx) error {
-	tx := txInput.(*Tx)
-	_, err := client.SolClient.SendTransactionWithOpts(
+	txData, err := txInput.Serialize()
+	if err != nil {
+		return fmt.Errorf("send transaction: encode transaction: %w", err)
+	}
+
+	_, err = client.SolClient.SendEncodedTransactionWithOpts(
 		ctx,
-		tx.SolTx,
+		base64.StdEncoding.EncodeToString(txData),
 		rpc.TransactionOpts{
 			SkipPreflight:       false,
 			PreflightCommitment: rpc.CommitmentFinalized,

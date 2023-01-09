@@ -26,6 +26,8 @@ type Tx struct {
 	TxDataToSign    []byte
 }
 
+var _ xc.Tx = Tx{}
+
 // Hash returns the tx hash or id
 func (tx Tx) Hash() xc.TxHash {
 	serialized, err := tx.Serialize()
