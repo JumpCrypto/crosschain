@@ -20,6 +20,8 @@ type Tx struct {
 	parsedTransfer         interface{}
 }
 
+var _ xc.Tx = Tx{}
+
 // Hash returns the tx hash or id, for Solana it's signature
 func (tx Tx) Hash() xc.TxHash {
 	if tx.SolTx != nil && len(tx.SolTx.Signatures) > 0 {

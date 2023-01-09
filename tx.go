@@ -69,4 +69,5 @@ type Tx interface {
 	Hash() TxHash
 	Sighashes() ([]TxDataToSign, error)
 	AddSignatures(...TxSignature) error
+	Serialize() ([]byte, error)
 }
