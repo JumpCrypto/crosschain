@@ -11,6 +11,7 @@ import (
 	injectivecodec "github.com/InjectiveLabs/sdk-go/chain/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	authVestingTypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	ethermintcodec "github.com/evmos/ethermint/encoding/codec"
@@ -22,6 +23,7 @@ func MakeCosmosConfig() params.EncodingConfig {
 	cosmosCfg := terraApp.MakeEncodingConfig()
 	ethermintcodec.RegisterInterfaces(cosmosCfg.InterfaceRegistry)
 	injectivecodec.RegisterInterfaces(cosmosCfg.InterfaceRegistry)
+	authVestingTypes.RegisterInterfaces(cosmosCfg.InterfaceRegistry)
 	cosmosCfg.InterfaceRegistry.RegisterImplementations((*cryptotypes.PubKey)(nil), &injethsecp256k1.PubKey{})
 	return cosmosCfg
 }
