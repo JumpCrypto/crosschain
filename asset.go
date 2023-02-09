@@ -8,38 +8,6 @@ import (
 // Asset is an asset on a blockchain. It can be a token or native asset.
 type Asset string
 
-// NativeAsset is an asset on a blockchain used to pay gas fees.
-// In Crosschain, for simplicity, a NativeAsset represents a chain.
-type NativeAsset Asset
-
-// List of supported NativeAsset
-const (
-	// UTXO
-	BCH  = NativeAsset("BCH")  // Bitcoin Cash
-	BTC  = NativeAsset("BTC")  // Bitcoin
-	DOGE = NativeAsset("DOGE") // Dogecoin
-	LTC  = NativeAsset("LTC")  // Litecoin
-
-	// Account-based
-	ACA    = NativeAsset("ACA")    // Acala
-	APTOS  = NativeAsset("APTOS")  // APTOS
-	ArbETH = NativeAsset("ArbETH") // Arbitrum Ether
-	AurETH = NativeAsset("AurETH") // Aurora
-	AVAX   = NativeAsset("AVAX")   // Avalanche
-	BNB    = NativeAsset("BNB")    // Binance Coin
-	CELO   = NativeAsset("CELO")   // Celo
-	CHZ    = NativeAsset("CHZ")    // Chiliz
-	ETC    = NativeAsset("ETC")    // Ethereum Classic
-	ETH    = NativeAsset("ETH")    // Ether
-	FTM    = NativeAsset("FTM")    // Fantom
-	KAR    = NativeAsset("KAR")    // Karura
-	KLAY   = NativeAsset("KLAY")   // Klaytn
-	MATIC  = NativeAsset("MATIC")  // Matic PoS (Polygon)
-	OptETH = NativeAsset("OptETH") // Optimism
-	ROSE   = NativeAsset("ROSE")   // Rose (Oasis)
-	SOL    = NativeAsset("SOL")    // Solana
-)
-
 // AssetType is the type of an asset, either native or token
 type AssetType string
 
@@ -57,6 +25,7 @@ func (asset Asset) AssetType() AssetType {
 	case ACA,
 		APTOS,
 		ArbETH,
+		ATOM,
 		AurETH,
 		AVAX,
 		BNB,
@@ -64,13 +33,20 @@ func (asset Asset) AssetType() AssetType {
 		CHZ,
 		ETC,
 		ETH,
+		ETHW,
 		FTM,
+		INJ,
 		KAR,
 		KLAY,
+		LUNA,
+		LUNC,
 		MATIC,
+		OAS,
+		OasisROSE,
 		OptETH,
 		ROSE,
-		SOL:
+		SOL,
+		XPLA:
 		return AssetTypeNative
 	default:
 		return AssetTypeToken
@@ -95,6 +71,7 @@ func (native NativeAsset) ChainType() ChainType {
 	case ACA,
 		APTOS,
 		ArbETH,
+		ATOM,
 		AurETH,
 		AVAX,
 		BNB,
@@ -102,18 +79,65 @@ func (native NativeAsset) ChainType() ChainType {
 		CHZ,
 		ETC,
 		ETH,
+		ETHW,
 		FTM,
+		INJ,
 		KAR,
 		KLAY,
+		LUNA,
+		LUNC,
 		MATIC,
+		OAS,
+		OasisROSE,
 		OptETH,
 		ROSE,
-		SOL:
+		SOL,
+		XPLA:
 		return ChainTypeAccount
 	default:
 		return ChainTypeUnknown
 	}
 }
+
+// NativeAsset is an asset on a blockchain used to pay gas fees.
+// In Crosschain, for simplicity, a NativeAsset represents a chain.
+type NativeAsset Asset
+
+// List of supported NativeAsset
+const (
+	// UTXO
+	BCH  = NativeAsset("BCH")  // Bitcoin Cash
+	BTC  = NativeAsset("BTC")  // Bitcoin
+	DOGE = NativeAsset("DOGE") // Dogecoin
+	LTC  = NativeAsset("LTC")  // Litecoin
+
+	// Account-based
+	ACA       = NativeAsset("ACA")       // Acala
+	APTOS     = NativeAsset("APTOS")     // APTOS
+	ArbETH    = NativeAsset("ArbETH")    // Arbitrum
+	ATOM      = NativeAsset("ATOM")      // Cosmos
+	AurETH    = NativeAsset("AurETH")    // Aurora
+	AVAX      = NativeAsset("AVAX")      // Avalanche
+	BNB       = NativeAsset("BNB")       // Binance Coin
+	CELO      = NativeAsset("CELO")      // Celo
+	CHZ       = NativeAsset("CHZ")       // Chiliz
+	ETC       = NativeAsset("ETC")       // Ethereum Classic
+	ETH       = NativeAsset("ETH")       // Ethereum
+	ETHW      = NativeAsset("ETHW")      // Ethereum PoW
+	FTM       = NativeAsset("FTM")       // Fantom
+	INJ       = NativeAsset("INJ")       // Injective
+	LUNA      = NativeAsset("LUNA")      // Terra V2
+	LUNC      = NativeAsset("LUNC")      // Terra Classic
+	KAR       = NativeAsset("KAR")       // Karura
+	KLAY      = NativeAsset("KLAY")      // Klaytn
+	MATIC     = NativeAsset("MATIC")     // Polygon
+	OAS       = NativeAsset("OAS")       // Oasys (not Oasis!)
+	OasisROSE = NativeAsset("OasisROSE") // Rose (Oasis = main chain)
+	OptETH    = NativeAsset("OptETH")    // Optimism
+	ROSE      = NativeAsset("ROSE")      // Rose (Oasis Emerald parachain)
+	SOL       = NativeAsset("SOL")       // Solana
+	XPLA      = NativeAsset("XPLA")      // XPLA
+)
 
 // Driver is the type of a chain
 type Driver string

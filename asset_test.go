@@ -105,4 +105,8 @@ func (s *CrosschainTestSuite) TestGetAssetIDFromAsset() {
 	require.Equal(AssetID("USDC"), GetAssetIDFromAsset("USDC", ""))
 	require.Equal(AssetID("USDC"), GetAssetIDFromAsset("USDC", "ETH"))
 	require.Equal(AssetID("USDC.SOL"), GetAssetIDFromAsset("USDC", "SOL"))
+
+	require.Equal(AssetID("INJ"), GetAssetIDFromAsset("INJ", "INJ"))
+	require.Equal(AssetID("INJ.ETH"), GetAssetIDFromAsset("INJ", "ETH"))
+	require.Equal(AssetID("INJ.SOL"), GetAssetIDFromAsset("INJ", "SOL"))
 }
