@@ -121,6 +121,16 @@ func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.proxy.RoundTrip(req)
 }
 
+func (client *Client) UpdateAsset(assetCfg xc.AssetConfig) error {
+	// validate that the new asset is the same native asset
+	if client.Asset.NativeAsset != assetCfg.NativeAsset {
+		return fmt.Errorf("cannot update client asset to different chain")
+	}
+
+	client.Asset = assetCfg
+	return nil
+}
+
 // FetchTxInput returns tx input for a Cosmos tx
 func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Address) (xc.TxInput, error) {
 	txInput := NewTxInput()
@@ -296,10 +306,19 @@ func (client *Client) EstimateGas(ctx context.Context) (float64, error) {
 
 // FetchBalance fetches token balance for a Cosmos address
 func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	if isNativeAsset(client.Asset) {
+	return client.FetchBalanceForAsset(ctx, address, client.Asset)
+}
+
+// FetchBalanceForAsset fetches a specific token balance which may not be the asset configured for the client
+func (client *Client) FetchBalanceForAsset(ctx context.Context, address xc.Address, assetCfg xc.AssetConfig) (xc.AmountBlockchain, error) {
+	if isNativeAsset(assetCfg) {
 		return client.FetchNativeBalance(ctx, address)
 	}
 
+	return client.fetchContractBalance(ctx, address, assetCfg.Contract)
+}
+
+func (client *Client) fetchContractBalance(ctx context.Context, address xc.Address, contractAddress string) (xc.AmountBlockchain, error) {
 	zero := xc.NewAmountBlockchainFromUint64(0)
 
 	_, err := types.GetFromBech32(string(address), client.Prefix)
@@ -309,7 +328,7 @@ func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.
 
 	input := json.RawMessage(`{"balance": {"address": "` + string(address) + `"}}`)
 	balResp, err := wasmtypes.NewQueryClient(client.Ctx).ContractStore(ctx, &wasmtypes.QueryContractStoreRequest{
-		ContractAddress: client.Asset.Contract,
+		ContractAddress: contractAddress,
 		QueryMsg:        input,
 	})
 	if err != nil {

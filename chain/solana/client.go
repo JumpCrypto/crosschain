@@ -46,6 +46,16 @@ func NewClient(asset xc.AssetConfig) (*Client, error) {
 	}, nil
 }
 
+func (client *Client) UpdateAsset(assetCfg xc.AssetConfig) error {
+	// validate that the new asset is the same native asset
+	if client.Asset.NativeAsset != assetCfg.NativeAsset {
+		return fmt.Errorf("cannot update client asset to different chain")
+	}
+
+	client.Asset = assetCfg
+	return nil
+}
+
 // FetchTxInput returns tx input for a Solana tx, namely a RecentBlockHash
 func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.Address) (xc.TxInput, error) {
 	txInput := NewTxInput()
@@ -246,12 +256,22 @@ func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address
 
 // FetchBalance fetches token balance for a Solana address
 func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	if client.Asset.Type == xc.AssetTypeNative {
+	return client.FetchBalanceForAsset(ctx, address, client.Asset)
+}
+
+// FetchBalanceForAsset fetches a specific token balance which may not be the asset configured for the client
+func (client *Client) FetchBalanceForAsset(ctx context.Context, address xc.Address, assetCfg xc.AssetConfig) (xc.AmountBlockchain, error) {
+	if assetCfg.Type == xc.AssetTypeNative {
 		return client.FetchNativeBalance(ctx, address)
 	}
 
+	return client.fetchContractBalance(ctx, address, assetCfg.Contract)
+}
+
+// fetchContractBalance fetches a specific token balance for a Solana address
+func (client *Client) fetchContractBalance(ctx context.Context, address xc.Address, contract string) (xc.AmountBlockchain, error) {
 	zero := xc.NewAmountBlockchainFromUint64(0)
-	ataStr, err := FindAssociatedTokenAddress(string(address), client.Asset.Contract)
+	ataStr, err := FindAssociatedTokenAddress(string(address), contract)
 	if err != nil {
 		return zero, err
 	}
