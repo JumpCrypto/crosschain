@@ -33,7 +33,7 @@ func (s *CrosschainTestSuite) TestAssetConfig() {
 		Provider:   "myprovider",
 		AuthSecret: "SECRET",
 	}
-	require.Equal("net: mynet, url: myurl, auth: myauth, provider: myprovider", assetConfig.String())
+	require.Equal("asset=myasset chain= chainId=0 driver= decimals=0 type= chainCoin= prefix= net=mynet url=myurl auth=myauth provider=myprovider", assetConfig.String())
 	require.NotContains(assetConfig.String(), "SECRET")
 }
 

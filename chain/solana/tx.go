@@ -9,6 +9,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/programs/token"
+	"github.com/gagliardetto/solana-go/programs/vote"
 	"github.com/gagliardetto/solana-go/rpc"
 )
 
@@ -95,6 +96,10 @@ func (tx Tx) From() xc.Address {
 	case *token.Transfer:
 		from := tf.GetOwnerAccount().PublicKey.String()
 		return xc.Address(from)
+	case *vote.Vote:
+		// https://docs.rs/solana-vote-program/latest/solana_vote_program/vote_instruction/enum.VoteInstruction.html#variant.Withdraw
+		from := tf.GetAccounts()[2].PublicKey.String()
+		return xc.Address(from)
 	}
 	return xc.Address("")
 }
@@ -109,6 +114,10 @@ func (tx Tx) To() xc.Address {
 	switch tf := tx.parsedTransfer.(type) {
 	case *system.Transfer:
 		to := tf.GetRecipientAccount().PublicKey.String()
+		return xc.Address(to)
+	case *vote.Withdraw:
+		// https://docs.rs/solana-vote-program/latest/solana_vote_program/vote_instruction/enum.VoteInstruction.html#variant.Withdraw
+		to := tf.GetAccounts()[1].PublicKey.String()
 		return xc.Address(to)
 	}
 
@@ -139,6 +148,8 @@ func (tx Tx) Amount() xc.AmountBlockchain {
 		return xc.NewAmountBlockchainFromUint64(*tf.Amount)
 	case *token.Transfer:
 		return xc.NewAmountBlockchainFromUint64(*tf.Amount)
+	case *vote.Withdraw:
+		return xc.NewAmountBlockchainFromUint64(*tf.Lamports)
 	}
 	return xc.NewAmountBlockchainFromUint64(0)
 }
@@ -175,7 +186,11 @@ func (tx Tx) getSystemTransfer() (*system.Transfer, error) {
 	if tx.SolTx != nil {
 		message := tx.SolTx.Message
 		for _, instruction := range message.Instructions {
-			inst, err := system.DecodeInstruction(instruction.ResolveInstructionAccounts(&message), instruction.Data)
+			accs, err := instruction.ResolveInstructionAccounts(&message)
+			if err != nil {
+				continue
+			}
+			inst, err := system.DecodeInstruction(accs, instruction.Data)
 			if err != nil {
 				continue
 			}
@@ -193,7 +208,11 @@ func (tx Tx) getTokenTransferChecked() (*token.TransferChecked, error) {
 	if tx.SolTx != nil {
 		message := tx.SolTx.Message
 		for _, instruction := range message.Instructions {
-			inst, err := token.DecodeInstruction(instruction.ResolveInstructionAccounts(&message), instruction.Data)
+			accs, err := instruction.ResolveInstructionAccounts(&message)
+			if err != nil {
+				continue
+			}
+			inst, err := token.DecodeInstruction(accs, instruction.Data)
 			if err != nil {
 				continue
 			}
@@ -212,7 +231,11 @@ func (tx Tx) getTokenTransfer() (*token.Transfer, error) {
 	if tx.SolTx != nil {
 		message := tx.SolTx.Message
 		for _, instruction := range message.Instructions {
-			inst, err := token.DecodeInstruction(instruction.ResolveInstructionAccounts(&message), instruction.Data)
+			accs, err := instruction.ResolveInstructionAccounts(&message)
+			if err != nil {
+				continue
+			}
+			inst, err := token.DecodeInstruction(accs, instruction.Data)
 			if err != nil {
 				continue
 			}
