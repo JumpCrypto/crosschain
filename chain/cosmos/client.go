@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	xc "github.com/jumpcrypto/crosschain"
 
@@ -18,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -356,12 +358,39 @@ func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address
 	if err != nil {
 		return zero, fmt.Errorf("bad address: '%v': %v", address, err)
 	}
+	denom := client.Asset.ChainCoin
+	if denom == "" {
+		if client.Asset.Contract != "" {
+			denom = client.Asset.Contract
+		}
+	}
+	if denom == "" {
+		return zero, fmt.Errorf("failed to account balance: no denom on asset %s.%s", client.Asset.Asset, client.Asset.NativeAsset)
+	}
 
-	balResp, err := banktypes.NewQueryClient(client.Ctx).Balance(ctx, &banktypes.QueryBalanceRequest{
+	queryClient := banktypes.NewQueryClient(client.Ctx)
+	balResp, err := queryClient.Balance(ctx, &banktypes.QueryBalanceRequest{
 		Address: string(address),
-		Denom:   client.Asset.ChainCoin,
+		Denom:   denom,
 	})
 	if err != nil {
+		if strings.Contains(err.Error(), "invalid denom") {
+			// Some chains do not properly support getting balance by denom directly, but will support when getting all of the balances.
+			allBals, err := queryClient.AllBalances(ctx, &banktypes.QueryAllBalancesRequest{
+				Address: string(address),
+				Pagination: &query.PageRequest{
+					Limit: 100,
+				},
+			})
+			if err != nil {
+				return zero, fmt.Errorf("failed to get any account balance: '%v': %v", address, err)
+			}
+			for _, bal := range allBals.Balances {
+				if bal.Denom == denom {
+					return xc.AmountBlockchain(*bal.Amount.BigInt()), nil
+				}
+			}
+		}
 		return zero, fmt.Errorf("failed to get account balance: '%v': %v", address, err)
 	}
 	if balResp == nil || balResp.GetBalance() == nil {
