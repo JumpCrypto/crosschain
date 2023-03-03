@@ -20,7 +20,7 @@ type ClientBalance interface {
 	FetchBalance(ctx context.Context, address Address) (AmountBlockchain, error)
 
 	// Fetch Balance for a specific asset on the same chain
-	FetchBalanceForAsset(ctx context.Context, addressAddress, assetCfg AssetConfig) (AmountBlockchain, error)
+	FetchBalanceForAsset(ctx context.Context, address Address, assetCfg AssetConfig) (AmountBlockchain, error)
 
 	FetchNativeBalance(ctx context.Context, address Address) (AmountBlockchain, error)
 }
