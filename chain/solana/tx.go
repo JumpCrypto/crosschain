@@ -96,7 +96,7 @@ func (tx Tx) From() xc.Address {
 	case *token.Transfer:
 		from := tf.GetOwnerAccount().PublicKey.String()
 		return xc.Address(from)
-	case *vote.Vote:
+	case *vote.Withdraw:
 		// https://docs.rs/solana-vote-program/latest/solana_vote_program/vote_instruction/enum.VoteInstruction.html#variant.Withdraw
 		from := tf.GetAccounts()[2].PublicKey.String()
 		return xc.Address(from)

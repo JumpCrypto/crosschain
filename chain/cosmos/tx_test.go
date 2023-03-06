@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	ethermintCodec "github.com/evmos/ethermint/encoding/codec"
 	xc "github.com/jumpcrypto/crosschain"
-	terraApp "github.com/terra-money/core/app"
+	terraApp "github.com/terra-money/core/v2/app"
 )
 
 func (s *CrosschainTestSuite) TestTx() {

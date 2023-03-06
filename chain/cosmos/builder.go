@@ -7,13 +7,13 @@ import (
 	"math/big"
 	"strings"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	xc "github.com/jumpcrypto/crosschain"
-	wasmtypes "github.com/terra-money/core/x/wasm/types"
 )
 
 // TxBuilder for Cosmos
@@ -85,9 +85,9 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 
 	contractTransferMsg := fmt.Sprintf(`{"transfer": {"amount": "%s", "recipient": "%s"}}`, amount.String(), to)
 	msgSend := &wasmtypes.MsgExecuteContract{
-		Sender:     string(from),
-		Contract:   asset.Contract,
-		ExecuteMsg: json.RawMessage(contractTransferMsg),
+		Sender:   string(from),
+		Contract: asset.Contract,
+		Msg:      wasmtypes.RawContractMessage(json.RawMessage(contractTransferMsg)),
 	}
 
 	return txBuilder.createTxWithMsg(from, to, amount, txInput, msgSend)

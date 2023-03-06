@@ -17,13 +17,13 @@ import (
 
 	// injectivecryptocodec "github.com/InjectiveLabs/sdk-go/chain/crypto/codec"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	wasmtypes "github.com/terra-money/core/x/wasm/types"
 )
 
 // TxInput for Cosmos
@@ -329,9 +329,9 @@ func (client *Client) fetchContractBalance(ctx context.Context, address xc.Addre
 	}
 
 	input := json.RawMessage(`{"balance": {"address": "` + string(address) + `"}}`)
-	balResp, err := wasmtypes.NewQueryClient(client.Ctx).ContractStore(ctx, &wasmtypes.QueryContractStoreRequest{
-		ContractAddress: contractAddress,
-		QueryMsg:        input,
+	balResp, err := wasmtypes.NewQueryClient(client.Ctx).SmartContractState(ctx, &wasmtypes.QuerySmartContractStateRequest{
+		QueryData: wasmtypes.RawContractMessage(input),
+		Address:   contractAddress,
 	})
 	if err != nil {
 		return zero, fmt.Errorf("failed to get token balance: '%v': %v", address, err)
@@ -341,7 +341,7 @@ func (client *Client) fetchContractBalance(ctx context.Context, address xc.Addre
 		Balance string
 	}
 	var balResult TokenBalance
-	err = json.Unmarshal(balResp.QueryResult, &balResult)
+	err = json.Unmarshal(balResp.Data.Bytes(), &balResult)
 	if err != nil {
 		return zero, fmt.Errorf("failed to parse token balance: '%v': %v", address, err)
 	}

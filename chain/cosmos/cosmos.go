@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 
 	xc "github.com/jumpcrypto/crosschain"
-	terraApp "github.com/terra-money/core/app"
-	"github.com/terra-money/core/app/params"
+	terraApp "github.com/terra-money/core/v2/app"
+	"github.com/terra-money/core/v2/app/params"
 
 	injethsecp256k1 "github.com/InjectiveLabs/sdk-go/chain/crypto/ethsecp256k1"
 	injectivecodec "github.com/InjectiveLabs/sdk-go/chain/types"
