@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	ethermintCodec "github.com/evmos/ethermint/encoding/codec"
 	xc "github.com/jumpcrypto/crosschain"
-	terraApp "github.com/terra-money/core/v2/app"
 )
 
 func (s *CrosschainTestSuite) TestTx() {
@@ -51,7 +50,7 @@ func (s *CrosschainTestSuite) TestTx() {
 	for _, v := range vectors {
 		bytes, _ := hex.DecodeString(v.bin)
 
-		cosmosCfg := terraApp.MakeEncodingConfig()
+		cosmosCfg := MakeEncodingConfig()
 		ethermintCodec.RegisterInterfaces(cosmosCfg.InterfaceRegistry)
 		decoder := cosmosCfg.TxConfig.TxDecoder()
 		decodedTx, _ := decoder(bytes)
@@ -90,7 +89,7 @@ func (s *CrosschainTestSuite) TestTxSighashesErr() {
 
 func (s *CrosschainTestSuite) TestTxAddSignaturesErr() {
 	require := s.Require()
-	cosmosCfg := terraApp.MakeEncodingConfig()
+	cosmosCfg := MakeEncodingConfig()
 
 	tx := Tx{}
 	err := tx.AddSignatures([]xc.TxSignature{}...)
