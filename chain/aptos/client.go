@@ -3,7 +3,6 @@ package aptos
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/coming-chat/go-aptos/aptosclient"
 	xc "github.com/jumpcrypto/crosschain"
@@ -27,6 +26,8 @@ type Client struct {
 	AptosClient *aptosclient.RestClient
 }
 
+var _ xc.FullClient = &Client{}
+
 // NewClient returns a new Aptos Client
 func NewClient(cfg xc.AssetConfig) (*Client, error) {
 	client, err := aptosclient.Dial(context.Background(), cfg.URL)
@@ -34,16 +35,6 @@ func NewClient(cfg xc.AssetConfig) (*Client, error) {
 		Asset:       cfg,
 		AptosClient: client,
 	}, err
-}
-
-func (client *Client) UpdateAsset(assetCfg xc.AssetConfig) error {
-	// validate that the new asset is the same native asset
-	if client.Asset.NativeAsset != assetCfg.NativeAsset {
-		return fmt.Errorf("cannot update client asset to different chain")
-	}
-
-	client.Asset = assetCfg
-	return nil
 }
 
 // FetchTxInput returns tx input for a Aptos tx

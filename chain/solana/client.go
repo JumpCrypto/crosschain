@@ -37,6 +37,8 @@ type Client struct {
 	Asset     xc.AssetConfig
 }
 
+var _ xc.FullClient = &Client{}
+
 // NewClient returns a new JSON-RPC Client to the Solana node
 func NewClient(asset xc.AssetConfig) (*Client, error) {
 	solClient := rpc.New(asset.URL)
@@ -44,16 +46,6 @@ func NewClient(asset xc.AssetConfig) (*Client, error) {
 		SolClient: solClient,
 		Asset:     asset,
 	}, nil
-}
-
-func (client *Client) UpdateAsset(assetCfg xc.AssetConfig) error {
-	// validate that the new asset is the same native asset
-	if client.Asset.NativeAsset != assetCfg.NativeAsset {
-		return fmt.Errorf("cannot update client asset to different chain")
-	}
-
-	client.Asset = assetCfg
-	return nil
 }
 
 // FetchTxInput returns tx input for a Solana tx, namely a RecentBlockHash

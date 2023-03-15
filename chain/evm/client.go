@@ -11,6 +11,8 @@ import (
 type Client struct {
 }
 
+var _ xc.Client = &Client{}
+
 // TxInput for EVM
 type TxInput struct {
 }
@@ -23,10 +25,6 @@ func NewClient(cfg xc.AssetConfig) (*Client, error) {
 // NewLegacyClient returns a new EVM Client for legacy tx
 func NewLegacyClient(cfg xc.AssetConfig) (*Client, error) {
 	return &Client{}, errors.New("not implemented")
-}
-
-func (client *Client) UpdateAsset(assetCfg xc.AssetConfig) error {
-	return errors.New("not implemented")
 }
 
 // FetchTxInput returns tx input for a EVM tx
