@@ -37,7 +37,7 @@ func NewTxBuilder(asset xc.AssetConfig) (xc.TxBuilder, error) {
 
 // NewTransfer creates a new transfer for an Asset, either native or token
 func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
-	if isNativeAsset(txBuilder.Asset) {
+	if isNativeAsset(&txBuilder.Asset) {
 		return txBuilder.NewNativeTransfer(from, to, amount, input)
 	}
 	return txBuilder.NewTokenTransfer(from, to, amount, input)
@@ -75,7 +75,7 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 	// Terra Classic: most tokens are actually native tokens
 	// in crosschain we can treat them interchangeably as native or non-native assets
 	// if contract isn't a valid address, they're native tokens
-	if isNativeAsset(asset) {
+	if isNativeAsset(&asset) {
 		return txBuilder.NewNativeTransfer(from, to, amount, input)
 	}
 

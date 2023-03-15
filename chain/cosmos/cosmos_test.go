@@ -28,20 +28,20 @@ func TestExampleTestSuite(t *testing.T) {
 func (s *CrosschainTestSuite) TestIsNativeAsset() {
 	require := s.Require()
 
-	is := isNativeAsset(xc.AssetConfig{Type: xc.AssetTypeNative})
+	is := isNativeAsset(&xc.AssetConfig{Type: xc.AssetTypeNative})
 	require.True(is)
 
-	is = isNativeAsset(xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "uluna"})
+	is = isNativeAsset(&xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "uluna"})
 	require.True(is)
 
-	is = isNativeAsset(xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "a-valid-long-contract"})
+	is = isNativeAsset(&xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "a-valid-long-contract"})
 	require.False(is)
 
 	// edge cases
-	is = isNativeAsset(xc.AssetConfig{})
+	is = isNativeAsset(&xc.AssetConfig{})
 	require.True(is)
 
-	is = isNativeAsset(xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "uluna"})
+	is = isNativeAsset(&xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "uluna"})
 	require.True(is)
 }
 

@@ -153,7 +153,7 @@ func MakeCosmosConfig() EncodingConfig {
 	return cosmosCfg
 }
 
-func isNativeAsset(asset xc.AssetConfig) bool {
+func isNativeAsset(asset *xc.AssetConfig) bool {
 	return asset.Type == xc.AssetTypeNative || len(asset.Contract) < LEN_NATIVE_ASSET
 }
 

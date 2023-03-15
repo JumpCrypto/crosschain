@@ -298,12 +298,16 @@ func (client *Client) EstimateGas(ctx context.Context) (float64, error) {
 	return 0, errors.New("not implemented")
 }
 
-// FetchBalance fetches token balance for a Cosmos address
+// FetchBalance fetches balance for input asset for a Cosmos address
 func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	if isNativeAsset(client.Asset) {
+	if isNativeAsset(&client.Asset) {
 		return client.FetchNativeBalance(ctx, address)
 	}
-
+	_, err := types.GetFromBech32(client.Asset.Contract, client.Prefix)
+	if err != nil {
+		// could be a custom denom.  Try querying as a native balance.
+		return client.fetchBankModuleBalance(ctx, address, &client.Asset)
+	}
 	return client.fetchContractBalance(ctx, address, client.Asset.Contract)
 }
 
@@ -339,20 +343,26 @@ func (client *Client) fetchContractBalance(ctx context.Context, address xc.Addre
 
 // FetchNativeBalance fetches account balance for a Cosmos address
 func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
+	return client.fetchBankModuleBalance(ctx, address, &client.Asset)
+}
+
+// Cosmos chains can have multiple native assets.  This helper is necessary to query the
+// native bank module for a given asset.
+func (client *Client) fetchBankModuleBalance(ctx context.Context, address xc.Address, asset *xc.AssetConfig) (xc.AmountBlockchain, error) {
 	zero := xc.NewAmountBlockchainFromUint64(0)
 
 	_, err := types.GetFromBech32(string(address), client.Prefix)
 	if err != nil {
 		return zero, fmt.Errorf("bad address: '%v': %v", address, err)
 	}
-	denom := client.Asset.ChainCoin
+	denom := asset.ChainCoin
 	if denom == "" {
-		if client.Asset.Contract != "" {
-			denom = client.Asset.Contract
+		if asset.Contract != "" {
+			denom = asset.Contract
 		}
 	}
 	if denom == "" {
-		return zero, fmt.Errorf("failed to account balance: no denom on asset %s.%s", client.Asset.Asset, client.Asset.NativeAsset)
+		return zero, fmt.Errorf("failed to account balance: no denom on asset %s.%s", asset.Asset, asset.NativeAsset)
 	}
 
 	queryClient := banktypes.NewQueryClient(client.Ctx)
