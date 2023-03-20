@@ -41,6 +41,7 @@ func (asset Asset) AssetType() AssetType {
 		LUNA,
 		LUNC,
 		MATIC,
+		XDC,
 		OAS,
 		OasisROSE,
 		OptETH,
@@ -87,6 +88,7 @@ func (native NativeAsset) ChainType() ChainType {
 		LUNA,
 		LUNC,
 		MATIC,
+		XDC,
 		OAS,
 		OasisROSE,
 		OptETH,
@@ -130,6 +132,7 @@ const (
 	LUNC      = NativeAsset("LUNC")      // Terra Classic
 	KAR       = NativeAsset("KAR")       // Karura
 	KLAY      = NativeAsset("KLAY")      // Klaytn
+	XDC       = NativeAsset("XDC")       // XinFin
 	MATIC     = NativeAsset("MATIC")     // Polygon
 	OAS       = NativeAsset("OAS")       // Oasys (not Oasis!)
 	OasisROSE = NativeAsset("OasisROSE") // Rose (Oasis = main chain)
@@ -192,6 +195,10 @@ type AssetConfig struct {
 	Contract string `yaml:"contract"`
 	Decimals int32  `yaml:"decimals"`
 	Name     string `yaml:"name"`
+
+	// Indexing settings for polling
+	IndexerUrl  string `yaml:"indexer_url"`
+	IndexerType string `yaml:"indexer_type"`
 
 	// Not used for serde
 	ID          AssetID     `yaml:"-"`

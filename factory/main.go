@@ -470,6 +470,10 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 		if strings.HasPrefix(address, "0x") {
 			return strings.ToLower(address)
 		}
+	case XDC:
+		if strings.HasPrefix(address, "0x") || strings.HasPrefix(address, "xdc") {
+			return strings.ToLower(address)
+		}
 	case BCH:
 		// remove bitcoincash: prefix
 		if strings.Contains(address, ":") {
