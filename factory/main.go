@@ -57,6 +57,16 @@ type Factory struct {
 
 var _ FactoryContext = &Factory{}
 
+func (f *Factory) GetAllAssets() []*AssetConfig {
+	assets := []*AssetConfig{}
+	f.AllAssets.Range(func(key, value any) bool {
+		asset := value.(AssetConfig)
+		assets = append(assets, &asset)
+		return true
+	})
+	return assets
+}
+
 func (f *Factory) cfgFromAsset(assetID AssetID) (AssetConfig, error) {
 	cfgI, found := f.AllAssets.Load(assetID)
 	if !found {
