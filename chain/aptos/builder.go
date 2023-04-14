@@ -8,13 +8,13 @@ import (
 
 // TxBuilder for Template
 type TxBuilder struct {
-	Asset xc.AssetConfig
+	Asset *xc.AssetConfig
 }
 
 // NewTxBuilder creates a new Template TxBuilder
-func NewTxBuilder(asset xc.AssetConfig) (xc.TxBuilder, error) {
+func NewTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 	return TxBuilder{
-		Asset: asset,
+		Asset: asset.GetAssetConfig(),
 	}, errors.New("not implemented")
 }
 

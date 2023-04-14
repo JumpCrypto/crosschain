@@ -16,7 +16,7 @@ type TxInput struct {
 }
 
 // NewClient returns a new Template Client
-func NewClient(cfg xc.AssetConfig) (*Client, error) {
+func NewClient(cfgI xc.ITask) (*Client, error) {
 	return &Client{}, errors.New("not implemented")
 }
 

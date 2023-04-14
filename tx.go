@@ -1,5 +1,7 @@
 package crosschain
 
+import "encoding/base64"
+
 // TxInput is input data to a tx. Depending on the blockchain it can include nonce, recent block hash, account id, ...
 type TxInput interface {
 }
@@ -35,7 +37,6 @@ type TxInfoEndpoint struct {
 	Address         Address
 	ContractAddress ContractAddress
 	Amount          AmountBlockchain
-	AmountHuman     AmountHumanReadable
 	NativeAsset     NativeAsset
 	Asset           Asset
 	AssetConfig     *AssetConfig
@@ -43,6 +44,7 @@ type TxInfoEndpoint struct {
 
 // TxInfo is a unified view of common tx info across multiple blockchains. Use it as an example to build your own.
 type TxInfo struct {
+	BlockHash       string
 	TxID            string
 	ExplorerURL     string
 	From            Address
@@ -55,8 +57,10 @@ type TxInfo struct {
 	BlockTime       int64
 	Confirmations   int64
 	Status          TxStatus
-	Sources         []TxInfoEndpoint
-	Destinations    []TxInfoEndpoint
+	Sources         []*TxInfoEndpoint
+	Destinations    []*TxInfoEndpoint
+	Time            int64
+	TimeReceived    int64
 }
 
 // TxHash is a tx hash or id
@@ -64,6 +68,10 @@ type TxHash string
 
 // TxDataToSign is the payload that Signer needs to sign, when "signing a tx". It's sometimes called a sighash.
 type TxDataToSign []byte
+
+func (data TxDataToSign) String() string {
+	return base64.RawURLEncoding.EncodeToString(data)
+}
 
 // TxSignature is a tx signature
 type TxSignature []byte

@@ -1,8 +1,9 @@
 package evm
 
 import (
-	"errors"
+	"encoding/hex"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	xc "github.com/jumpcrypto/crosschain"
 )
 
@@ -11,16 +12,24 @@ type Signer struct {
 }
 
 // NewSigner creates a new EVM Signer
-func NewSigner(asset xc.AssetConfig) (xc.Signer, error) {
-	return Signer{}, errors.New("not implemented")
+func NewSigner(asset xc.ITask) (xc.Signer, error) {
+	return Signer{}, nil
 }
+
+var _ xc.Signer = &Signer{}
 
 // ImportPrivateKey imports an EVM private key
 func (signer Signer) ImportPrivateKey(privateKey string) (xc.PrivateKey, error) {
-	return xc.PrivateKey([]byte{}), errors.New("not implemented")
+	bytesPri, err := hex.DecodeString(privateKey)
+	return xc.PrivateKey(bytesPri), err
 }
 
 // Sign an EVM tx
 func (signer Signer) Sign(privateKey xc.PrivateKey, data xc.TxDataToSign) (xc.TxSignature, error) {
-	return xc.TxSignature([]byte{}), errors.New("not implemented")
+	ecdsaKey, err := crypto.HexToECDSA(hex.EncodeToString(privateKey))
+	if err != nil {
+		return []byte{}, err
+	}
+	signatureRaw, err := crypto.Sign([]byte(data), ecdsaKey)
+	return xc.TxSignature(signatureRaw), err
 }

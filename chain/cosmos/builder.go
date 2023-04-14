@@ -19,17 +19,17 @@ import (
 // TxBuilder for Cosmos
 type TxBuilder struct {
 	xc.TxBuilder
-	Asset           xc.AssetConfig
+	Asset           *xc.AssetConfig
 	CosmosTxConfig  client.TxConfig
 	CosmosTxBuilder client.TxBuilder
 }
 
 // NewTxBuilder creates a new Cosmos TxBuilder
-func NewTxBuilder(asset xc.AssetConfig) (xc.TxBuilder, error) {
+func NewTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 	cosmosCfg := MakeCosmosConfig()
 
 	return TxBuilder{
-		Asset:           asset,
+		Asset:           asset.GetAssetConfig(),
 		CosmosTxConfig:  cosmosCfg.TxConfig,
 		CosmosTxBuilder: cosmosCfg.TxConfig.NewTxBuilder(),
 	}, nil
@@ -37,7 +37,7 @@ func NewTxBuilder(asset xc.AssetConfig) (xc.TxBuilder, error) {
 
 // NewTransfer creates a new transfer for an Asset, either native or token
 func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
-	if isNativeAsset(&txBuilder.Asset) {
+	if isNativeAsset(txBuilder.Asset) {
 		return txBuilder.NewNativeTransfer(from, to, amount, input)
 	}
 	return txBuilder.NewTokenTransfer(from, to, amount, input)
@@ -75,7 +75,7 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 	// Terra Classic: most tokens are actually native tokens
 	// in crosschain we can treat them interchangeably as native or non-native assets
 	// if contract isn't a valid address, they're native tokens
-	if isNativeAsset(&asset) {
+	if isNativeAsset(asset) {
 		return txBuilder.NewNativeTransfer(from, to, amount, input)
 	}
 
@@ -113,7 +113,7 @@ func accAddressFromBech32WithPrefix(address string, prefix string) ([]byte, erro
 
 // createTxWithMsg creates a new Tx given Cosmos Msg
 func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input *TxInput, msg types.Msg) (xc.Tx, error) {
-	asset := txBuilder.Asset
+	asset := *txBuilder.Asset
 	cosmosTxConfig := txBuilder.CosmosTxConfig
 	cosmosBuilder := txBuilder.CosmosTxBuilder
 

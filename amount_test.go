@@ -12,6 +12,17 @@ func (s *CrosschainTestSuite) TestNewAmountBlockchainFromUint64() {
 	require.Equal(amount.String(), "123")
 }
 
+func (s *CrosschainTestSuite) TestNewAmountBlockchainFromFloat64() {
+	require := s.Require()
+	amount := NewAmountBlockchainToMaskFloat64(1.23)
+	require.NotNil(amount)
+	require.Equal(amount.Uint64(), uint64(1230000))
+	require.Equal(amount.String(), "1230000")
+
+	amountFloat := amount.UnmaskFloat64()
+	require.Equal(amountFloat, 1.23)
+}
+
 func (s *CrosschainTestSuite) TestAmountHumanReadable() {
 	require := s.Require()
 	amountDec, _ := decimal.NewFromString("10.3")

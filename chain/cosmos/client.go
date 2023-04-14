@@ -59,15 +59,18 @@ func NewTxInput() *TxInput {
 
 // Client for Cosmos
 type Client struct {
-	Asset  xc.AssetConfig
-	Ctx    client.Context
-	Prefix string
+	Asset           *xc.AssetConfig
+	Ctx             client.Context
+	Prefix          string
+	EstimateGasFunc xc.EstimateGasFunc
 }
 
-var _ xc.FullClient = &Client{}
+var _ xc.FullClientWithGas = &Client{}
 
 // NewClient returns a new Client
-func NewClient(cfg xc.AssetConfig) (*Client, error) {
+func NewClient(cfgI xc.ITask) (*Client, error) {
+	asset := cfgI.GetAssetConfig()
+	cfg := cfgI.GetNativeAsset()
 	host := cfg.URL
 	httpClient, err := rpchttp.NewWithClient(
 		host,
@@ -95,9 +98,10 @@ func NewClient(cfg xc.AssetConfig) (*Client, error) {
 		WithChainID(string(cfg.ChainIDStr))
 
 	return &Client{
-		Asset:  cfg,
-		Ctx:    cliCtx,
-		Prefix: cfg.ChainPrefix,
+		Asset:           asset,
+		Ctx:             cliCtx,
+		Prefix:          cfg.ChainPrefix,
+		EstimateGasFunc: nil,
 	}, nil
 }
 
@@ -140,7 +144,7 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Ad
 	if err != nil {
 		return txInput, fmt.Errorf("failed to estimate gas: %v", err)
 	}
-	txInput.GasPrice = gasPrice
+	txInput.GasPrice = gasPrice.UnmaskFloat64()
 
 	return txInput, nil
 }
@@ -250,63 +254,81 @@ func (client *Client) GetAccount(ctx context.Context, address xc.Address) (clien
 	return acc, nil
 }
 
-func (client *Client) estimateGasFcd(ctx context.Context) (float64, error) {
+func (client *Client) estimateGasFcd(ctx context.Context) (xc.AmountBlockchain, error) {
+	zero := xc.NewAmountBlockchainFromUint64(0)
 	asset := client.Asset
 	fdcURL := asset.FcdURL
 	resp, err := http.Get(fdcURL + "/v1/txs/gas_prices")
 	if err != nil {
-		return 0, err
+		return zero, err
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return 0, err
+		return zero, err
 	}
 
 	prices := make(map[string]string)
 	err = json.Unmarshal(body, &prices)
 	if err != nil {
-		return 0, err
+		return zero, err
 	}
 
 	denom := asset.ChainCoin
 	priceStr, ok := prices[denom]
 	if !ok {
-		return 0, fmt.Errorf("could not find %s in /gas_prices", denom)
+		return zero, fmt.Errorf("could not find %s in /gas_prices", denom)
 	}
 	gasPrice, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
-		return 0, err
+		return zero, err
 	}
 
 	multiplier := 1.0
 	if asset.ChainGasMultiplier > 0 {
 		multiplier = asset.ChainGasMultiplier
 	}
-	return gasPrice * multiplier, nil
+	return xc.NewAmountBlockchainToMaskFloat64(gasPrice * multiplier), nil
 }
 
 // EstimateGas estimates gas price for a Cosmos chain
-func (client *Client) EstimateGas(ctx context.Context) (float64, error) {
+func (client *Client) EstimateGas(ctx context.Context) (xc.AmountBlockchain, error) {
+	// invoke EstimateGasFunc callback, if registered
+	if client.EstimateGasFunc != nil {
+		nativeAsset := client.Asset.NativeAsset
+		res, err := client.EstimateGasFunc(nativeAsset)
+		if err != nil {
+			// continue with default implementation as fallback
+		} else {
+			return res, err
+		}
+	}
+
+	zero := xc.NewAmountBlockchainFromUint64(0)
 	if client.Asset.FcdURL != "" {
 		return client.estimateGasFcd(ctx)
 	}
 	if client.Asset.ChainGasPriceDefault > 0 {
-		return client.Asset.ChainGasPriceDefault, nil
+		return xc.NewAmountBlockchainToMaskFloat64(client.Asset.ChainGasPriceDefault), nil
 	}
-	return 0, errors.New("not implemented")
+	return zero, errors.New("not implemented")
+}
+
+// RegisterEstimateGasCallback registers a callback to get gas price
+func (client *Client) RegisterEstimateGasCallback(fn xc.EstimateGasFunc) {
+	client.EstimateGasFunc = fn
 }
 
 // FetchBalance fetches balance for input asset for a Cosmos address
 func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	if isNativeAsset(&client.Asset) {
+	if isNativeAsset(client.Asset) {
 		return client.FetchNativeBalance(ctx, address)
 	}
 	_, err := types.GetFromBech32(client.Asset.Contract, client.Prefix)
 	if err != nil {
 		// could be a custom denom.  Try querying as a native balance.
-		return client.fetchBankModuleBalance(ctx, address, &client.Asset)
+		return client.fetchBankModuleBalance(ctx, address, client.Asset)
 	}
 	return client.fetchContractBalance(ctx, address, client.Asset.Contract)
 }
@@ -343,7 +365,7 @@ func (client *Client) fetchContractBalance(ctx context.Context, address xc.Addre
 
 // FetchNativeBalance fetches account balance for a Cosmos address
 func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	return client.fetchBankModuleBalance(ctx, address, &client.Asset)
+	return client.fetchBankModuleBalance(ctx, address, client.Asset)
 }
 
 // Cosmos chains can have multiple native assets.  This helper is necessary to query the

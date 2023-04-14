@@ -11,7 +11,7 @@ func (s *CrosschainTestSuite) TestNewClient() {
 	server, close := test.MockHTTP(&s.Suite, resp)
 	defer close()
 
-	client, err := NewClient(xc.AssetConfig{URL: server.URL})
+	client, err := NewClient(&xc.AssetConfig{URL: server.URL})
 	require.NotNil(client)
 	require.Nil(err)
 }
@@ -347,25 +347,25 @@ func (s *CrosschainTestSuite) TestFetchBalance() {
 	require := s.Require()
 
 	vectors := []struct {
-		asset xc.AssetConfig
+		asset *xc.AssetConfig
 		resp  interface{}
 		val   string
 		err   string
 	}{
 		{
-			xc.AssetConfig{Type: xc.AssetTypeNative},
+			&xc.AssetConfig{Type: xc.AssetTypeNative},
 			`{"type":"0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>","data":{"coin":{"value":"1000000"},"deposit_events":{"counter":"2","guid":{"id":{"addr":"0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85","creation_num":"2"}}},"frozen":false,"withdraw_events":{"counter":"0","guid":{"id":{"addr":"0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85","creation_num":"3"}}}}}`,
 			"1000000",
 			"",
 		},
 		{
-			xc.AssetConfig{Type: xc.AssetTypeToken},
+			&xc.AssetConfig{Type: xc.AssetTypeToken},
 			`{"type":"0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>","data":{"coin":{"value":"1000000"},"deposit_events":{"counter":"2","guid":{"id":{"addr":"0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85","creation_num":"2"}}},"frozen":false,"withdraw_events":{"counter":"0","guid":{"id":{"addr":"0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85","creation_num":"3"}}}}}`,
 			"1000000",
 			"",
 		},
 		{
-			xc.AssetConfig{Type: xc.AssetTypeNative},
+			&xc.AssetConfig{Type: xc.AssetTypeNative},
 			`null`,
 			"0",
 			"",

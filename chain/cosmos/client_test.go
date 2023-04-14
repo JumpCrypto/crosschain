@@ -10,7 +10,7 @@ import (
 
 func (s *CrosschainTestSuite) TestNewClient() {
 	require := s.Require()
-	client, err := NewClient(xc.AssetConfig{})
+	client, err := NewClient(&xc.AssetConfig{})
 	require.NotNil(client)
 	require.Nil(err)
 }
@@ -175,7 +175,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 
 		v.asset.URL = server.URL
 		v.asset.FcdURL = serverFcd.URL
-		client, _ := NewClient(v.asset)
+		client, _ := NewClient(&v.asset)
 		from := xc.Address(v.from)
 		to := xc.Address(v.to)
 		input, err := client.FetchTxInput(s.Ctx, from, to)
@@ -199,7 +199,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 func (s *CrosschainTestSuite) TestSubmitTxErr() {
 	require := s.Require()
 
-	client, _ := NewClient(xc.AssetConfig{})
+	client, _ := NewClient(&xc.AssetConfig{})
 	tx := &Tx{}
 	err := client.SubmitTx(s.Ctx, tx)
 	require.ErrorContains(err, "unsupported protocol scheme")
@@ -240,12 +240,12 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 				BlockTime:       1668891362,
 				Confirmations:   48860,
 				Status:          0,
-				Sources: []xc.TxInfoEndpoint{
+				Sources: []*xc.TxInfoEndpoint{
 					{
 						Address: "terra1h8ljdmae7lx05kjj79c9ekscwsyjd3yr8wyvdn",
 					},
 				},
-				Destinations: []xc.TxInfoEndpoint{
+				Destinations: []*xc.TxInfoEndpoint{
 					{
 						Address:         "terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
 						ContractAddress: "uluna",
@@ -280,12 +280,12 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 				BlockTime:       1669849454,
 				Confirmations:   107,
 				Status:          0,
-				Sources: []xc.TxInfoEndpoint{
+				Sources: []*xc.TxInfoEndpoint{
 					{
 						Address: "xpla1hdvf6vv5amc7wp84js0ls27apekwxpr0ge96kg",
 					},
 				},
-				Destinations: []xc.TxInfoEndpoint{
+				Destinations: []*xc.TxInfoEndpoint{
 					{
 						Address:         "xpla1a8f3wnn7qwvwdzxkc9w849kfzhrr6gdvy4c8wv",
 						ContractAddress: "axpla",
@@ -338,7 +338,7 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 
 		asset := v.asset
 		asset.URL = server.URL
-		client, _ := NewClient(asset)
+		client, _ := NewClient(&asset)
 		txInfo, err := client.FetchTxInfo(s.Ctx, xc.TxHash(v.tx))
 
 		if v.err != "" {
@@ -414,7 +414,7 @@ func (s *CrosschainTestSuite) TestFetchBalance() {
 
 		asset := v.asset
 		asset.URL = server.URL
-		client, _ := NewClient(asset)
+		client, _ := NewClient(&asset)
 		from := xc.Address(v.address)
 		balance, err := client.FetchBalance(s.Ctx, from)
 

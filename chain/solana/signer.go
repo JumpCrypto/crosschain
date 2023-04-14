@@ -12,7 +12,7 @@ type Signer struct {
 }
 
 // NewSigner creates a new Solana Signer
-func NewSigner(asset xc.AssetConfig) (xc.Signer, error) {
+func NewSigner(cfgI xc.ITask) (xc.Signer, error) {
 	return Signer{}, nil
 }
 

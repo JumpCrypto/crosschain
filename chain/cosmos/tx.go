@@ -173,13 +173,13 @@ func (tx Tx) Fee() xc.AmountBlockchain {
 }
 
 // Sources returns the sources of a Tx
-func (tx Tx) Sources() []xc.TxInfoEndpoint {
-	sources := []xc.TxInfoEndpoint{}
+func (tx Tx) Sources() []*xc.TxInfoEndpoint {
+	sources := []*xc.TxInfoEndpoint{}
 	for _, parsedTransfer := range tx.ParsedTransfers {
 		switch tf := parsedTransfer.(type) {
 		case *banktypes.MsgSend:
 			from := tf.FromAddress
-			sources = append(sources, xc.TxInfoEndpoint{
+			sources = append(sources, &xc.TxInfoEndpoint{
 				Address: xc.Address(from),
 			})
 			// currently assume/support single-source transfers
@@ -190,15 +190,15 @@ func (tx Tx) Sources() []xc.TxInfoEndpoint {
 }
 
 // Destinations returns the destinations of a Tx
-func (tx Tx) Destinations() []xc.TxInfoEndpoint {
-	destinations := []xc.TxInfoEndpoint{}
+func (tx Tx) Destinations() []*xc.TxInfoEndpoint {
+	destinations := []*xc.TxInfoEndpoint{}
 	for _, parsedTransfer := range tx.ParsedTransfers {
 		switch tf := parsedTransfer.(type) {
 		case *banktypes.MsgSend:
 			to := tf.ToAddress
 			denom := tf.Amount[0].Denom
 			amount := tf.Amount[0].Amount.BigInt()
-			destinations = append(destinations, xc.TxInfoEndpoint{
+			destinations = append(destinations, &xc.TxInfoEndpoint{
 				Address:         xc.Address(to),
 				ContractAddress: xc.ContractAddress(denom),
 				Amount:          xc.AmountBlockchain(*amount),

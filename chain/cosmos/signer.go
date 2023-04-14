@@ -13,13 +13,13 @@ import (
 
 // Signer for Cosmos
 type Signer struct {
-	Asset xc.AssetConfig
+	Asset *xc.AssetConfig
 }
 
 // NewSigner creates a new Cosmos Signer
-func NewSigner(asset xc.AssetConfig) (xc.Signer, error) {
+func NewSigner(asset xc.ITask) (xc.Signer, error) {
 	return Signer{
-		Asset: asset,
+		Asset: asset.GetAssetConfig(),
 	}, nil
 }
 

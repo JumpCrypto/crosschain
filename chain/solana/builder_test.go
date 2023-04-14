@@ -7,15 +7,15 @@ import (
 
 func (s *CrosschainTestSuite) TestNewTxBuilder() {
 	require := s.Require()
-	builder, err := NewTxBuilder(xc.AssetConfig{Asset: "USDC"})
+	builder, err := NewTxBuilder(&xc.AssetConfig{Asset: "USDC"})
 	require.Nil(err)
 	require.NotNil(builder)
-	require.Equal("USDC", builder.(TxBuilder).Asset.Asset)
+	require.Equal("USDC", builder.(TxBuilder).Asset.GetAssetConfig().Asset)
 }
 
 func (s *CrosschainTestSuite) TestNewNativeTransfer() {
 	require := s.Require()
-	builder, _ := NewTxBuilder(xc.AssetConfig{})
+	builder, _ := NewTxBuilder(&xc.AssetConfig{})
 	from := xc.Address("Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
 	to := xc.Address("BWbmXj5ckAaWCAtzMZ97qnJhBAKegoXtgNrv9BUpAB11")
 	amount := xc.NewAmountBlockchainFromUint64(1200000) // 1.2 SOL
@@ -31,7 +31,7 @@ func (s *CrosschainTestSuite) TestNewNativeTransfer() {
 
 func (s *CrosschainTestSuite) TestNewNativeTransferErr() {
 	require := s.Require()
-	builder, _ := NewTxBuilder(xc.AssetConfig{})
+	builder, _ := NewTxBuilder(&xc.AssetConfig{})
 
 	from := xc.Address("from") // fails on parsing from
 	to := xc.Address("to")
@@ -51,7 +51,7 @@ func (s *CrosschainTestSuite) TestNewNativeTransferErr() {
 func (s *CrosschainTestSuite) TestNewTokenTransfer() {
 	require := s.Require()
 	contract := "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
-	builder, _ := NewTxBuilder(xc.AssetConfig{
+	builder, _ := NewTxBuilder(&xc.AssetConfig{
 		Type:     xc.AssetTypeToken,
 		Contract: contract,
 		Decimals: 6,
@@ -115,7 +115,7 @@ func (s *CrosschainTestSuite) TestNewTokenTransferErr() {
 	require := s.Require()
 
 	// invalid asset
-	builder, _ := NewTxBuilder(xc.AssetConfig{})
+	builder, _ := NewTxBuilder(&xc.AssetConfig{})
 	from := xc.Address("from")
 	to := xc.Address("to")
 	amount := xc.AmountBlockchain{}
@@ -125,7 +125,7 @@ func (s *CrosschainTestSuite) TestNewTokenTransferErr() {
 	require.EqualError(err, "asset is not of type token")
 
 	// invalid from, to
-	builder, _ = NewTxBuilder(xc.AssetConfig{
+	builder, _ = NewTxBuilder(&xc.AssetConfig{
 		Type:     xc.AssetTypeToken,
 		Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
 		Decimals: 6,
@@ -144,7 +144,7 @@ func (s *CrosschainTestSuite) TestNewTokenTransferErr() {
 	require.EqualError(err, "invalid length, expected 32, got 2")
 
 	// invalid asset config
-	builder, _ = NewTxBuilder(xc.AssetConfig{
+	builder, _ = NewTxBuilder(&xc.AssetConfig{
 		Type:     xc.AssetTypeToken,
 		Contract: "contract",
 		Decimals: 6,
@@ -156,7 +156,7 @@ func (s *CrosschainTestSuite) TestNewTokenTransferErr() {
 
 func (s *CrosschainTestSuite) TestNewTransfer() {
 	require := s.Require()
-	builder, _ := NewTxBuilder(xc.AssetConfig{})
+	builder, _ := NewTxBuilder(&xc.AssetConfig{})
 	from := xc.Address("Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
 	to := xc.Address("BWbmXj5ckAaWCAtzMZ97qnJhBAKegoXtgNrv9BUpAB11")
 	amount := xc.NewAmountBlockchainFromUint64(1200000) // 1.2 SOL
@@ -172,7 +172,7 @@ func (s *CrosschainTestSuite) TestNewTransfer() {
 
 func (s *CrosschainTestSuite) TestNewTransferAsToken() {
 	require := s.Require()
-	builder, _ := NewTxBuilder(xc.AssetConfig{
+	builder, _ := NewTxBuilder(&xc.AssetConfig{
 		Type:     xc.AssetTypeToken,
 		Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
 		Decimals: 6,

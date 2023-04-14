@@ -7,19 +7,19 @@ import (
 
 // AddressBuilder for Cosmos
 type AddressBuilder struct {
-	Asset xc.AssetConfig
+	Asset *xc.AssetConfig
 }
 
 // NewAddressBuilder creates a new Cosmos AddressBuilder
-func NewAddressBuilder(asset xc.AssetConfig) (xc.AddressBuilder, error) {
+func NewAddressBuilder(asset xc.ITask) (xc.AddressBuilder, error) {
 	return AddressBuilder{
-		Asset: asset,
+		Asset: asset.GetAssetConfig(),
 	}, nil
 }
 
 // GetAddressFromPublicKey returns an Address given a public key
 func (ab AddressBuilder) GetAddressFromPublicKey(publicKeyBytes []byte) (xc.Address, error) {
-	publicKey := getPublicKey(ab.Asset, publicKeyBytes)
+	publicKey := getPublicKey(*ab.Asset, publicKeyBytes)
 	rawAddress := publicKey.Address()
 
 	err := sdk.VerifyAddressFormat(rawAddress)

@@ -9,17 +9,17 @@ import (
 type TestFactory struct {
 	DefaultFactory factory.FactoryContext
 
-	NewClientFunc               func(asset xc.AssetConfig) (xc.Client, error)
-	NewTxBuilderFunc            func(asset xc.AssetConfig) (xc.TxBuilder, error)
-	NewSignerFunc               func(asset xc.AssetConfig) (xc.Signer, error)
-	NewAddressBuilderFunc       func(asset xc.AssetConfig) (xc.AddressBuilder, error)
-	GetAddressFromPublicKeyFunc func(asset xc.AssetConfig, publicKey []byte) (xc.Address, error)
+	NewClientFunc               func(asset xc.ITask) (xc.Client, error)
+	NewTxBuilderFunc            func(asset xc.ITask) (xc.TxBuilder, error)
+	NewSignerFunc               func(asset xc.ITask) (xc.Signer, error)
+	NewAddressBuilderFunc       func(asset xc.ITask) (xc.AddressBuilder, error)
+	GetAddressFromPublicKeyFunc func(asset xc.ITask, publicKey []byte) (xc.Address, error)
 }
 
 var _ factory.FactoryContext = &TestFactory{}
 
 // NewClient creates a new Client
-func (f *TestFactory) NewClient(asset xc.AssetConfig) (xc.Client, error) {
+func (f *TestFactory) NewClient(asset xc.ITask) (xc.Client, error) {
 	if f.NewClientFunc != nil {
 		return f.NewClientFunc(asset)
 	}
@@ -27,7 +27,7 @@ func (f *TestFactory) NewClient(asset xc.AssetConfig) (xc.Client, error) {
 }
 
 // NewTxBuilder creates a new TxBuilder
-func (f *TestFactory) NewTxBuilder(asset xc.AssetConfig) (xc.TxBuilder, error) {
+func (f *TestFactory) NewTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 	if f.NewTxBuilderFunc != nil {
 		return f.NewTxBuilderFunc(asset)
 	}
@@ -35,7 +35,7 @@ func (f *TestFactory) NewTxBuilder(asset xc.AssetConfig) (xc.TxBuilder, error) {
 }
 
 // NewSigner creates a new Signer
-func (f *TestFactory) NewSigner(asset xc.AssetConfig) (xc.Signer, error) {
+func (f *TestFactory) NewSigner(asset xc.ITask) (xc.Signer, error) {
 	if f.NewSignerFunc != nil {
 		return f.NewSignerFunc(asset)
 	}
@@ -43,7 +43,7 @@ func (f *TestFactory) NewSigner(asset xc.AssetConfig) (xc.Signer, error) {
 }
 
 // NewAddressBuilder creates a new AddressBuilder
-func (f *TestFactory) NewAddressBuilder(asset xc.AssetConfig) (xc.AddressBuilder, error) {
+func (f *TestFactory) NewAddressBuilder(asset xc.ITask) (xc.AddressBuilder, error) {
 	if f.NewAddressBuilderFunc != nil {
 		return f.NewAddressBuilderFunc(asset)
 	}
@@ -62,7 +62,7 @@ func (f *TestFactory) UnmarshalTxInput(data []byte) (xc.TxInput, error) {
 }
 
 // GetAddressFromPublicKey returns an Address given a public key
-func (f *TestFactory) GetAddressFromPublicKey(asset xc.AssetConfig, publicKey []byte) (xc.Address, error) {
+func (f *TestFactory) GetAddressFromPublicKey(asset xc.ITask, publicKey []byte) (xc.Address, error) {
 	if f.GetAddressFromPublicKeyFunc != nil {
 		return f.GetAddressFromPublicKeyFunc(asset, publicKey)
 	}
@@ -70,7 +70,7 @@ func (f *TestFactory) GetAddressFromPublicKey(asset xc.AssetConfig, publicKey []
 }
 
 // GetAllPossibleAddressesFromPublicKey returns all PossibleAddress(es) given a public key
-func (f *TestFactory) GetAllPossibleAddressesFromPublicKey(asset xc.AssetConfig, publicKey []byte) ([]xc.PossibleAddress, error) {
+func (f *TestFactory) GetAllPossibleAddressesFromPublicKey(asset xc.ITask, publicKey []byte) ([]xc.PossibleAddress, error) {
 	if f.GetAddressFromPublicKeyFunc != nil {
 		return f.GetAllPossibleAddressesFromPublicKey(asset, publicKey)
 	}
@@ -78,47 +78,52 @@ func (f *TestFactory) GetAllPossibleAddressesFromPublicKey(asset xc.AssetConfig,
 }
 
 // ConvertAmountToHuman converts an AmountBlockchain into AmountHumanReadable, dividing by the appropriate number of decimals
-func (f *TestFactory) ConvertAmountToHuman(asset xc.AssetConfig, blockchainAmount xc.AmountBlockchain) (xc.AmountHumanReadable, error) {
+func (f *TestFactory) ConvertAmountToHuman(asset xc.ITask, blockchainAmount xc.AmountBlockchain) (xc.AmountHumanReadable, error) {
 	return f.DefaultFactory.ConvertAmountToHuman(asset, blockchainAmount)
 }
 
 // ConvertAmountToBlockchain converts an AmountHumanReadable into AmountBlockchain, multiplying by the appropriate number of decimals
-func (f *TestFactory) ConvertAmountToBlockchain(asset xc.AssetConfig, humanAmount xc.AmountHumanReadable) (xc.AmountBlockchain, error) {
+func (f *TestFactory) ConvertAmountToBlockchain(asset xc.ITask, humanAmount xc.AmountHumanReadable) (xc.AmountBlockchain, error) {
 	return f.DefaultFactory.ConvertAmountToBlockchain(asset, humanAmount)
 }
 
 // ConvertAmountStrToBlockchain converts a string representing an AmountHumanReadable into AmountBlockchain, multiplying by the appropriate number of decimals
-func (f *TestFactory) ConvertAmountStrToBlockchain(asset xc.AssetConfig, humanAmountStr string) (xc.AmountBlockchain, error) {
+func (f *TestFactory) ConvertAmountStrToBlockchain(asset xc.ITask, humanAmountStr string) (xc.AmountBlockchain, error) {
 	return f.DefaultFactory.ConvertAmountStrToBlockchain(asset, humanAmountStr)
 }
 
-// GetAssetID returns a canonical AssetID
-func (f *TestFactory) GetAssetID(asset string, nativeAsset string) xc.AssetID {
-	return f.DefaultFactory.GetAssetID(asset, nativeAsset)
-}
-
 // GetAssetConfig returns an AssetConfig by asset and native asset (chain)
-func (f *TestFactory) GetAssetConfig(asset string, nativeAsset string) (xc.AssetConfig, error) {
+func (f *TestFactory) GetAssetConfig(asset string, nativeAsset string) (xc.ITask, error) {
 	return f.DefaultFactory.GetAssetConfig(asset, nativeAsset)
 }
 
+// GetTaskConfig returns an AssetConfig by task name and assetID
+func (f *TestFactory) GetTaskConfig(taskName string, assetID xc.AssetID) (xc.ITask, error) {
+	return f.DefaultFactory.GetTaskConfig(taskName, assetID)
+}
+
+// GetMultiAssetConfig returns an AssetConfig by source and destination assetIDs
+func (f *TestFactory) GetMultiAssetConfig(srcAssetID xc.AssetID, dstAssetID xc.AssetID) ([]xc.ITask, error) {
+	return f.DefaultFactory.GetMultiAssetConfig(srcAssetID, dstAssetID)
+}
+
 // GetAssetConfigByContract returns an AssetConfig by contract and native asset (chain)
-func (f *TestFactory) GetAssetConfigByContract(contract string, nativeAsset string) (xc.AssetConfig, error) {
+func (f *TestFactory) GetAssetConfigByContract(contract string, nativeAsset string) (xc.ITask, error) {
 	return f.DefaultFactory.GetAssetConfigByContract(contract, nativeAsset)
 }
 
 // EnrichAssetConfig augments a partial AssetConfig, for example if some info is stored in a db and other in a config file
-func (f *TestFactory) EnrichAssetConfig(partialCfg xc.AssetConfig) (xc.AssetConfig, error) {
+func (f *TestFactory) EnrichAssetConfig(partialCfg *xc.TokenAssetConfig) (*xc.TokenAssetConfig, error) {
 	return f.DefaultFactory.EnrichAssetConfig(partialCfg)
 }
 
 // EnrichDestinations augments a TxInfo by resolving assets and amounts in TxInfo.Destinations
-func (f *TestFactory) EnrichDestinations(asset xc.AssetConfig, txInfo xc.TxInfo) (xc.TxInfo, error) {
-	return f.DefaultFactory.EnrichDestinations(asset, txInfo)
+func (f *TestFactory) EnrichDestinations(activity xc.ITask, txInfo xc.TxInfo) (xc.TxInfo, error) {
+	return f.DefaultFactory.EnrichDestinations(activity, txInfo)
 }
 
 // PutAssetConfig adds an AssetConfig to the current Config cache
-func (f *TestFactory) PutAssetConfig(config xc.AssetConfig) (xc.AssetConfig, error) {
+func (f *TestFactory) PutAssetConfig(config xc.ITask) (xc.ITask, error) {
 	return f.DefaultFactory.PutAssetConfig(config)
 }
 
@@ -128,18 +133,18 @@ func (f *TestFactory) Config() interface{} {
 }
 
 // MustAddress coverts a string to Address, panic if error
-func (f *TestFactory) MustAddress(asset xc.AssetConfig, addressStr string) xc.Address {
+func (f *TestFactory) MustAddress(asset xc.ITask, addressStr string) xc.Address {
 	return f.DefaultFactory.MustAddress(asset, addressStr)
 }
 
 // MustAmountBlockchain coverts a string into AmountBlockchain, panic if error
-func (f *TestFactory) MustAmountBlockchain(asset xc.AssetConfig, humanAmountStr string) xc.AmountBlockchain {
+func (f *TestFactory) MustAmountBlockchain(asset xc.ITask, humanAmountStr string) xc.AmountBlockchain {
 	return f.DefaultFactory.MustAmountBlockchain(asset, humanAmountStr)
 
 }
 
 // MustPrivateKey coverts a string into PrivateKey, panic if error
-func (f *TestFactory) MustPrivateKey(asset xc.AssetConfig, privateKeyStr string) xc.PrivateKey {
+func (f *TestFactory) MustPrivateKey(asset xc.ITask, privateKeyStr string) xc.PrivateKey {
 	return f.DefaultFactory.MustPrivateKey(asset, privateKeyStr)
 }
 

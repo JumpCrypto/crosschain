@@ -15,6 +15,7 @@ type AssetType string
 const (
 	AssetTypeNative = AssetType("native")
 	AssetTypeToken  = AssetType("token")
+	AssetTypeTask   = AssetType("task")
 )
 
 // AssetType returns the type of an Asset
@@ -189,32 +190,98 @@ type AssetConfig struct {
 	ChainGasPriceDefault float64 `yaml:"chain_gas_price_default"`
 	ChainGasMultiplier   float64 `yaml:"chain_gas_multiplier"`
 	ExplorerURL          string  `yaml:"explorer_url"`
+	Decimals             int32   `yaml:"decimals"`
+	Name                 string  `yaml:"name"`
+	IndexerUrl           string  `yaml:"indexer_url"`
+	IndexerType          string  `yaml:"indexer_type"`
 
 	// Tokens
 	Chain    string `yaml:"chain"`
 	Contract string `yaml:"contract"`
-	Decimals int32  `yaml:"decimals"`
-	Name     string `yaml:"name"`
 
-	// Indexing settings for polling
-	IndexerUrl  string `yaml:"indexer_url"`
-	IndexerType string `yaml:"indexer_type"`
-
-	// Not used for serde
-	ID          AssetID     `yaml:"-"`
+	// Internal
 	AuthSecret  string      `yaml:"-"`
-	NativeAsset NativeAsset `yaml:"-"`
 	Type        AssetType   `yaml:"-"`
+	NativeAsset NativeAsset `yaml:"-"`
 }
+type NativeAssetConfig = AssetConfig
+
+type TokenAssetConfig struct {
+	Asset    string `yaml:"asset"`
+	Chain    string `yaml:"chain"`
+	Net      string `yaml:"net"`
+	Decimals int32  `yaml:"decimals"`
+	Contract string `yaml:"contract"`
+
+	AssetConfig       `yaml:"-"`
+	NativeAssetConfig *NativeAssetConfig `yaml:"-"`
+}
+
+var _ ITask = &NativeAssetConfig{}
+var _ ITask = &TokenAssetConfig{}
 
 // Config is the full config containing all Assets
 type Config struct {
-	AllAssets []AssetConfig `yaml:"chains"`
+	Chains       []*NativeAssetConfig `yaml:"chains"`
+	Tokens       []*TokenAssetConfig  `yaml:"tokens"`
+	AllPipelines []*PipelineConfig    `yaml:"pipelines"`
+	AllTasks     []*TaskConfig        `yaml:"tasks"`
+	AllAssets    []ITask              `yaml:"-"`
 }
 
-func (c AssetConfig) String() string {
+func (c NativeAssetConfig) String() string {
 	// do NOT print AuthSecret
-	return fmt.Sprintf("net: %s, url: %s, auth: %s, provider: %s", c.Net, c.URL, c.Auth, c.Provider)
+	return fmt.Sprintf(
+		"NativeAssetConfig(id=%s asset=%s chainId=%d driver=%s type=%s chainCoin=%s prefix=%s net=%s url=%s auth=%s provider=%s)",
+		c.ID(), c.Asset, c.ChainID, c.Driver, c.Type, c.ChainCoin, c.ChainPrefix, c.Net, c.URL, c.Auth, c.Provider,
+	)
+}
+
+func (asset *NativeAssetConfig) ID() AssetID {
+	return GetAssetIDFromAsset("", asset.Asset)
+}
+
+func (asset NativeAssetConfig) GetAssetConfig() *AssetConfig {
+	return &asset
+}
+
+func (asset NativeAssetConfig) GetDriver() string {
+	return asset.Driver
+}
+
+func (asset NativeAssetConfig) GetNativeAsset() *NativeAssetConfig {
+	return &asset
+}
+
+func (asset NativeAssetConfig) GetTask() *TaskConfig {
+	return nil
+}
+
+func (c TokenAssetConfig) String() string {
+	return fmt.Sprintf(
+		"TokenAssetConfig(id=%s asset=%s chain=%s net=%s decimals=%d contract=%s)",
+		c.ID(), c.Asset, c.Chain, c.Net, c.Decimals, c.Contract,
+	)
+}
+
+func (asset *TokenAssetConfig) ID() AssetID {
+	return GetAssetIDFromAsset(asset.Asset, asset.Chain)
+}
+
+func (asset TokenAssetConfig) GetNativeAsset() *NativeAssetConfig {
+	return asset.NativeAssetConfig
+}
+
+func (asset TokenAssetConfig) GetDriver() string {
+	return asset.GetNativeAsset().Driver
+}
+
+func (asset TokenAssetConfig) GetAssetConfig() *AssetConfig {
+	return &asset.AssetConfig
+}
+
+func (asset TokenAssetConfig) GetTask() *TaskConfig {
+	return nil
 }
 
 func parseAssetAndNativeAsset(asset string, nativeAsset string) (string, string) {
@@ -249,8 +316,8 @@ func parseAssetAndNativeAsset(asset string, nativeAsset string) (string, string)
 // GetAssetIDFromAsset return the canonical AssetID given two input strings asset, nativeAsset.
 // Input can come from user input.
 // Examples:
-// - GetAssetIDFromAsset("USDC", "") -> "USDC"
-// - GetAssetIDFromAsset("USDC", "ETH") -> "USDC"
+// - GetAssetIDFromAsset("USDC", "") -> "USDC.ETH"
+// - GetAssetIDFromAsset("USDC", "ETH") -> "USDC.ETH"
 // - GetAssetIDFromAsset("USDC", "SOL") -> "USDC.SOL"
 // - GetAssetIDFromAsset("USDC.SOL", "") -> "USDC.SOL"
 // See tests for more examples.
@@ -266,7 +333,7 @@ func GetAssetIDFromAsset(asset string, nativeAsset string) AssetID {
 		return AssetID(asset)
 	}
 	if nativeAsset == "ETH" && !validNative {
-		return AssetID(asset)
+		return AssetID(asset + ".ETH")
 	}
 	// token, e.g. USDC, USDC.SOL
 	return AssetID(asset + "." + nativeAsset)

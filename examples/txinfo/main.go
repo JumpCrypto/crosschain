@@ -8,19 +8,10 @@ import (
 	"github.com/jumpcrypto/crosschain/factory"
 )
 
-func main() {
-	// initialize crosschain
-	xc := factory.NewDefaultFactory()
-	ctx := context.Background()
-
+func TxInfo(ctx context.Context, xc *factory.Factory, nativeAsset string, txHash string) {
 	// get asset model, including config data
 	// asset is used to create client, builder, signer, etc.
-	// txHash := "22nfxos4FYb8xzQs4vkg1EDnqPAfSUt1UH2H3NvUXbZLpUuLHFXLKGUGTT4jWu3PRx6WT9u2hB4gmArQ18AAmfq5"
-	// asset, err := xc.GetAssetConfig("", "SOL")
-	txHash := "a8522e7c84d462011265cb6038b5a52f3028d4acff14d9565b3cbec0f4a2f800"
-	asset, err := xc.GetAssetConfig("", "INJ")
-	// txHash := "b10cf7cc68ba761307d1b0a07fdb1671e6917ac3d2c2dc9e7ed74ad9f506aa6e"
-	// asset, err := xc.GetAssetConfig("", "XPLA")
+	asset, err := xc.GetAssetConfig("", nativeAsset)
 	if err != nil {
 		panic("unsupported asset")
 	}
@@ -33,4 +24,13 @@ func main() {
 	}
 	info, _ = xc.EnrichDestinations(asset, info)
 	fmt.Printf("%+v\n", info)
+}
+
+func main() {
+	// initialize crosschain
+	xc := factory.NewDefaultFactory()
+	ctx := context.Background()
+	TxInfo(ctx, xc, "INJ", "a8522e7c84d462011265cb6038b5a52f3028d4acff14d9565b3cbec0f4a2f800")
+	TxInfo(ctx, xc, "BTC", "40a83018604b67cfc681b3ad7a8e3a9985f03060ba00df7e6a09af1edc93510a")
+	TxInfo(ctx, xc, "ETH", "0x40ecf9af59bbf9ed1f4ea75610af87f801618ffa8902cd210477076a56b36f61")
 }

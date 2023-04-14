@@ -4,21 +4,13 @@ crosschain:
     driver: evm
     net: testnet
     url: 'https://goerli.infura.io/v3'
-    auth: '...'
+    auth: 'env:INFURA_API_TOKEN'
     provider: infura
     chain_id: 5
     chain_name: Ethereum (Goerli)
     explorer_url: 'https://goerli.etherscan.io'
     decimals: 18
-  # EVM with ERC20
-  - asset: BNB
-    driver: evm
-    net: testnet
-    url: 'https://data-seed-prebsc-1-s1.binance.org:8545'
-    chain_id: 97
-    chain_name: Binance Smart Chain (Testnet)
-    explorer_url: 'https://testnet.bscscan.com'
-    decimals: 18
+  # EVM
   - asset: MATIC
     driver: evm
     net: testnet
@@ -26,6 +18,34 @@ crosschain:
     chain_id: 80001
     chain_name: Polygon (Mumbai)
     explorer_url: 'https://mumbai.polygonscan.com'
+    decimals: 18
+  - asset: AVAX
+    driver: "evm"
+    net: testnet
+    url: 'https://api.avax-test.network/ext/bc/C/rpc'
+    chain_id: 43113
+    chain_name: Avalanche (Fuji Testnet)
+    explorer_url: 'https://testnet.snowtrace.io'
+    indexer_url: 'https://api.covalenthq.com/v1'
+    indexer_type: covalent
+    decimals: 18
+  # EVM Legacy
+  - asset: BNB
+    driver: evm-legacy
+    net: testnet
+    url: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+    chain_id: 97
+    chain_name: Binance Smart Chain (Testnet)
+    explorer_url: 'https://testnet.bscscan.com'
+    decimals: 18
+  - asset: FTM
+    driver: evm-legacy
+    net: testnet
+    url: 'https://rpc.testnet.fantom.network'
+    chain_id: 4002
+    chain_name: Fantom (Testnet)
+    explorer_url: 'https://testnet.ftmscan.com'
+    indexer_type: none
     decimals: 18
   # Solana
   - asset: SOL
@@ -93,7 +113,17 @@ crosschain:
     chain_name: Aptos (Devnet)
     explorer_url: 'https://explorer.devnet.aptos.dev'
     decimals: 8
-  # Tokens
+  # Bitcoin
+  - asset: BTC
+    driver: bitcoin
+    net: testnet
+    url: 'https://api.blockchair.com/bitcoin/testnet'
+    auth: 'env:BLOCKCHAIR_API_TOKEN'
+    provider: blockchair
+    chain_name: Bitcoin (Testnet)
+    explorer_url: 'https://blockchair.com/bitcoin/testnet'
+    decimals: 8
+  tokens:
   - asset: DAI
     chain: ETH
     net: testnet
@@ -103,17 +133,32 @@ crosschain:
     chain: ETH
     net: testnet
     decimals: 6
-    contract: 0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c
+    contract: 0x07865c6e87b9f70255377e024ace6630c1eaa37f
   - asset: WETH
     chain: ETH
     net: testnet
     decimals: 18
-    contract: 0xc778417E063141139Fce010982780140Aa0cD5Ab
+    contract: 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6
+  - asset: WETH
+    chain: MATIC
+    net: testnet
+    decimals: 18
+    contract: 0xc6735cc74553Cc2caeB9F5e1Ea0A4dAe12ef4632
+  - asset: WSOL
+    chain: SOL
+    net: testnet
+    decimals: 9
+    contract: So11111111111111111111111111111111111111112
   - asset: USDC
     chain: SOL
     net: testnet
     decimals: 6
     contract: 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+  - asset: WETH
+    chain: SOL
+    net: testnet
+    decimals: 8
+    contract: 7VPWjBhCXrpYYBiRKZh1ubh9tLZZNkZGp2ReRphEV4Mc
   - asset: USDC
     chain: INJ
     net: testnet
@@ -124,19 +169,39 @@ crosschain:
     net: testnet
     decimals: 6
     contract: peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5
+
+  contract_accounts:
+    - wallet: 'TMSL-BTCX-TMSL-217:dex-trading.ETH'
+      native_asset: ETH
+      signer_address: '0x648ff8e9aceb9e60d35101952e43c368ae907936'
+      contract_address: '0x2d35ce0cabf4ac263eab1c182a454c91cc155cc1'
+      contract_name: 'customTrader'
+
   tasks:
-    - name: Wrap
+    # Solana
+    - name: sol-wrap
+      code: WrapTx
+      chain: SOL
+      allow:
+      - SOL -> WSOL.SOL
+    - name: sol-unwrap
+      code: UnwrapEverythingTx
+      chain: SOL
+      allow:
+      - WSOL.SOL -> SOL
+    # Ethereum
+    - name: eth-wrap
       chain: ETH
-      assets: ["WETH"]
-      approvals: 1
+      allow:
+      - ETH -> WETH.ETH
       operations:
       - function: deposit
         signature: d0e30db0
         payable: true
-    - name: Unwrap
+    - name: eth-unwrap
       chain: ETH
-      assets: ["WETH"]
-      approvals: 1
+      allow:
+      - WETH.ETH -> ETH
       operations:
       - function: withdraw
         signature: 2e1a7d4d
@@ -144,11 +209,82 @@ crosschain:
         - name: qty
           type: uint256
           bind: amount
-    # example to show that erc20.transfer can be written as task
-    - name: Transfer
+    - name: proxy-transfer-eth
+      code: ProxyTransferTx
       chain: ETH
-      assets: ["USDC", "WETH"]
-      approvals: 1
+      allow: ETH
+    - name: proxy-transfer-erc20
+      code: ProxyTransferTx
+      chain: ETH
+      allow: "*"
+    - name: coinbase-multisend-eth
+      code: MultisendTransferTx
+      operations:
+      - function: multisendETH
+        signature: 1a1da075
+        contract: 0xa9d1e08c7793af67e9d92fe308d5697fb81d3e43
+        params:
+        - name: ignored1
+          type: uint256
+          # 40
+        - name: ignored2
+          type: uint256
+          # 15694
+        - name: tx
+          type: array # array is not yet implemented
+          bind: destinations
+          fields:
+          - name: to
+            type: address
+          - name: amount
+            type: uint256
+    - name: coinbase-multisend-erc20
+      code: MultisendTransferTx
+      operations:
+      - function: multisendERC20
+        signature: ca350aa6
+        contract: 0xa9d1e08c7793af67e9d92fe308d5697fb81d3e43
+        params:
+        - name: ignored1
+          type: uint256
+          # 40
+        - name: ignored2
+          type: uint256
+          # 3d090
+        - name: tx
+          type: array # array is not yet implemented
+          bind: destinations
+          fields:
+          - name: asset
+            type: address
+          - name: to
+            type: address
+          - name: amount
+            type: uint256
+    # Bridging
+    - name: wormhole-approve
+      operations:
+      - function: approve
+        signature: 095ea7b3
+        params:
+        - name: spender
+          type: address
+          defaults:
+          - match: "*.ETH"
+            value: 0x3ee18B2214AFF97000D974cf647E7C347E8fa585
+          - match: "*.AVAX"
+            value: 0x0e082F06FF657D94310cB8cE8B0D9a04541d8052
+          - match: "*.FTM"
+            value: 0x7C9Fc5741288cDFdD83CeB07f3ea7e22618D79D2
+        - name: amount
+          type: uint256
+          bind: amount
+    - name: wormhole-transfer
+      code: WormholeTransferTx
+    # example to show that erc20.transfer can be written as a task
+    - name: erc20-transfer
+      chain: ETH
+      allow: ["USDC", "WETH"]
       operations:
       - function: transfer
         signature: a9059cbb
@@ -158,3 +294,16 @@ crosschain:
         - name: qty
           type: uint256
           bind: amount
+  pipelines:
+    - name: wormhole-transfer
+      allow:
+        - WETH.ETH -> WETH.MATIC
+        - WETH.ETH -> WETH.SOL
+        - WETH.MATIC -> WETH.SOL
+        # src undefined
+        - WBTC.ETH -> WBTC.MATIC
+        # dst undefined
+        - WETH.ETH -> WETH.BNB
+      tasks:
+        - wormhole-approve
+        - wormhole-transfer

@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	xc "github.com/jumpcrypto/crosschain"
@@ -34,14 +33,16 @@ func NewTxInput() *TxInput {
 // Client for Solana
 type Client struct {
 	SolClient *rpc.Client
-	Asset     xc.AssetConfig
+	Asset     *xc.AssetConfig
 }
 
-var _ xc.FullClient = &Client{}
+var _ xc.Client = &Client{}
 
 // NewClient returns a new JSON-RPC Client to the Solana node
-func NewClient(asset xc.AssetConfig) (*Client, error) {
-	solClient := rpc.New(asset.URL)
+func NewClient(cfgI xc.ITask) (*Client, error) {
+	asset := cfgI.GetAssetConfig()
+	cfg := cfgI.GetNativeAsset()
+	solClient := rpc.New(cfg.URL)
 	return &Client{
 		SolClient: solClient,
 		Asset:     asset,
@@ -79,7 +80,7 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.A
 		txInput.ToIsATA = true
 	} else {
 		ownerAddr := res.Value.Owner.String()
-		log.Println("owner", ownerAddr)
+		// log.Println("owner", ownerAddr)
 		sysAddr := "11111111111111111111111111111111"
 		if ownerAddr != sysAddr {
 			// The field "to" is not an owner address, therefore is a (possibly custom) ATA
@@ -252,7 +253,7 @@ func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.
 }
 
 // FetchBalanceForAsset fetches a specific token balance which may not be the asset configured for the client
-func (client *Client) FetchBalanceForAsset(ctx context.Context, address xc.Address, assetCfg xc.AssetConfig) (xc.AmountBlockchain, error) {
+func (client *Client) FetchBalanceForAsset(ctx context.Context, address xc.Address, assetCfg *xc.AssetConfig) (xc.AmountBlockchain, error) {
 	if assetCfg.Type == xc.AssetTypeNative {
 		return client.FetchNativeBalance(ctx, address)
 	}

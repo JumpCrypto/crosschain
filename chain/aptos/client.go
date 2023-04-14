@@ -22,17 +22,19 @@ func NewTxInput() *TxInput {
 
 // Client for Aptos
 type Client struct {
-	Asset       xc.AssetConfig
+	Asset       *xc.AssetConfig
 	AptosClient *aptosclient.RestClient
 }
 
 var _ xc.FullClient = &Client{}
 
 // NewClient returns a new Aptos Client
-func NewClient(cfg xc.AssetConfig) (*Client, error) {
+func NewClient(cfgI xc.ITask) (*Client, error) {
+	asset := cfgI.GetAssetConfig()
+	cfg := cfgI.GetNativeAsset()
 	client, err := aptosclient.Dial(context.Background(), cfg.URL)
 	return &Client{
-		Asset:       cfg,
+		Asset:       asset,
 		AptosClient: client,
 	}, err
 }

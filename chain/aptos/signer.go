@@ -11,7 +11,7 @@ type Signer struct {
 }
 
 // NewSigner creates a new Aptos Signer
-func NewSigner(asset xc.AssetConfig) (xc.Signer, error) {
+func NewSigner(asset xc.ITask) (xc.Signer, error) {
 	return Signer{}, errors.New("not implemented")
 }
 

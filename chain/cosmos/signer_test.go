@@ -8,14 +8,14 @@ import (
 
 func (s *CrosschainTestSuite) TestNewSigner() {
 	require := s.Require()
-	signer, err := NewSigner(xc.AssetConfig{})
+	signer, err := NewSigner(&xc.AssetConfig{})
 	require.Nil(err)
 	require.NotNil(signer)
 }
 
 func (s *CrosschainTestSuite) TestImportPrivateKey() {
 	require := s.Require()
-	signer, _ := NewSigner(xc.AssetConfig{})
+	signer, _ := NewSigner(&xc.AssetConfig{})
 
 	mnemonic := "input today bottom quality era above february fiction shift student lawsuit order news pelican unaware firm onion fresh assume lazy draw side joy box"
 	privateKey := "894590a2bb2a66a08319895d82ae963565ca5fe1511f065f34ddee74417aa8ad"
@@ -65,7 +65,7 @@ func (s *CrosschainTestSuite) TestSign() {
 	}
 
 	for _, v := range vectors {
-		signer, _ := NewSigner(xc.AssetConfig{})
+		signer, _ := NewSigner(&xc.AssetConfig{})
 		bytesPri, _ := hex.DecodeString(v.pri)
 		bytesMsg, _ := hex.DecodeString(v.msg)
 		sig, err := signer.Sign(xc.PrivateKey(bytesPri), xc.TxDataToSign(bytesMsg))
@@ -77,7 +77,7 @@ func (s *CrosschainTestSuite) TestSign() {
 
 func (s *CrosschainTestSuite) TestSignErr() {
 	require := s.Require()
-	signer, _ := NewSigner(xc.AssetConfig{})
+	signer, _ := NewSigner(&xc.AssetConfig{})
 	sig, err := signer.Sign(xc.PrivateKey{}, xc.TxDataToSign{})
 	require.Nil(sig)
 	require.ErrorContains(err, "calculated S is zero")

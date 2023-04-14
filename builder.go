@@ -11,3 +11,9 @@ type TxTokenBuilder interface {
 	NewNativeTransfer(from Address, to Address, amount AmountBlockchain, input TxInput) (Tx, error)
 	NewTokenTransfer(from Address, to Address, amount AmountBlockchain, input TxInput) (Tx, error)
 }
+
+// TxXTransferBuilder is a Builder that can mutate an asset into another asset
+type TxXTransferBuilder interface {
+	TxBuilder
+	NewTask(from Address, to Address, amount AmountBlockchain, input TxInput) (Tx, error)
+}

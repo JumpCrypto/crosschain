@@ -13,7 +13,7 @@ type AddressBuilder struct {
 }
 
 // NewAddressBuilder creates a new Template AddressBuilder
-func NewAddressBuilder(asset xc.AssetConfig) (xc.AddressBuilder, error) {
+func NewAddressBuilder(asset xc.ITask) (xc.AddressBuilder, error) {
 	return AddressBuilder{}, nil
 }
 
