@@ -21,21 +21,22 @@ type NetworkTriple struct {
 }
 
 func init() {
+	// TODO re-enable panic'ing on registration error
 	if err := chaincfg.Register(DogeNetworks.Mainnet); err != nil {
-		panic(err)
+		// panic(err)
 	}
 	if err := chaincfg.Register(DogeNetworks.Testnet); err != nil {
-		panic(err)
+		// panic(err)
 	}
 	if err := chaincfg.Register(DogeNetworks.Regtest); err != nil {
-		panic(err)
+		// panic(err)
 	}
 
 	if err := chaincfg.Register(LtcNetworks.Mainnet); err != nil {
-		panic(err)
+		// panic(err)
 	}
 	if err := chaincfg.Register(LtcNetworks.Testnet); err != nil {
-		panic(err)
+		// panic(err)
 	}
 	if err := chaincfg.Register(LtcNetworks.Regtest); err != nil {
 		// litecoin regtest is a dup of another utxo chain, it will fail..
