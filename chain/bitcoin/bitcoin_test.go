@@ -138,11 +138,11 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	require.NoError(err)
 	btcInput := input.(*TxInput)
 	fmt.Println(btcInput)
-	require.Len(btcInput.unspentOutputs, 1)
-	require.EqualValues(2392235, btcInput.unspentOutputs[0].Value.Uint64())
-	require.EqualValues(1, btcInput.unspentOutputs[0].Index)
+	require.Len(btcInput.UnspentOutputs, 1)
+	require.EqualValues(2392235, btcInput.UnspentOutputs[0].Value.Uint64())
+	require.EqualValues(1, btcInput.UnspentOutputs[0].Index)
 	// string should be reversed
-	require.EqualValues("27e07074f7fbc5a66f914900a24dcb02bded831c5723bf7b87a103bb609497c4", hex.EncodeToString(btcInput.unspentOutputs[0].Hash))
+	require.EqualValues("27e07074f7fbc5a66f914900a24dcb02bded831c5723bf7b87a103bb609497c4", hex.EncodeToString(btcInput.UnspentOutputs[0].Hash))
 	require.EqualValues(1, btcInput.gasPricePerByte.Uint64())
 }
 
@@ -154,7 +154,7 @@ func (s *CrosschainTestSuite) TestNewNativeTransfer() {
 	to := xc.Address("tb1qtpqqpgadjr2q3f4wrgd6ndclqtfg7cz5evtvs0")
 	amount := xc.NewAmountBlockchainFromUint64(1)
 	input := &TxInput{
-		unspentOutputs: []Output{{
+		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
 		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
@@ -167,7 +167,7 @@ func (s *CrosschainTestSuite) TestNewNativeTransfer() {
 
 	// Having not enough balance for fees will be an error
 	input_small := &TxInput{
-		unspentOutputs: []Output{{
+		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(5),
 		}},
 		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
@@ -196,7 +196,7 @@ func (s *CrosschainTestSuite) TestNewTokenTransfer() {
 	to := xc.Address("tb1qtpqqpgadjr2q3f4wrgd6ndclqtfg7cz5evtvs0")
 	amount := xc.NewAmountBlockchainFromUint64(1)
 	input := &TxInput{
-		unspentOutputs: []Output{{
+		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
 		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
@@ -214,7 +214,7 @@ func (s *CrosschainTestSuite) TestNewTransfer() {
 	to := xc.Address("tb1qtpqqpgadjr2q3f4wrgd6ndclqtfg7cz5evtvs0")
 	amount := xc.NewAmountBlockchainFromUint64(1)
 	input := &TxInput{
-		unspentOutputs: []Output{{
+		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
 		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
@@ -325,7 +325,7 @@ func (s *CrosschainTestSuite) TestTxHash() {
 	to := xc.Address("tb1qtpqqpgadjr2q3f4wrgd6ndclqtfg7cz5evtvs0")
 	amount := xc.NewAmountBlockchainFromUint64(1)
 	input := &TxInput{
-		unspentOutputs: []Output{{
+		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
 		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
@@ -353,7 +353,7 @@ func (s *CrosschainTestSuite) TestTxAddSignature() {
 	to := xc.Address("tb1qtpqqpgadjr2q3f4wrgd6ndclqtfg7cz5evtvs0")
 	amount := xc.NewAmountBlockchainFromUint64(10)
 	input := TxInput{
-		unspentOutputs: []Output{{
+		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
 	}
@@ -392,7 +392,7 @@ func (s *CrosschainTestSuite) TestTxAddSignature() {
 	// 2 inputs = 2 sigs
 	amount = xc.NewAmountBlockchainFromUint64(15000)
 	input = TxInput{
-		unspentOutputs: []Output{{
+		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(10000),
 		},
 			{

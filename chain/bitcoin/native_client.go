@@ -100,7 +100,7 @@ func (client *NativeClient) FetchTxInput(ctx context.Context, from xc.Address, t
 	if err != nil {
 		return input, err
 	}
-	input.unspentOutputs = allUnspentOutputs
+	input.UnspentOutputs = allUnspentOutputs
 	gasPerByte, err := client.EstimateGas(ctx)
 	input.gasPricePerByte = gasPerByte
 	if err != nil {

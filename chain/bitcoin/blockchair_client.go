@@ -163,7 +163,7 @@ func (client *BlockchairClient) FetchTxInput(ctx context.Context, from xc.Addres
 		fmt.Println("FETCHED ERR")
 		return input, err
 	}
-	input.unspentOutputs = allUnspentOutputs
+	input.UnspentOutputs = allUnspentOutputs
 	gasPerByte, err := client.EstimateGas(ctx)
 	input.gasPricePerByte = gasPerByte
 	if err != nil {

@@ -56,7 +56,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 	}
 	// Only need to save min utxo for the transfer.
 	totalSpend := local_input.allocateMinUtxoSet(amount, 10)
-	local_input.unspentOutputs = []Output{}
+	local_input.UnspentOutputs = []Output{}
 
 	gasPrice := local_input.gasPricePerByte
 	// 255 for bitcoin, 300 for bch
