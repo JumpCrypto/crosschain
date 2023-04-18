@@ -101,7 +101,6 @@ func (client *BlockchairClient) UnspentOutputs(ctx context.Context, minConf, max
 
 	_, err := client.send(ctx, &data, "/dashboards/address", string(addr))
 	if err != nil {
-		fmt.Println("SEND ERR")
 		return res, err
 	}
 
@@ -156,11 +155,8 @@ func (client *BlockchairClient) EstimateGasFee(ctx context.Context, numBlocks in
 // FetchTxInput returns tx input for a Bitcoin tx
 func (client *BlockchairClient) FetchTxInput(ctx context.Context, from xc.Address, to xc.Address) (xc.TxInput, error) {
 	input := NewTxInput()
-	fmt.Println("FETCH UNSPENT")
 	allUnspentOutputs, err := client.UnspentOutputs(ctx, 0, 999999999, xc.Address(from))
-	fmt.Println("FETCHED")
 	if err != nil {
-		fmt.Println("FETCHED ERR")
 		return input, err
 	}
 	input.UnspentOutputs = allUnspentOutputs
@@ -271,7 +267,7 @@ func (client *BlockchairClient) send(ctx context.Context, resp interface{}, meth
 		log.Error(string(body))
 		return nil, err
 	}
-	fmt.Println("<<", string(body))
+	// fmt.Println("<<", string(body))
 
 	if apiData.Context.Code != 200 {
 		return &apiData.Context, fmt.Errorf("error code failure: %d: %s", apiData.Context.Code, apiData.Context.Error)
