@@ -296,12 +296,12 @@ func (f *Factory) NewAddressBuilder(cfg ITask) (AddressBuilder, error) {
 
 // MarshalTxInput marshalls a TxInput struct
 func (f *Factory) MarshalTxInput(input TxInput) ([]byte, error) {
-	return marshalTxInput(input)
+	return MarshalTxInput(input)
 }
 
 // UnmarshalTxInput unmarshalls data into a TxInput struct
 func (f *Factory) UnmarshalTxInput(data []byte) (TxInput, error) {
-	return unmarshalTxInput(data)
+	return UnmarshalTxInput(data)
 }
 
 // GetAddressFromPublicKey returns an Address given a public key
@@ -572,11 +572,11 @@ func newAddressBuilder(cfg ITask) (AddressBuilder, error) {
 	return nil, errors.New("unsupported asset")
 }
 
-func marshalTxInput(txInput TxInput) ([]byte, error) {
+func MarshalTxInput(txInput TxInput) ([]byte, error) {
 	return json.Marshal(txInput)
 }
 
-func unmarshalTxInput(data []byte) (TxInput, error) {
+func UnmarshalTxInput(data []byte) (TxInput, error) {
 	var env TxInputEnvelope
 	buf := []byte(data)
 	err := json.Unmarshal(buf, &env)
