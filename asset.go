@@ -232,7 +232,7 @@ type Config struct {
 func (c NativeAssetConfig) String() string {
 	// do NOT print AuthSecret
 	return fmt.Sprintf(
-		"NativeAssetConfig(id=%s asset=%s chainId=%d driver=%s type=%s chainCoin=%s prefix=%s net=%s url=%s auth=%s provider=%s, native_asset=%s)",
+		"NativeAssetConfig(id=%s asset=%s chainId=%d driver=%s type=%s chainCoin=%s prefix=%s net=%s url=%s auth=%s provider=%s native_asset=%s)",
 		c.ID(), c.Asset, c.ChainID, c.Driver, c.Type, c.ChainCoin, c.ChainPrefix, c.Net, c.URL, c.Auth, c.Provider, c.NativeAsset,
 	)
 }

@@ -26,14 +26,15 @@ func (s *CrosschainTestSuite) TestChainType() {
 func (s *CrosschainTestSuite) TestAssetConfig() {
 	require := s.Require()
 	assetConfig := AssetConfig{
-		Asset:      "myasset",
-		Net:        "mynet",
-		URL:        "myurl",
-		Auth:       "myauth",
-		Provider:   "myprovider",
-		AuthSecret: "SECRET",
+		Asset:       "myasset",
+		NativeAsset: "native",
+		Net:         "mynet",
+		URL:         "myurl",
+		Auth:        "myauth",
+		Provider:    "myprovider",
+		AuthSecret:  "SECRET",
 	}
-	require.Equal("NativeAssetConfig(id=MYASSET asset=myasset chainId=0 driver= type= chainCoin= prefix= net=mynet url=myurl auth=myauth provider=myprovider)", assetConfig.String())
+	require.Equal("NativeAssetConfig(id=MYASSET asset=myasset chainId=0 driver= type= chainCoin= prefix= net=mynet url=myurl auth=myauth provider=myprovider native_asset=native)", assetConfig.String())
 	require.NotContains(assetConfig.String(), "SECRET")
 }
 
