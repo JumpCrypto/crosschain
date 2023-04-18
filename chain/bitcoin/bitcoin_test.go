@@ -143,7 +143,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	require.EqualValues(1, btcInput.UnspentOutputs[0].Index)
 	// string should be reversed
 	require.EqualValues("27e07074f7fbc5a66f914900a24dcb02bded831c5723bf7b87a103bb609497c4", hex.EncodeToString(btcInput.UnspentOutputs[0].Hash))
-	require.EqualValues(1, btcInput.gasPricePerByte.Uint64())
+	require.EqualValues(1, btcInput.GasPricePerByte.Uint64())
 }
 
 func (s *CrosschainTestSuite) TestNewNativeTransfer() {
@@ -157,7 +157,7 @@ func (s *CrosschainTestSuite) TestNewNativeTransfer() {
 		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
-		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
+		GasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
 	}
 	tf, err := builder.(xc.TxTokenBuilder).NewNativeTransfer(from, to, amount, input)
 	require.NoError(err)
@@ -170,7 +170,7 @@ func (s *CrosschainTestSuite) TestNewNativeTransfer() {
 		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(5),
 		}},
-		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
+		GasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
 	}
 	_, err = builder.(xc.TxTokenBuilder).NewNativeTransfer(from, to, amount, input_small)
 	require.Error(err)
@@ -199,7 +199,7 @@ func (s *CrosschainTestSuite) TestNewTokenTransfer() {
 		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
-		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
+		GasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
 	}
 	tf, err := builder.(xc.TxTokenBuilder).NewTokenTransfer(from, to, amount, input)
 	require.Nil(tf)
@@ -217,7 +217,7 @@ func (s *CrosschainTestSuite) TestNewTransfer() {
 		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
-		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
+		GasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
 	}
 	tf, err := builder.NewTransfer(from, to, amount, input)
 	require.NotNil(tf)
@@ -328,7 +328,7 @@ func (s *CrosschainTestSuite) TestTxHash() {
 		UnspentOutputs: []Output{{
 			Value: xc.NewAmountBlockchainFromUint64(1000),
 		}},
-		gasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
+		GasPricePerByte: xc.NewAmountBlockchainFromUint64(1),
 	}
 	tf, err := builder.(xc.TxTokenBuilder).NewNativeTransfer(from, to, amount, input)
 	require.NoError(err)
@@ -401,7 +401,7 @@ func (s *CrosschainTestSuite) TestTxAddSignature() {
 		},
 	}
 	tf, _ = builder.(xc.TxTokenBuilder).NewNativeTransfer(from, to, amount, input)
-	require.Len(tf.(*Tx).input.inputs, 2)
+	require.Len(tf.(*Tx).input.Inputs, 2)
 	err = tf.(*Tx).AddSignatures([]xc.TxSignature{
 		sig, sig,
 	}...)

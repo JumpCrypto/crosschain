@@ -102,7 +102,7 @@ func (client *NativeClient) FetchTxInput(ctx context.Context, from xc.Address, t
 	}
 	input.UnspentOutputs = allUnspentOutputs
 	gasPerByte, err := client.EstimateGas(ctx)
-	input.gasPricePerByte = gasPerByte
+	input.GasPricePerByte = gasPerByte
 	if err != nil {
 		return input, err
 	}
@@ -174,7 +174,7 @@ func (client *NativeClient) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (
 			Output:  output,
 			Address: xc.Address(addresses[0].String()),
 		}
-		tx.input.inputs = append(tx.input.inputs, input)
+		tx.input.Inputs = append(tx.input.Inputs, input)
 		sources = append(sources, &xc.TxInfoEndpoint{
 			Address:         input.Address,
 			Amount:          input.Value,

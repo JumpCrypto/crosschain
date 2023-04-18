@@ -161,7 +161,7 @@ func (client *BlockchairClient) FetchTxInput(ctx context.Context, from xc.Addres
 	}
 	input.UnspentOutputs = allUnspentOutputs
 	gasPerByte, err := client.EstimateGas(ctx)
-	input.gasPricePerByte = gasPerByte
+	input.GasPricePerByte = gasPerByte
 	if err != nil {
 		return input, err
 	}
@@ -340,7 +340,7 @@ func (client *BlockchairClient) FetchTxInfo(ctx context.Context, txHash xc.TxHas
 			// SigScript: sigScript,
 			Address: xc.Address(in.Recipient),
 		}
-		tx.input.inputs = append(tx.input.inputs, input)
+		tx.input.Inputs = append(tx.input.Inputs, input)
 		sources = append(sources, &xc.TxInfoEndpoint{
 			Address:         input.Address,
 			Amount:          input.Value,

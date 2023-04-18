@@ -83,9 +83,9 @@ func bzToString(bz []byte) string {
 
 // Sighashes returns the tx payload to sign, aka sighash
 func (tx *Tx) Sighashes() ([]xc.TxDataToSign, error) {
-	sighashes := make([]xc.TxDataToSign, len(tx.input.inputs))
+	sighashes := make([]xc.TxDataToSign, len(tx.input.Inputs))
 
-	for i, txin := range tx.input.inputs {
+	for i, txin := range tx.input.Inputs {
 		pubKeyScript := txin.PubKeyScript
 		sigScript := txin.SigScript
 		value := txin.Value.Uint64()
@@ -144,8 +144,8 @@ func (tx *Tx) AddSignatures(signatures ...xc.TxSignature) error {
 			R: r,
 			S: s,
 		}
-		pubKeyScript := tx.input.inputs[i].Output.PubKeyScript
-		sigScript := tx.input.inputs[i].SigScript
+		pubKeyScript := tx.input.Inputs[i].Output.PubKeyScript
+		sigScript := tx.input.Inputs[i].SigScript
 
 		// Support segwit.
 		if sigScript == nil {
@@ -213,7 +213,7 @@ func (tx *Tx) DetectFrom() (string, xc.AmountBlockchain) {
 	from := ""
 	max := xc.NewAmountBlockchainFromUint64(0)
 	totalIn := xc.NewAmountBlockchainFromUint64(0)
-	for _, input := range tx.input.inputs {
+	for _, input := range tx.input.Inputs {
 		value := input.Output.Value
 		if value.Cmp(&max) > 0 {
 			max = value

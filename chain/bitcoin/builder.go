@@ -58,11 +58,11 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 	totalSpend := local_input.allocateMinUtxoSet(amount, 10)
 	local_input.UnspentOutputs = []Output{}
 
-	gasPrice := local_input.gasPricePerByte
+	gasPrice := local_input.GasPricePerByte
 	// 255 for bitcoin, 300 for bch
-	estimatedTxBytesLength := xc.NewAmountBlockchainFromUint64(uint64(255 * len(local_input.inputs)))
+	estimatedTxBytesLength := xc.NewAmountBlockchainFromUint64(uint64(255 * len(local_input.Inputs)))
 	if txBuilder.Asset.NativeAsset == xc.BCH {
-		estimatedTxBytesLength = xc.NewAmountBlockchainFromUint64(uint64(300 * len(local_input.inputs)))
+		estimatedTxBytesLength = xc.NewAmountBlockchainFromUint64(uint64(300 * len(local_input.Inputs)))
 	}
 	fee := gasPrice.Mul(&estimatedTxBytesLength)
 
@@ -81,7 +81,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 
 	msgTx := wire.NewMsgTx(TxVersion)
 
-	for _, input := range local_input.inputs {
+	for _, input := range local_input.Inputs {
 		hash := chainhash.Hash{}
 		copy(hash[:], input.Hash)
 		msgTx.AddTxIn(wire.NewTxIn(wire.NewOutPoint(&hash, input.Index), nil, nil))

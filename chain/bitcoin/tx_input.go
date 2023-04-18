@@ -13,10 +13,10 @@ import (
 // TxInput for Bitcoin
 type TxInput struct {
 	xc.TxInputEnvelope
-	UnspentOutputs  []Output
-	inputs          []Input
-	FromPublicKey   []byte
-	gasPricePerByte xc.AmountBlockchain
+	UnspentOutputs  []Output            `json:"unspent_outputs"`
+	Inputs          []Input             `json:"input"`
+	FromPublicKey   []byte              `json:"from_public_key"`
+	GasPricePerByte xc.AmountBlockchain `json:"gas_price_per_byte"`
 }
 
 var _ xc.TxInputWithPublicKey = &TxInput{}
@@ -28,6 +28,9 @@ func NewTxInput() *TxInput {
 	}
 }
 
+func (txInput *TxInput) GetGetPricePerByte() xc.AmountBlockchain {
+	return txInput.GasPricePerByte
+}
 func (txInput *TxInput) SetPublicKey(publicKeyBytes xc.PublicKey) error {
 	txInput.FromPublicKey = publicKeyBytes
 	return nil
@@ -84,6 +87,6 @@ func (txInput *TxInput) allocateMinUtxoSet(targetAmount xc.AmountBlockchain, min
 		})
 		i++
 	}
-	txInput.inputs = inputs
+	txInput.Inputs = inputs
 	return &balance
 }
