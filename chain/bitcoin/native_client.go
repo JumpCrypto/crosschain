@@ -95,7 +95,7 @@ func NewNativeClient(cfgI xc.ITask) (*NativeClient, error) {
 
 // FetchTxInput returns tx input for a Bitcoin tx
 func (client *NativeClient) FetchTxInput(ctx context.Context, from xc.Address, to xc.Address) (xc.TxInput, error) {
-	input := &TxInput{}
+	input := NewTxInput()
 	allUnspentOutputs, err := client.UnspentOutputs(ctx, 0, 999999999, xc.Address(from))
 	if err != nil {
 		return input, err
@@ -146,7 +146,7 @@ func (client *NativeClient) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (
 
 	data, _ := hex.DecodeString(resp.Hex)
 	tx := &Tx{
-		input:  TxInput{},
+		input:  *NewTxInput(),
 		msgTx:  &wire.MsgTx{},
 		signed: true,
 	}

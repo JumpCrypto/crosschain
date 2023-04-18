@@ -12,6 +12,7 @@ import (
 
 // TxInput for Bitcoin
 type TxInput struct {
+	xc.TxInputEnvelope
 	UnspentOutputs  []Output
 	inputs          []Input
 	FromPublicKey   []byte
@@ -19,6 +20,13 @@ type TxInput struct {
 }
 
 var _ xc.TxInputWithPublicKey = &TxInput{}
+
+// NewTxInput returns a new Bitcoin TxInput
+func NewTxInput() *TxInput {
+	return &TxInput{
+		TxInputEnvelope: *xc.NewTxInputEnvelope(xc.DriverBitcoin),
+	}
+}
 
 func (txInput *TxInput) SetPublicKey(publicKeyBytes xc.PublicKey) error {
 	txInput.FromPublicKey = publicKeyBytes

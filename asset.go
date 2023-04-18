@@ -157,6 +157,15 @@ const (
 	DriverSolana      = Driver("solana")
 )
 
+var SupportedDrivers = []Driver{
+	DriverBitcoin,
+	DriverCosmos,
+	DriverCosmosEvmos,
+	DriverEVM,
+	DriverEVMLegacy,
+	DriverSolana,
+}
+
 // AssetID is an internal identifier for each asset
 // Examples: ETH, USDC, USDC.SOL - see tests for details
 type AssetID string

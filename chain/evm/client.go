@@ -60,6 +60,14 @@ type TxInput struct {
 	GasPrice xc.AmountBlockchain // wei per gas
 }
 
+func NewTxInput() *TxInput {
+	return &TxInput{
+		TxInputEnvelope: xc.TxInputEnvelope{
+			Type: xc.DriverEVM,
+		},
+	}
+}
+
 // Interceptor
 type HttpInterceptor struct {
 	core    http.RoundTripper
@@ -175,14 +183,10 @@ func NewLegacyClient(cfg xc.ITask) (*Client, error) {
 // FetchTxInput returns tx input for a EVM tx
 func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Address) (xc.TxInput, error) {
 	zero := xc.NewAmountBlockchainFromUint64(0)
-	result := &TxInput{
-		TxInputEnvelope: xc.TxInputEnvelope{},
-		Nonce:           0,
-		GasLimit:        0,
-		GasTipCap:       xc.NewAmountBlockchainFromUint64(DEFAULT_GAS_TIP),
-		GasFeeCap:       zero,
-		GasPrice:        zero,
-	}
+	result := NewTxInput()
+	result.GasTipCap = xc.NewAmountBlockchainFromUint64(DEFAULT_GAS_TIP)
+	result.GasFeeCap = zero
+	result.GasPrice = zero
 
 	// Nonce
 	targetAddr, err := HexToAddress(from)

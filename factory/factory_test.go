@@ -5,7 +5,10 @@ import (
 	"testing"
 
 	xc "github.com/jumpcrypto/crosschain"
+	"github.com/jumpcrypto/crosschain/chain/aptos"
+	"github.com/jumpcrypto/crosschain/chain/bitcoin"
 	"github.com/jumpcrypto/crosschain/chain/cosmos"
+	"github.com/jumpcrypto/crosschain/chain/evm"
 	"github.com/jumpcrypto/crosschain/chain/solana"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/suite"
@@ -450,4 +453,29 @@ func (s *CrosschainTestSuite) TestTxInputSerDeser() {
 	require.NotNil(typedCosmos)
 	expected := inputCosmos
 	require.Equal(expected, typedCosmos)
+}
+
+func (s *CrosschainTestSuite) TestAllTxInputSerDeser() {
+	require := s.Require()
+	for _, driver := range xc.SupportedDrivers {
+		var input xc.TxInput
+		switch driver {
+		case xc.DriverEVM, xc.DriverEVMLegacy:
+			input = evm.NewTxInput()
+		case xc.DriverCosmos, xc.DriverCosmosEvmos:
+			input = cosmos.NewTxInput()
+		case xc.DriverSolana:
+			input = solana.NewTxInput()
+		case xc.DriverAptos:
+			input = aptos.NewTxInput()
+		case xc.DriverBitcoin:
+			input = bitcoin.NewTxInput()
+		default:
+			require.Fail("must add driver to test: " + string(driver))
+		}
+		bz, err := MarshalTxInput(input)
+		require.NoError(err)
+		_, err = UnmarshalTxInput(bz)
+		require.NoError(err)
+	}
 }

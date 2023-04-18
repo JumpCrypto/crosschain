@@ -155,7 +155,7 @@ func (client *BlockchairClient) EstimateGasFee(ctx context.Context, numBlocks in
 
 // FetchTxInput returns tx input for a Bitcoin tx
 func (client *BlockchairClient) FetchTxInput(ctx context.Context, from xc.Address, to xc.Address) (xc.TxInput, error) {
-	input := &TxInput{}
+	input := NewTxInput()
 	fmt.Println("FETCH UNSPENT")
 	allUnspentOutputs, err := client.UnspentOutputs(ctx, 0, 999999999, xc.Address(from))
 	fmt.Println("FETCHED")
@@ -322,9 +322,7 @@ func (client *BlockchairClient) FetchTxInfo(ctx context.Context, txHash xc.TxHas
 
 	// build Tx
 	tx := &Tx{
-		input: TxInput{
-			inputs: []Input{},
-		},
+		input:      *NewTxInput(),
 		recipients: []Recipient{},
 		msgTx:      &wire.MsgTx{},
 		signed:     true,
