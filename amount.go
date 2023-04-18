@@ -1,6 +1,7 @@
 package crosschain
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 
@@ -100,4 +101,21 @@ func NewAmountBlockchainFromStr(str string) AmountBlockchain {
 
 func (amount AmountHumanReadable) String() string {
 	return decimal.Decimal(amount).String()
+}
+
+func (b *AmountBlockchain) MarshalJSON() ([]byte, error) {
+	return []byte(b.String()), nil
+}
+
+func (b *AmountBlockchain) UnmarshalJSON(p []byte) error {
+	if string(p) == "null" {
+		return nil
+	}
+	var z big.Int
+	_, ok := z.SetString(string(p), 10)
+	if !ok {
+		return fmt.Errorf("not a valid big integer: %s", p)
+	}
+	*b = AmountBlockchain(z)
+	return nil
 }

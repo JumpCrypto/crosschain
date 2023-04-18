@@ -428,10 +428,10 @@ func (s *CrosschainTestSuite) TestTxInputSerDeser() {
 	inputSolana.ToIsATA = true
 	inputSolana.ShouldCreateATA = true
 	ser, err := s.Factory.MarshalTxInput(inputSolana)
-	require.Nil(err)
+	require.NoError(err)
 
 	deser, err := s.Factory.UnmarshalTxInput(ser)
-	require.Nil(err)
+	require.NoError(err)
 	typedSolana := deser.(*solana.TxInput)
 	require.NotNil(typedSolana)
 	require.Equal(inputSolana, typedSolana)
@@ -445,14 +445,43 @@ func (s *CrosschainTestSuite) TestTxInputSerDeser() {
 	inputCosmos.GasPrice = 4.5
 	inputCosmos.Memo = "memo"
 	ser, err = s.Factory.MarshalTxInput(inputCosmos)
-	require.Nil(err)
+	require.NoError(err)
 
 	deser, err = s.Factory.UnmarshalTxInput(ser)
-	require.Nil(err)
+	require.NoError(err)
 	typedCosmos := deser.(*cosmos.TxInput)
 	require.NotNil(typedCosmos)
 	expected := inputCosmos
 	require.Equal(expected, typedCosmos)
+
+	inputBtc := bitcoin.NewTxInput()
+	inputBtc.UnspentOutputs = []bitcoin.Output{
+		{
+			Outpoint: bitcoin.Outpoint{
+				Index: 1,
+			},
+			Value: xc.NewAmountBlockchainFromUint64(100),
+		},
+		{
+			Outpoint: bitcoin.Outpoint{
+				Index: 2,
+			},
+			Value: xc.NewAmountBlockchainFromUint64(200),
+		},
+	}
+	btcBz, err := MarshalTxInput(inputBtc)
+	require.NoError(err)
+	inputBtc2, err := UnmarshalTxInput(btcBz)
+	require.NoError(err)
+
+	require.Equal(inputBtc.UnspentOutputs[0].Value.String(), "100")
+	require.Equal(inputBtc.UnspentOutputs[1].Value.String(), "200")
+	require.EqualValues(inputBtc2.(*bitcoin.TxInput).UnspentOutputs[0].Outpoint.Index, 1)
+	require.EqualValues(inputBtc2.(*bitcoin.TxInput).UnspentOutputs[1].Outpoint.Index, 2)
+	fmt.Println("SERDE:\n", string(btcBz))
+	require.Equal(inputBtc2.(*bitcoin.TxInput).UnspentOutputs[0].Value.String(), "100")
+	require.Equal(inputBtc2.(*bitcoin.TxInput).UnspentOutputs[1].Value.String(), "200")
+
 }
 
 func (s *CrosschainTestSuite) TestAllTxInputSerDeser() {
