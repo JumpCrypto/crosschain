@@ -64,13 +64,14 @@ type Factory struct {
 var _ FactoryContext = &Factory{}
 
 func (f *Factory) GetAllAssets() []ITask {
-	assets := []ITask{}
+	tasks := []ITask{}
 	f.AllAssets.Range(func(key, value any) bool {
 		asset := value.(ITask)
-		assets = append(assets, asset)
+		task, _ := f.cfgFromAsset(asset.ID())
+		tasks = append(tasks, task)
 		return true
 	})
-	return assets
+	return tasks
 }
 
 func (f *Factory) cfgFromAsset(assetID AssetID) (ITask, error) {
