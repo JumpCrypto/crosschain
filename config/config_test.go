@@ -1,10 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"testing"
 
+	vault "github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -74,4 +76,68 @@ func (s *CrosschainTestSuite) TestGetSecretErrInvalidType() {
 	secret, err := GetSecret("invalid:value")
 	require.Equal("", secret)
 	require.Error(errors.New("invalid secret source for: ***"), err)
+}
+
+type MockedVaultLoaded struct {
+	data map[string]interface{}
+}
+
+var _ VaultLoader = &MockedVaultLoaded{}
+
+func (l *MockedVaultLoaded) LoadSecretData(path string) (*vault.Secret, error) {
+	data, ok := l.data[path]
+	if !ok {
+		return &vault.Secret{}, errors.New("path not found")
+	}
+	return &vault.Secret{
+		Data: data.(map[string]interface{}),
+	}, nil
+}
+
+func (s *CrosschainTestSuite) TestGetSecretVault() {
+	require := s.Require()
+	NewVaultClient = func(cfg *vault.Config) (VaultLoader, error) {
+		vaultRes := `{
+			"path1/to": {
+				"data": {
+					"secret": "mysecret"
+				}
+			},
+			"path2/to": {
+				"data": {
+					"secret2": "mysecret2"
+				}
+			}
+		}`
+		data := make(map[string]interface{})
+		err := json.Unmarshal([]byte(vaultRes), &data)
+		require.NoError(err)
+
+		return &MockedVaultLoaded{
+			data: data,
+		}, nil
+	}
+
+	_, err := GetSecret("vault:wrong_args")
+	require.ErrorContains(err, "vault secret has 2 comma separated arguments")
+	_, err = GetSecret("vault:wrong_args,aaa,bbb")
+	require.ErrorContains(err, "vault secret has 2 comma separated arguments")
+
+	_, err = GetSecret("vault:url,aaa")
+	require.ErrorContains(err, "malformed vault secret")
+
+	_, err = GetSecret("vault:url,aaa/secret")
+	require.EqualError(err, "path not found")
+
+	secret, err := GetSecret("vault:https://example.com,path1/to/secret")
+	require.NoError(err)
+	require.Equal("mysecret", secret)
+
+	secret, err = GetSecret("vault:https://example.com,path2/to/secret2")
+	require.NoError(err)
+	require.Equal("mysecret2", secret)
+
+	secret, err = GetSecret("vault:https://example.com,path2/to/secret_none")
+	require.NoError(err)
+	require.Equal("", secret)
 }
