@@ -685,8 +685,8 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 	return address
 }
 
-func CheckError(cfg *AssetConfig, err error) ClientError {
-	switch Driver(cfg.Driver) {
+func CheckError(driver Driver, err error) ClientError {
+	switch driver {
 	case DriverEVM, DriverEVMLegacy:
 		return evm.CheckError(err)
 	case DriverCosmos, DriverCosmosEvmos:
