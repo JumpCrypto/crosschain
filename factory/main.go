@@ -115,7 +115,6 @@ func (f *Factory) cfgFromTask(taskName string, assetID AssetID) (ITask, error) {
 			if entry.Src == assetID {
 				allowed = true
 				dstAssetID = entry.Dst
-				fmt.Println(dstAssetID)
 				break
 			}
 		}
@@ -208,7 +207,12 @@ func (f *Factory) cfgEnrichAssetConfig(partialCfg *TokenAssetConfig) (*TokenAsse
 		}
 		chain := chainI.(*NativeAssetConfig)
 		cfg.NativeAssetConfig = chain
-
+		if cfg.NativeAssetConfig.NativeAsset == "" {
+			cfg.NativeAssetConfig.NativeAsset = NativeAsset(cfg.NativeAssetConfig.Chain)
+			if cfg.NativeAssetConfig.NativeAsset == "" {
+				cfg.NativeAssetConfig.NativeAsset = NativeAsset(cfg.NativeAssetConfig.Asset)
+			}
+		}
 		cfg.Driver = chain.Driver
 		cfg.Net = chain.Net
 		cfg.URL = chain.URL
