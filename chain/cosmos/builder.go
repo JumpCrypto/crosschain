@@ -19,7 +19,7 @@ import (
 // TxBuilder for Cosmos
 type TxBuilder struct {
 	xc.TxBuilder
-	Asset           *xc.AssetConfig
+	Asset           xc.ITask
 	CosmosTxConfig  client.TxConfig
 	CosmosTxBuilder client.TxBuilder
 }
@@ -29,7 +29,7 @@ func NewTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 	cosmosCfg := MakeCosmosConfig()
 
 	return TxBuilder{
-		Asset:           asset.GetAssetConfig(),
+		Asset:           asset,
 		CosmosTxConfig:  cosmosCfg.TxConfig,
 		CosmosTxBuilder: cosmosCfg.TxConfig.NewTxBuilder(),
 	}, nil
@@ -37,7 +37,7 @@ func NewTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 
 // NewTransfer creates a new transfer for an Asset, either native or token
 func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
-	if isNativeAsset(txBuilder.Asset) {
+	if isNativeAsset(txBuilder.Asset.GetAssetConfig()) {
 		return txBuilder.NewNativeTransfer(from, to, amount, input)
 	}
 	return txBuilder.NewTokenTransfer(from, to, amount, input)
@@ -53,12 +53,19 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 		txInput.GasLimit = 400_000
 	}
 
+	denom := asset.GetNativeAsset().ChainCoin
+	if token, ok := asset.(*xc.TokenAssetConfig); ok {
+		if token.Contract != "" {
+			denom = token.Contract
+		}
+	}
+
 	msgSend := &banktypes.MsgSend{
 		FromAddress: string(from),
 		ToAddress:   string(to),
 		Amount: types.Coins{
 			{
-				Denom:  asset.ChainCoin,
+				Denom:  denom,
 				Amount: types.NewIntFromBigInt(&amountInt),
 			},
 		},
@@ -75,7 +82,7 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 	// Terra Classic: most tokens are actually native tokens
 	// in crosschain we can treat them interchangeably as native or non-native assets
 	// if contract isn't a valid address, they're native tokens
-	if isNativeAsset(asset) {
+	if isNativeAsset(asset.GetAssetConfig()) {
 		return txBuilder.NewNativeTransfer(from, to, amount, input)
 	}
 
@@ -86,7 +93,7 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 	contractTransferMsg := fmt.Sprintf(`{"transfer": {"amount": "%s", "recipient": "%s"}}`, amount.String(), to)
 	msgSend := &wasmtypes.MsgExecuteContract{
 		Sender:   string(from),
-		Contract: asset.Contract,
+		Contract: asset.GetAssetConfig().Contract,
 		Msg:      wasmtypes.RawContractMessage(json.RawMessage(contractTransferMsg)),
 	}
 
@@ -113,7 +120,7 @@ func accAddressFromBech32WithPrefix(address string, prefix string) ([]byte, erro
 
 // createTxWithMsg creates a new Tx given Cosmos Msg
 func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input *TxInput, msg types.Msg) (xc.Tx, error) {
-	asset := *txBuilder.Asset
+	asset := txBuilder.Asset
 	cosmosTxConfig := txBuilder.CosmosTxConfig
 	cosmosBuilder := txBuilder.CosmosTxBuilder
 
@@ -122,12 +129,12 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 		return nil, err
 	}
 
-	_, err = accAddressFromBech32WithPrefix(string(from), asset.ChainPrefix)
+	_, err = accAddressFromBech32WithPrefix(string(from), asset.GetNativeAsset().ChainPrefix)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = accAddressFromBech32WithPrefix(string(to), asset.ChainPrefix)
+	_, err = accAddressFromBech32WithPrefix(string(to), asset.GetNativeAsset().ChainPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +143,7 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 	cosmosBuilder.SetGasLimit(input.GasLimit)
 	cosmosBuilder.SetFeeAmount(types.Coins{
 		{
-			Denom:  asset.ChainCoin,
+			Denom:  asset.GetNativeAsset().ChainCoin,
 			Amount: types.NewIntFromUint64(uint64(input.GasPrice * float64(input.GasLimit))),
 		},
 	})
@@ -144,7 +151,7 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 	sigMode := signingtypes.SignMode_SIGN_MODE_DIRECT
 	sigsV2 := []signingtypes.SignatureV2{
 		{
-			PubKey: getPublicKey(asset, input.FromPublicKey),
+			PubKey: getPublicKey(*asset.GetNativeAsset(), input.FromPublicKey),
 			Data: &signingtypes.SingleSignatureData{
 				SignMode:  sigMode,
 				Signature: nil,
@@ -159,20 +166,20 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 
 	signerData := signing.SignerData{
 		AccountNumber: input.AccountNumber,
-		ChainID:       asset.ChainIDStr,
+		ChainID:       asset.GetNativeAsset().ChainIDStr,
 		Sequence:      input.Sequence,
 	}
 	sighashData, err := cosmosTxConfig.SignModeHandler().GetSignBytes(sigMode, signerData, cosmosBuilder.GetTx())
 	if err != nil {
 		return nil, err
 	}
-
+	sighash := getSighash(*asset.GetNativeAsset(), sighashData)
 	return &Tx{
 		CosmosTx:        cosmosBuilder.GetTx(),
 		ParsedTransfers: []types.Msg{msg},
 		CosmosTxBuilder: cosmosBuilder,
 		CosmosTxEncoder: cosmosTxConfig.TxEncoder(),
 		SigsV2:          sigsV2,
-		TxDataToSign:    getSighash(asset, sighashData),
+		TxDataToSign:    sighash,
 	}, nil
 }

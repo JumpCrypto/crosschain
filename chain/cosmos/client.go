@@ -59,7 +59,7 @@ func NewTxInput() *TxInput {
 
 // Client for Cosmos
 type Client struct {
-	Asset           *xc.AssetConfig
+	Asset           xc.ITask
 	Ctx             client.Context
 	Prefix          string
 	EstimateGasFunc xc.EstimateGasFunc
@@ -69,7 +69,7 @@ var _ xc.FullClientWithGas = &Client{}
 
 // NewClient returns a new Client
 func NewClient(cfgI xc.ITask) (*Client, error) {
-	asset := cfgI.GetAssetConfig()
+	asset := cfgI
 	cfg := cfgI.GetNativeAsset()
 	host := cfg.URL
 	httpClient, err := rpchttp.NewWithClient(
@@ -209,7 +209,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	}
 
 	result.TxID = string(txHash)
-	result.ExplorerURL = client.Asset.ExplorerURL + "/tx/" + result.TxID
+	result.ExplorerURL = client.Asset.GetNativeAsset().ExplorerURL + "/tx/" + result.TxID
 	tx.ParseTransfer()
 
 	// parse tx info - this should happen after ATA is set
@@ -257,7 +257,7 @@ func (client *Client) GetAccount(ctx context.Context, address xc.Address) (clien
 func (client *Client) estimateGasFcd(ctx context.Context) (xc.AmountBlockchain, error) {
 	zero := xc.NewAmountBlockchainFromUint64(0)
 	asset := client.Asset
-	fdcURL := asset.FcdURL
+	fdcURL := asset.GetNativeAsset().FcdURL
 	resp, err := http.Get(fdcURL + "/v1/txs/gas_prices")
 	if err != nil {
 		return zero, err
@@ -275,7 +275,7 @@ func (client *Client) estimateGasFcd(ctx context.Context) (xc.AmountBlockchain, 
 		return zero, err
 	}
 
-	denom := asset.ChainCoin
+	denom := asset.GetNativeAsset().ChainCoin
 	priceStr, ok := prices[denom]
 	if !ok {
 		return zero, fmt.Errorf("could not find %s in /gas_prices", denom)
@@ -286,8 +286,8 @@ func (client *Client) estimateGasFcd(ctx context.Context) (xc.AmountBlockchain, 
 	}
 
 	multiplier := 1.0
-	if asset.ChainGasMultiplier > 0 {
-		multiplier = asset.ChainGasMultiplier
+	if asset.GetNativeAsset().ChainGasMultiplier > 0 {
+		multiplier = asset.GetNativeAsset().ChainGasMultiplier
 	}
 	return xc.NewAmountBlockchainToMaskFloat64(gasPrice * multiplier), nil
 }
@@ -296,7 +296,7 @@ func (client *Client) estimateGasFcd(ctx context.Context) (xc.AmountBlockchain, 
 func (client *Client) EstimateGas(ctx context.Context) (xc.AmountBlockchain, error) {
 	// invoke EstimateGasFunc callback, if registered
 	if client.EstimateGasFunc != nil {
-		nativeAsset := client.Asset.NativeAsset
+		nativeAsset := client.Asset.GetNativeAsset().NativeAsset
 		res, err := client.EstimateGasFunc(nativeAsset)
 		if err != nil {
 			// continue with default implementation as fallback
@@ -306,11 +306,11 @@ func (client *Client) EstimateGas(ctx context.Context) (xc.AmountBlockchain, err
 	}
 
 	zero := xc.NewAmountBlockchainFromUint64(0)
-	if client.Asset.FcdURL != "" {
+	if client.Asset.GetNativeAsset().FcdURL != "" {
 		return client.estimateGasFcd(ctx)
 	}
-	if client.Asset.ChainGasPriceDefault > 0 {
-		return xc.NewAmountBlockchainToMaskFloat64(client.Asset.ChainGasPriceDefault), nil
+	if client.Asset.GetNativeAsset().ChainGasPriceDefault > 0 {
+		return xc.NewAmountBlockchainToMaskFloat64(client.Asset.GetNativeAsset().ChainGasPriceDefault), nil
 	}
 	return zero, errors.New("not implemented")
 }
@@ -322,15 +322,15 @@ func (client *Client) RegisterEstimateGasCallback(fn xc.EstimateGasFunc) {
 
 // FetchBalance fetches balance for input asset for a Cosmos address
 func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	if isNativeAsset(client.Asset) {
+	if isNativeAsset(client.Asset.GetNativeAsset()) {
 		return client.FetchNativeBalance(ctx, address)
 	}
-	_, err := types.GetFromBech32(client.Asset.Contract, client.Prefix)
+	_, err := types.GetFromBech32(client.Asset.GetNativeAsset().Contract, client.Prefix)
 	if err != nil {
 		// could be a custom denom.  Try querying as a native balance.
 		return client.fetchBankModuleBalance(ctx, address, client.Asset)
 	}
-	return client.fetchContractBalance(ctx, address, client.Asset.Contract)
+	return client.fetchContractBalance(ctx, address, client.Asset.GetAssetConfig().Contract)
 }
 
 func (client *Client) fetchContractBalance(ctx context.Context, address xc.Address, contractAddress string) (xc.AmountBlockchain, error) {
@@ -370,21 +370,23 @@ func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address
 
 // Cosmos chains can have multiple native assets.  This helper is necessary to query the
 // native bank module for a given asset.
-func (client *Client) fetchBankModuleBalance(ctx context.Context, address xc.Address, asset *xc.AssetConfig) (xc.AmountBlockchain, error) {
+func (client *Client) fetchBankModuleBalance(ctx context.Context, address xc.Address, asset xc.ITask) (xc.AmountBlockchain, error) {
 	zero := xc.NewAmountBlockchainFromUint64(0)
 
 	_, err := types.GetFromBech32(string(address), client.Prefix)
 	if err != nil {
 		return zero, fmt.Errorf("bad address: '%v': %v", address, err)
 	}
-	denom := asset.ChainCoin
+	denom := asset.GetNativeAsset().ChainCoin
 	if denom == "" {
-		if asset.Contract != "" {
-			denom = asset.Contract
+		if token, ok := asset.(*xc.TokenAssetConfig); ok {
+			if token.Contract != "" {
+				denom = token.Contract
+			}
 		}
 	}
 	if denom == "" {
-		return zero, fmt.Errorf("failed to account balance: no denom on asset %s.%s", asset.Asset, asset.NativeAsset)
+		return zero, fmt.Errorf("failed to account balance: no denom on asset %s.%s", asset.GetAssetConfig().Asset, asset.GetNativeAsset().NativeAsset)
 	}
 
 	queryClient := banktypes.NewQueryClient(client.Ctx)

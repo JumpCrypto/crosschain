@@ -216,11 +216,12 @@ type AssetConfig struct {
 type NativeAssetConfig = AssetConfig
 
 type TokenAssetConfig struct {
-	Asset    string `yaml:"asset"`
-	Chain    string `yaml:"chain"`
-	Net      string `yaml:"net"`
-	Decimals int32  `yaml:"decimals"`
-	Contract string `yaml:"contract"`
+	Asset    string    `yaml:"asset"`
+	Chain    string    `yaml:"chain"`
+	Net      string    `yaml:"net"`
+	Decimals int32     `yaml:"decimals"`
+	Contract string    `yaml:"contract"`
+	Type     AssetType `yaml:"type"`
 
 	AssetConfig       `yaml:"-"`
 	NativeAssetConfig *NativeAssetConfig `yaml:"-"`

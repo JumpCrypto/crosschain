@@ -164,6 +164,7 @@ crosschain:
     net: testnet
     decimals: 6
     contract: factory/inj17vytdwqczqz72j65saukplrktd4gyfme5agf6c/usdc
+    type: native
   - asset: USDT
     chain: INJ
     net: testnet
