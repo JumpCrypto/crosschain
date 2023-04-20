@@ -181,6 +181,12 @@ func (s *CrosschainTestSuite) TestNewNativeTransfer() {
 			hash := tf.Hash()
 			require.Len(hash, 64)
 
+			if native_asset == xc.BCH {
+				require.True(tf.(*Tx).IsBch())
+			} else {
+				require.False(tf.(*Tx).IsBch())
+			}
+
 			// Having not enough balance for fees will be an error
 			input_small := &TxInput{
 				UnspentOutputs: []Output{{

@@ -18,11 +18,12 @@ const TxVersion int32 = 2
 type TxBuilder struct {
 	Asset  *xc.AssetConfig
 	Params *chaincfg.Params
+	isBch  bool
 }
 
 // NewTxBuilder creates a new Bitcoin TxBuilder
 func NewTxBuilder(cfgI xc.ITask) (xc.TxBuilder, error) {
-	asset := cfgI.GetAssetConfig()
+	asset := cfgI.GetNativeAsset()
 	params, err := GetParams(asset)
 	if err != nil {
 		return TxBuilder{}, err
@@ -30,6 +31,7 @@ func NewTxBuilder(cfgI xc.ITask) (xc.TxBuilder, error) {
 	return TxBuilder{
 		Asset:  asset,
 		Params: params,
+		isBch:  asset.NativeAsset == xc.BCH,
 	}, nil
 }
 
@@ -124,6 +126,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 		input:  local_input,
 
 		recipients: recipients,
+		isBch:      txBuilder.isBch,
 	}
 	return &tx, nil
 }
