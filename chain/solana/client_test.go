@@ -2,6 +2,7 @@ package solana
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
@@ -51,7 +52,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	require := s.Require()
 
 	vectors := []struct {
-		asset           *xc.AssetConfig
+		asset           xc.ITask
 		resp            interface{}
 		blockHash       string
 		toIsATA         bool
@@ -59,7 +60,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 		err             string
 	}{
 		{
-			&xc.AssetConfig{},
+			&xc.NativeAssetConfig{},
 			// valid blockhash
 			`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
 			"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
@@ -68,7 +69,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"",
 		},
 		{
-			&xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
+			&xc.TokenAssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
 			[]string{
 				// valid blockhash
 				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
@@ -83,7 +84,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"",
 		},
 		{
-			&xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
+			&xc.TokenAssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
 			[]string{
 				// valid blockhash
 				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
@@ -98,7 +99,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"",
 		},
 		{
-			&xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
+			&xc.TokenAssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
 			[]string{
 				// valid blockhash
 				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
@@ -113,7 +114,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"",
 		},
 		{
-			&xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
+			&xc.TokenAssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
 			[]string{
 				// valid blockhash
 				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
@@ -128,7 +129,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"",
 		},
 		{
-			&xc.AssetConfig{},
+			&xc.NativeAssetConfig{},
 			[]string{
 				// invalid blockhash
 				`{"context":{"slot":83986105},"value":{"blockhash":"error","feeCalculator":{"lamportsPerSignature":5000}}}`,
@@ -139,7 +140,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"rpc.GetRecentBlockhashResult",
 		},
 		{
-			&xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "invalid-contract"},
+			&xc.TokenAssetConfig{Type: xc.AssetTypeToken, Contract: "invalid-contract"},
 			[]string{
 				// valid blockhash
 				`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
@@ -152,7 +153,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"decode: invalid base58 digit",
 		},
 		{
-			&xc.AssetConfig{},
+			&xc.NativeAssetConfig{},
 			`null`,
 			"",
 			false,
@@ -160,7 +161,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"error fetching blockhash",
 		},
 		{
-			&xc.AssetConfig{},
+			&xc.NativeAssetConfig{},
 			`{}`,
 			"",
 			false,
@@ -168,7 +169,7 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 			"error fetching blockhash",
 		},
 		{
-			&xc.AssetConfig{},
+			&xc.NativeAssetConfig{},
 			errors.New(`{"message": "custom RPC error", "code": 123}`),
 			"",
 			false,
@@ -180,8 +181,16 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	for _, v := range vectors {
 		server, close := test.MockJSONRPC(&s.Suite, v.resp)
 		defer close()
+		fmt.Println("ASSET", v.asset)
+		if token, ok := v.asset.(*xc.TokenAssetConfig); ok {
+			token.NativeAssetConfig = &xc.AssetConfig{
+				URL:         server.URL,
+				NativeAsset: "SOL",
+			}
+		} else {
+			v.asset.(*xc.NativeAssetConfig).URL = server.URL
+		}
 
-		v.asset.URL = server.URL
 		client, _ := NewClient(v.asset)
 		from := xc.Address("from")
 		to := xc.Address("Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")

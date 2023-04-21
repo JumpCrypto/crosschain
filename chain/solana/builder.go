@@ -29,10 +29,14 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 		return txBuilder.NewTask(from, to, amount, input)
 	}
 
-	asset := txBuilder.Asset.GetAssetConfig()
-	if asset.Type == xc.AssetTypeToken {
-		return txBuilder.NewTokenTransfer(from, to, amount, input)
+	if asset, ok := txBuilder.Asset.(*xc.TokenAssetConfig); ok {
+		if asset.Type == xc.AssetTypeNative {
+			return txBuilder.NewNativeTransfer(from, to, amount, input)
+		} else {
+			return txBuilder.NewTokenTransfer(from, to, amount, input)
+		}
 	}
+
 	return txBuilder.NewNativeTransfer(from, to, amount, input)
 }
 
@@ -78,7 +82,9 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
 	asset := txBuilder.Asset.GetAssetConfig()
 	if asset.Type != xc.AssetTypeToken {
-		return nil, errors.New("asset is not of type token")
+		if _, ok := txBuilder.Asset.(*xc.TokenAssetConfig); !ok {
+			return nil, errors.New("asset is not of type token")
+		}
 	}
 	txInput := input.(*TxInput)
 

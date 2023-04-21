@@ -33,19 +33,18 @@ func NewTxInput() *TxInput {
 // Client for Solana
 type Client struct {
 	SolClient *rpc.Client
-	Asset     *xc.AssetConfig
+	Asset     xc.ITask
 }
 
 var _ xc.Client = &Client{}
 
 // NewClient returns a new JSON-RPC Client to the Solana node
 func NewClient(cfgI xc.ITask) (*Client, error) {
-	asset := cfgI.GetAssetConfig()
 	cfg := cfgI.GetNativeAsset()
 	solClient := rpc.New(cfg.URL)
 	return &Client{
 		SolClient: solClient,
-		Asset:     asset,
+		Asset:     cfgI,
 	}, nil
 }
 
@@ -65,9 +64,17 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.A
 		return nil, errors.New("error fetching blockhash")
 	}
 	txInput.RecentBlockHash = recent.Value.Blockhash
-
-	if asset.Type != xc.AssetTypeToken {
-		return txInput, nil
+	contract := ""
+	if token, ok := asset.(*xc.TokenAssetConfig); ok {
+		contract = token.Contract
+	} else {
+		// TODO remove native asset
+		if asset.GetAssetConfig().Contract != "" {
+			contract = asset.GetAssetConfig().Contract
+		} else {
+			// native transfer
+			return txInput, nil
+		}
 	}
 
 	// get account info - check if to is an owner or ata
@@ -91,7 +98,7 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.A
 	// for tokens, get ata account info
 	ataTo := accountTo
 	if !txInput.ToIsATA {
-		ataToStr, err := FindAssociatedTokenAddress(string(to), string(asset.Contract))
+		ataToStr, err := FindAssociatedTokenAddress(string(to), contract)
 		if err != nil {
 			return nil, err
 		}
@@ -190,7 +197,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	result.Fee = xc.NewAmountBlockchainFromUint64(meta.Fee)
 
 	result.TxID = string(txHash)
-	result.ExplorerURL = client.Asset.ExplorerURL + "/tx/" + result.TxID + "?cluster=" + client.Asset.Net
+	result.ExplorerURL = client.Asset.GetNativeAsset().ExplorerURL + "/tx/" + result.TxID + "?cluster=" + client.Asset.GetNativeAsset().Net
 	tx.ParseTransfer()
 
 	// first, check associated token account
@@ -253,12 +260,15 @@ func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.
 }
 
 // FetchBalanceForAsset fetches a specific token balance which may not be the asset configured for the client
-func (client *Client) FetchBalanceForAsset(ctx context.Context, address xc.Address, assetCfg *xc.AssetConfig) (xc.AmountBlockchain, error) {
-	if assetCfg.Type == xc.AssetTypeNative {
-		return client.FetchNativeBalance(ctx, address)
+func (client *Client) FetchBalanceForAsset(ctx context.Context, address xc.Address, assetCfg xc.ITask) (xc.AmountBlockchain, error) {
+	if token, ok := assetCfg.(*xc.TokenAssetConfig); ok {
+		return client.fetchContractBalance(ctx, address, token.Contract)
 	}
-
-	return client.fetchContractBalance(ctx, address, assetCfg.Contract)
+	// TODO remove assetconfig
+	if assetCfg.GetAssetConfig().Contract != "" {
+		return client.fetchContractBalance(ctx, address, assetCfg.GetAssetConfig().Contract)
+	}
+	return client.FetchNativeBalance(ctx, address)
 }
 
 // fetchContractBalance fetches a specific token balance for a Solana address
