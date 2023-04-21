@@ -77,6 +77,11 @@ func (tx *Tx) ParseTransfer() {
 		tx.parsedTransfer = tokenT
 		return
 	}
+	voteW, _ := tx.getVoteWithdraw()
+	if voteW != nil {
+		tx.parsedTransfer = voteW
+		return
+	}
 }
 
 // SetAssociatedTokenAccount sets the associated token account
@@ -182,10 +187,46 @@ func (tx Tx) RecentBlockhash() string {
 	return ""
 }
 
+func (tx Tx) getVoteWithdraw() (*vote.Withdraw, error) {
+	if tx.SolTx != nil {
+		message := tx.SolTx.Message
+		for _, instruction := range message.Instructions {
+			program, err := message.ResolveProgramIDIndex(instruction.ProgramIDIndex)
+			if err != nil {
+				continue
+			}
+			if !program.Equals(solana.VoteProgramID) {
+				continue
+			}
+			accs, err := instruction.ResolveInstructionAccounts(&message)
+			if err != nil {
+				continue
+			}
+			inst, err := vote.DecodeInstruction(accs, instruction.Data)
+			if err != nil {
+				continue
+			}
+			castedInst, ok := inst.Impl.(*vote.Withdraw)
+			if !ok {
+				continue
+			}
+			return castedInst, nil
+		}
+	}
+	return nil, fmt.Errorf("no tx set")
+}
+
 func (tx Tx) getSystemTransfer() (*system.Transfer, error) {
 	if tx.SolTx != nil {
 		message := tx.SolTx.Message
 		for _, instruction := range message.Instructions {
+			program, err := message.ResolveProgramIDIndex(instruction.ProgramIDIndex)
+			if err != nil {
+				continue
+			}
+			if !program.Equals(solana.SystemProgramID) {
+				continue
+			}
 			accs, err := instruction.ResolveInstructionAccounts(&message)
 			if err != nil {
 				continue
@@ -208,6 +249,13 @@ func (tx Tx) getTokenTransferChecked() (*token.TransferChecked, error) {
 	if tx.SolTx != nil {
 		message := tx.SolTx.Message
 		for _, instruction := range message.Instructions {
+			program, err := message.ResolveProgramIDIndex(instruction.ProgramIDIndex)
+			if err != nil {
+				continue
+			}
+			if !program.Equals(solana.TokenProgramID) {
+				continue
+			}
 			accs, err := instruction.ResolveInstructionAccounts(&message)
 			if err != nil {
 				continue
@@ -231,6 +279,13 @@ func (tx Tx) getTokenTransfer() (*token.Transfer, error) {
 	if tx.SolTx != nil {
 		message := tx.SolTx.Message
 		for _, instruction := range message.Instructions {
+			program, err := message.ResolveProgramIDIndex(instruction.ProgramIDIndex)
+			if err != nil {
+				continue
+			}
+			if !program.Equals(solana.TokenProgramID) {
+				continue
+			}
 			accs, err := instruction.ResolveInstructionAccounts(&message)
 			if err != nil {
 				continue
