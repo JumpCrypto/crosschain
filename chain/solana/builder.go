@@ -33,6 +33,7 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 		if asset.Type == xc.AssetTypeNative {
 			return txBuilder.NewNativeTransfer(from, to, amount, input)
 		} else {
+			fmt.Println("new token tf")
 			return txBuilder.NewTokenTransfer(from, to, amount, input)
 		}
 	}
@@ -89,6 +90,9 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 	txInput := input.(*TxInput)
 
 	contract := asset.Contract
+	if token, ok := txBuilder.Asset.(*xc.TokenAssetConfig); ok && contract == "" {
+		contract = token.Contract
+	}
 	decimals := uint8(asset.Decimals)
 
 	accountFrom, err := solana.PublicKeyFromBase58(string(from))

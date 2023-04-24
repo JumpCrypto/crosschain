@@ -172,7 +172,7 @@ func (s *CrosschainTestSuite) TestNewTransfer() {
 
 func (s *CrosschainTestSuite) TestNewTransferAsToken() {
 	require := s.Require()
-	builder, _ := NewTxBuilder(&xc.AssetConfig{
+	builder, _ := NewTxBuilder(&xc.TokenAssetConfig{
 		Type:     xc.AssetTypeToken,
 		Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
 		Decimals: 6,
@@ -180,7 +180,9 @@ func (s *CrosschainTestSuite) TestNewTransferAsToken() {
 	from := xc.Address("Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
 	to := xc.Address("BWbmXj5ckAaWCAtzMZ97qnJhBAKegoXtgNrv9BUpAB11")
 	amount := xc.NewAmountBlockchainFromUint64(1200000) // 1.2 SOL
-	input := &TxInput{}
+	input := &TxInput{
+		RecentBlockHash: solana.HashFromBytes([]byte{1, 2, 3, 4}),
+	}
 	tx, err := builder.NewTransfer(from, to, amount, input)
 	require.Nil(err)
 	require.NotNil(tx)

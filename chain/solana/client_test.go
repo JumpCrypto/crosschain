@@ -1,9 +1,11 @@
 package solana
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -209,6 +211,25 @@ func (s *CrosschainTestSuite) TestFetchTxInput() {
 	}
 }
 
+func (s *CrosschainTestSuite) TestSubmitTxSuccess() {
+	require := s.Require()
+	txbin := "01df5ff457c2cdd23242ab26edd0b308d78499f28c6d43e185149cacdb88b35db171f1779e48ce2224cc80b9b9ce46dd80758319068b08eae34b14dc2cd070ab000100010379726da52d99d60b07ead73b2f6f0bf6083cc85c77a94e34d691d78f8bcafec9fc880863219008406235fa4c8fbb2a86d3da7b6762eac39323b2a1d8c404a4140000000000000000000000000000000000000000000000000000000000000000932bbef1569d58f4a116f41028f766439b2ba52c68c3308bbbea2b21e4716f6701020200010c0200000000ca9a3b00000000"
+	bytes, _ := hex.DecodeString(txbin)
+	solTx, _ := solana.TransactionFromDecoder(bin.NewBinDecoder(bytes))
+	tx := &Tx{
+		SolTx: solTx,
+	}
+	serialized_tx, err := tx.Serialize()
+	require.NoError(err)
+
+	server, close := test.MockJSONRPC(&s.Suite, fmt.Sprintf("\"%s\"", tx.Hash()))
+	defer close()
+	client, _ := NewClient(&xc.NativeAssetConfig{NativeAsset: xc.SOL, URL: server.URL})
+	err = client.SubmitTx(s.Ctx, &test.MockXcTx{
+		SerializedSignedTx: serialized_tx,
+	})
+	require.NoError(err)
+}
 func (s *CrosschainTestSuite) TestSubmitTxErr() {
 	require := s.Require()
 

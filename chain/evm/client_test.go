@@ -81,12 +81,16 @@ func (s *CrosschainTestSuite) TestAccountBalance() {
 // 	require.EqualError(err, "not implemented")
 // }
 
-// func (s *CrosschainTestSuite) TestSubmitTx() {
-// 	require := s.Require()
-// 	client, _ := NewClient(xc.AssetConfig{})
-// 	err := client.SubmitTx(s.Ctx, &Tx{})
-// 	require.EqualError(err, "not implemented")
-// }
+func (s *CrosschainTestSuite) TestSubmitTx() {
+	require := s.Require()
+	server, close := test.MockJSONRPC(&s.Suite, `{}`)
+	defer close()
+	client, _ := NewClient(&xc.NativeAssetConfig{NativeAsset: xc.ETH, URL: server.URL})
+	err := client.SubmitTx(s.Ctx, &test.MockXcTx{
+		SerializedSignedTx: []byte{1, 2, 3, 4},
+	})
+	require.NoError(err)
+}
 
 // func (s *CrosschainTestSuite) TestFetchTxInfo() {
 // 	require := s.Require()

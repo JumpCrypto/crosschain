@@ -3,7 +3,6 @@ package evm
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -212,15 +212,20 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Ad
 
 // SubmitTx submits a EVM tx
 func (client *Client) SubmitTx(ctx context.Context, tx xc.Tx) error {
-	ethTx := tx.(*Tx).EthTx
-	if ethTx == nil {
-		return errors.New("transaction not initialized")
+	switch tx := tx.(type) {
+	case *Tx:
+		err := client.EthClient.SendTransaction(ctx, tx.EthTx)
+		if err != nil {
+			return fmt.Errorf(fmt.Sprintf("sending transaction '%v': %v", tx.Hash(), err))
+		}
+		return nil
+	default:
+		bz, err := tx.Serialize()
+		if err != nil {
+			return err
+		}
+		return client.RpcClient.CallContext(ctx, nil, "eth_sendRawTransaction", hexutil.Encode(bz))
 	}
-	err := client.EthClient.SendTransaction(ctx, ethTx)
-	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("sending transaction '%v': %v", tx.Hash(), err))
-	}
-	return nil
 }
 
 // FetchTxInfo returns tx info for a EVM tx
