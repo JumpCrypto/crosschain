@@ -1,4 +1,4 @@
-package aptos
+package sui
 
 import (
 	"encoding/hex"
@@ -8,7 +8,6 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-// AddressBuilder for Template
 type AddressBuilder struct {
 }
 
@@ -19,7 +18,6 @@ func NewAddressBuilder(asset xc.ITask) (xc.AddressBuilder, error) {
 	return AddressBuilder{}, nil
 }
 
-// GetAddressFromPublicKey returns an Address given a public key
 func (ab AddressBuilder) GetAddressFromPublicKey(publicKeyBytes []byte) (xc.Address, error) {
 	if len(publicKeyBytes) == 32 {
 		publicKeyBytes = append(publicKeyBytes, 0x00)
@@ -36,7 +34,6 @@ func (ab AddressBuilder) GetAddressFromPublicKey(publicKeyBytes []byte) (xc.Addr
 	return xc.Address(address), nil
 }
 
-// GetAllPossibleAddressesFromPublicKey returns all PossubleAddress(es) given a public key
 func (ab AddressBuilder) GetAllPossibleAddressesFromPublicKey(publicKeyBytes []byte) ([]xc.PossibleAddress, error) {
 	address, err := ab.GetAddressFromPublicKey(publicKeyBytes)
 	return []xc.PossibleAddress{
@@ -46,3 +43,18 @@ func (ab AddressBuilder) GetAllPossibleAddressesFromPublicKey(publicKeyBytes []b
 		},
 	}, err
 }
+
+// Import account with mnemonic
+// acc, err := account.NewAccountWithMnemonic(mnemonic)
+
+// // Import account with private key
+// privateKey, err := hex.DecodeString("4ec5a9eefc0bb86027a6f3ba718793c813505acc25ed09447caf6a069accdd4b")
+// acc, err := account.NewAccount(privateKey)
+
+// // Get private key, public key, address
+// fmt.Printf("privateKey = %x\n", acc.PrivateKey[:32])
+// fmt.Printf(" publicKey = %x\n", acc.PublicKey)
+// fmt.Printf("   address = %v\n", acc.Address)
+
+// // Sign data
+// signedData := acc.Sign(data)
