@@ -14,6 +14,7 @@ func CheckError(err error) xc.ClientError {
 	}
 	if strings.Contains(msg, "response body closed") ||
 		strings.Contains(msg, "not found") ||
+		strings.Contains(msg, "could not find a result on blockchair") ||
 		strings.Contains(msg, "eof") {
 		return xc.NetworkError
 	}
