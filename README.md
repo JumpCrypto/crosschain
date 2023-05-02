@@ -23,14 +23,16 @@ go run ./examples/transfer/main.go
 
 ### Blockchains
 
-- [ ] Bitcoin
-- [ ] Bitcoin derived: Bitcoin Cash, Dogecoin
-- [ ] Ethereum
-- [ ] EVMs: Polygon, Binance Smart Chain, ...
+- [x] Bitcoin
+- [x] Bitcoin derived: Bitcoin Cash, Dogecoin
+- [x] Ethereum
+- [x] EVMs: Polygon, Binance Smart Chain, ...
 - [x] Solana
 - [x] Cosmos
 - [x] Cosmos derived: Terra, Injective, XPLA, ...
+- [ ] Polkadot
 - [ ] Aptos
+- [ ] Sui
 
 ### Assets
 
@@ -41,8 +43,13 @@ go run ./examples/transfer/main.go
 
 ### Operations
 
+- [x] Balances (native asset, tokens)
 - [x] Transfers (native transfers, token transfers)
-- [ ] Smart contract interactions
+- [x] Wraps/unwraps: ETH, SOL, ...
+- [ ] Swaps
+- [x] Crosschain transfers (via bridge): Wormhole
+- [x] Tasks (generic smart contract calls, single tx): EVM
+- [x] Pipelines (generic smart contract calls, multiple tx): EVM
 
 ## Contribute
 
