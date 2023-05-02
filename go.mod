@@ -19,6 +19,7 @@ require (
 	github.com/gagliardetto/solana-go v1.7.1
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/jinzhu/copier v0.3.5
+	github.com/novifinancial/serde-reflection/serde-generate/runtime/golang v0.0.0-20220519162058-e5cd3c3b3f3a
 	github.com/shopspring/decimal v1.3.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.14.0
