@@ -30,7 +30,7 @@ func main() {
 	// initialize crosschain
 	xc := factory.NewDefaultFactory()
 	ctx := context.Background()
-	TxInfo(ctx, xc, "INJ", "a8522e7c84d462011265cb6038b5a52f3028d4acff14d9565b3cbec0f4a2f800")
-	TxInfo(ctx, xc, "BTC", "40a83018604b67cfc681b3ad7a8e3a9985f03060ba00df7e6a09af1edc93510a")
-	TxInfo(ctx, xc, "ETH", "0x40ecf9af59bbf9ed1f4ea75610af87f801618ffa8902cd210477076a56b36f61")
+	// TxInfo(ctx, xc, "INJ", "a8522e7c84d462011265cb6038b5a52f3028d4acff14d9565b3cbec0f4a2f800")
+	// TxInfo(ctx, xc, "SOL", "3mDyJibiCCXEgfyYcW21Cu9o89qZsgpr2J3n3fpF2EzoT9psDmfyFq3Lv5MxbvvrjkLVnk2KC1TAe7vSTjFcyGHV")
+	TxInfo(ctx, xc, "APTOS", "0x15940935f6317d7a42085855aa8167106aff03aeff5528bed51da015940d3221")
 }

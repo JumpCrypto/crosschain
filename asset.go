@@ -259,8 +259,8 @@ func (asset NativeAssetConfig) GetDriver() string {
 	return asset.Driver
 }
 
-func (asset NativeAssetConfig) GetNativeAsset() *NativeAssetConfig {
-	return &asset
+func (asset *NativeAssetConfig) GetNativeAsset() *NativeAssetConfig {
+	return asset
 }
 
 func (asset NativeAssetConfig) GetTask() *TaskConfig {

@@ -1,6 +1,9 @@
 package aptos
 
 import (
+	"encoding/hex"
+	"fmt"
+
 	xc "github.com/jumpcrypto/crosschain"
 	"github.com/jumpcrypto/crosschain/test"
 )
@@ -17,377 +20,231 @@ func (s *CrosschainTestSuite) TestNewClient() {
 }
 
 func (s *CrosschainTestSuite) TestFetchTxInput() {
-	// require := s.Require()
+	require := s.Require()
 
-	// vectors := []struct {
-	// 	asset           xc.AssetConfig
-	// 	resp            interface{}
-	// 	blockHash       string
-	// 	toIsATA         bool
-	// 	shouldCreateATA bool
-	// 	err             string
-	// }{
-	// 	{
-	// 		xc.AssetConfig{},
-	// 		// valid blockhash
-	// 		`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 		"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
-	// 		false,
-	// 		false,
-	// 		"",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
-	// 		[]string{
-	// 			// valid blockhash
-	// 			`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 			// valid owner account
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175635504},"value":{"data":["","base64"],"executable":false,"lamports":1860881440,"owner":"11111111111111111111111111111111","rentEpoch":371}}`,
-	// 			// valid ATA
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175635873},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqctdvBIL2OuEzV5LBqS2x3308rEBwESq+xcukVQUYDkgpg6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":0}}`,
-	// 		},
-	// 		"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
-	// 		false,
-	// 		false,
-	// 		"",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
-	// 		[]string{
-	// 			// valid blockhash
-	// 			`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 			// valid owner account
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175635504},"value":{"data":["","base64"],"executable":false,"lamports":1860881440,"owner":"11111111111111111111111111111111","rentEpoch":371}}`,
-	// 			// empty ATA
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175636079},"value":null}`,
-	// 		},
-	// 		"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
-	// 		false,
-	// 		true,
-	// 		"",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
-	// 		[]string{
-	// 			// valid blockhash
-	// 			`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 			// valid ATA
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175635873},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqctdvBIL2OuEzV5LBqS2x3308rEBwESq+xcukVQUYDkgpg6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":0}}`,
-	// 			// valid ATA
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175635873},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqctdvBIL2OuEzV5LBqS2x3308rEBwESq+xcukVQUYDkgpg6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":0}}`,
-	// 		},
-	// 		"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
-	// 		true,
-	// 		false,
-	// 		"",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"},
-	// 		[]string{
-	// 			// valid blockhash
-	// 			`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 			// empty ATA
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175636079},"value":null}`,
-	// 			// empty ATA
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175636079},"value":null}`,
-	// 		},
-	// 		"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
-	// 		true,
-	// 		true,
-	// 		"",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{},
-	// 		[]string{
-	// 			// invalid blockhash
-	// 			`{"context":{"slot":83986105},"value":{"blockhash":"error","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 		},
-	// 		"",
-	// 		false,
-	// 		false,
-	// 		"rpc.GetRecentBlockhashResult",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{Type: xc.AssetTypeToken, Contract: "invalid-contract"},
-	// 		[]string{
-	// 			// valid blockhash
-	// 			`{"context":{"slot":83986105},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 			// valid owner account
-	// 			`{"context":{"apiVersion":"1.13.3","slot":175635504},"value":{"data":["","base64"],"executable":false,"lamports":1860881440,"owner":"11111111111111111111111111111111","rentEpoch":371}}`,
-	// 		},
-	// 		"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK",
-	// 		true,
-	// 		true,
-	// 		"decode: invalid base58 digit",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{},
-	// 		`null`,
-	// 		"",
-	// 		false,
-	// 		false,
-	// 		"error fetching blockhash",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{},
-	// 		`{}`,
-	// 		"",
-	// 		false,
-	// 		false,
-	// 		"error fetching blockhash",
-	// 	},
-	// 	{
-	// 		xc.AssetConfig{},
-	// 		errors.New(`{"message": "custom RPC error", "code": 123}`),
-	// 		"",
-	// 		false,
-	// 		false,
-	// 		"custom RPC error",
-	// 	},
-	// }
+	vectors := []struct {
+		asset xc.ITask
+		resp  interface{}
+		from  string
+		input *TxInput
+		err   string
+	}{
+		{
+			&xc.NativeAssetConfig{},
+			// valid blockhash
+			[]string{
+				`{"chain_id":58,"epoch":"61","ledger_version":"3524910","oldest_ledger_version":"0","ledger_timestamp":"1683057860656414","node_role":"full_node","oldest_block_height":"0","block_height":"1317171","git_hash":"57f8b499aead5adf38276acb585cd2c0de398568"}`,
+				`{"chain_id":58,"epoch":"61","ledger_version":"3524910","oldest_ledger_version":"0","ledger_timestamp":"1683057860656414","node_role":"full_node","oldest_block_height":"0","block_height":"1317171","git_hash":"57f8b499aead5adf38276acb585cd2c0de398568"}`,
+				`{"sequence_number":"2","authentication_key":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682"}`,
+			},
+			"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682",
+			&TxInput{
+				TxInputEnvelope: *xc.NewTxInputEnvelope(xc.DriverAptos),
+				SequenceNumber:  2,
+				GasLimit:        2000,
+				GasPrice:        10,
+				Timestamp:       1683057860656414,
+				ChainId:         58,
+			},
+			"",
+		},
+		{
+			&xc.NativeAssetConfig{},
+			// valid blockhash
+			[]string{
+				`{"chain_id":58,"epoch":"61","ledger_version":"3524910","oldest_ledger_version":"0","ledger_timestamp":"1683057860656414","node_role":"full_node","oldest_block_height":"0","block_height":"1317171","git_hash":"57f8b499aead5adf38276acb585cd2c0de398568"}`,
+				`{"chain_id":58,"epoch":"61","ledger_version":"3524910","oldest_ledger_version":"0","ledger_timestamp":"1683057860656414","node_role":"full_node","oldest_block_height":"0","block_height":"1317171","git_hash":"57f8b499aead5adf38276acb585cd2c0de398568"}`,
+				`{"message":"Account not found by Address(0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f681) and Ledger version(3545185)","error_code":"account_not_found","vm_error_code":null}`,
+			},
+			"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f680",
+			&TxInput{},
+			"Account not found",
+		},
+	}
 
-	// for _, v := range vectors {
-	// 	server, close := test.MockJSONRPC(&s.Suite, v.resp)
-	// 	defer close()
+	for _, v := range vectors {
 
-	// 	v.asset.URL = server.URL
-	// 	client, _ := NewClient(v.asset)
-	// 	from := xc.Address("from")
-	// 	to := xc.Address("Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb")
-	// 	input, err := client.FetchTxInput(s.Ctx, from, to)
+		resp := `{"chain_id":38,"epoch":"133","ledger_version":"13087045","oldest_ledger_version":"0","ledger_timestamp":"1669676013555573","node_role":"full_node","oldest_block_height":"0","block_height":"5435983","git_hash":"2c74a456298fcd520241a562119b6fe30abdaae2"}`
+		server, close := test.MockHTTP(&s.Suite, resp)
 
-	// 	if v.err != "" {
-	// 		require.Nil(input)
-	// 		require.ErrorContains(err, v.err)
-	// 	} else {
-	// 		require.Nil(err)
-	// 		require.NotNil(input)
-	// 		require.Equal(v.toIsATA, input.(*TxInput).ToIsATA, "ToIsATA")
-	// 		require.Equal(v.shouldCreateATA, input.(*TxInput).ShouldCreateATA, "ShouldCreateATA")
-	// 		require.Equal(v.blockHash, input.(*TxInput).RecentBlockHash.String())
-	// 	}
-	// }
+		asset := v.asset.GetNativeAsset()
+		asset.URL = server.URL
+		client, _ := NewClient(asset)
+		// cut out the gas estimation
+		client.EstimateGasFunc = func(native xc.NativeAsset) (xc.AmountBlockchain, error) {
+			return xc.NewAmountBlockchainFromUint64(10), nil
+		}
+		if v.err != "" {
+			// errors should return 400 status code.
+			server.StatusCodes = []int{200, 200, 400}
+		}
+		server.Response = v.resp
+		input, err := client.FetchTxInput(s.Ctx, xc.Address(v.from), "")
+
+		if v.err != "" {
+			require.ErrorContains(err, v.err)
+		} else {
+			require.Nil(err)
+			require.NotNil(input)
+			require.Equal(v.input, input)
+		}
+		close()
+	}
 }
 
-func (s *CrosschainTestSuite) TestSubmitTxErr() {
-	// require := s.Require()
+func (s *CrosschainTestSuite) TestSubmitTx() {
+	require := s.Require()
+	server, close := test.MockHTTP(&s.Suite, []string{
+		`{"chain_id":58,"epoch":"61","ledger_version":"3524910","oldest_ledger_version":"0","ledger_timestamp":"1683057860656414","node_role":"full_node","oldest_block_height":"0","block_height":"1317171","git_hash":"57f8b499aead5adf38276acb585cd2c0de398568"}`,
+		// transaction submitted
+		`{"hash":"0x5ec9ac15dee869a7364f31534e9d98db09c6dd028a64aa95b2b6d896348c4c94","sender":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","sequence_number":"2","max_gas_amount":"2000","gas_unit_price":"100","expiration_timestamp_secs":"1683068558920777","payload":{"function":"0x1::aptos_account::transfer","type_arguments":[],"arguments":["0x2a5ddd8e5ac5e30f61e42e4dc54a2d6a904412810767fa2e1674b08ca3b04365","12300000"],"type":"entry_function_payload"},"signature":{"public_key":"0xa09bb3957ad788bfcfd3f7c5eda9ab2876ff0de8db38dafdf439cfe3f96673b6","signature":"0xc32be4211fe1655e86d4d1558fdc48252e01e9f8ca9d14a1c815fce0913e9eac0360eb2991d3ea58a19e64461e9404a41e31aa20d4ba4bc184a353cecb8c9d0e","type":"ed25519_signature"}}`,
+		// 2nd submit should be an error
+		`{"message": "error"}`,
+	})
+	server.StatusCodes = []int{200, 200, 400}
+	defer close()
+	asset := &xc.AssetConfig{NativeAsset: xc.APTOS, Net: "devnet", URL: server.URL}
+	builder, _ := NewTxBuilder(asset)
+	from := xc.Address("0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85")
+	to := xc.Address("0xbb89a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab00")
+	amount := xc.NewAmountBlockchainFromUint64(1)
+	pubkey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8}
+	input := &TxInput{
+		TxInputEnvelope: *xc.NewTxInputEnvelope(xc.DriverAptos),
+		SequenceNumber:  3,
+		GasLimit:        2000,
+		GasPrice:        10,
+		Timestamp:       12345,
+		ChainId:         1,
+		Pubkey:          pubkey,
+	}
+	tf, err := builder.NewTransfer(from, to, amount, input)
+	require.NoError(err)
+	require.NotNil(tf)
+	hash := tf.Hash()
+	require.Len(hash, 64)
 
-	// client, _ := NewClient(xc.AssetConfig{})
-	// tx := &Tx{
-	// 	SolTx:                  &solana.Transaction{},
-	// 	ParsedSolTx:            &rpc.ParsedTransaction{},
-	// 	associatedTokenAccount: &token.Account{},
-	// 	parsedTransfer:         nil,
-	// }
-	// err := client.SubmitTx(s.Ctx, tx)
-	// require.ErrorContains(err, "unsupported protocol scheme")
+	// add signature
+	sig := []byte{}
+	for i := 0; i < 64; i++ {
+		sig = append(sig, byte(i))
+	}
+	err = tf.AddSignatures(xc.TxSignature(sig))
+	require.NoError(err)
+
+	client, err := NewClient(asset)
+	require.NoError(err)
+	err = client.SubmitTx(s.Ctx, tf)
+	require.NoError(err)
+
+	// second submit is error
+	err = client.SubmitTx(s.Ctx, tf)
+	require.Error(err)
+
 }
 
 func (s *CrosschainTestSuite) TestFetchTxInfo() {
-	// require := s.Require()
+	require := s.Require()
 
-	// vectors := []struct {
-	// 	tx   string
-	// 	resp interface{}
-	// 	val  xc.TxInfo
-	// 	err  string
-	// }{
-	// 	{
-	// 		// 1 SOL
-	// 		"5U2YvvKUS6NUrDAJnABHjx2szwLCVmg8LCRK9BDbZwVAbf2q5j8D9Sc9kUoqanoqpn6ZpDguY3rip9W7N7vwCjSw",
-	// 		[]string{
-	// 			`{"blockTime":1650017168,"meta":{"err":null,"fee":5000,"innerInstructions":[],"loadedAddresses":{"readonly":[],"writable":[]},"logMessages":["Program 11111111111111111111111111111111 invoke [1]","Program 11111111111111111111111111111111 success"],"postBalances":[19921026477997237,1869985000,1],"postTokenBalances":[],"preBalances":[19921027478002237,869985000,1],"preTokenBalances":[],"rewards":[],"status":{"Ok":null}},"slot":128184605,"transaction":["Ad9f9FfCzdIyQqsm7dCzCNeEmfKMbUPhhRScrNuIs12xcfF3nkjOIiTMgLm5zkbdgHWDGQaLCOrjSxTcLNBwqwABAAEDeXJtpS2Z1gsH6tc7L28L9gg8yFx3qU401pHXj4vK/sn8iAhjIZAIQGI1+kyPuyqG09p7Z2Lqw5MjsqHYxASkFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkyu+8VadWPShFvQQKPdmQ5srpSxowzCLu+orIeRxb2cBAgIAAQwCAAAAAMqaOwAAAAA=","base64"]}`,
-	// 			`{"context":{"slot":128184606},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 		},
-	// 		xc.TxInfo{
-	// 			TxID:            "5U2YvvKUS6NUrDAJnABHjx2szwLCVmg8LCRK9BDbZwVAbf2q5j8D9Sc9kUoqanoqpn6ZpDguY3rip9W7N7vwCjSw",
-	// 			ExplorerURL:     "/tx/5U2YvvKUS6NUrDAJnABHjx2szwLCVmg8LCRK9BDbZwVAbf2q5j8D9Sc9kUoqanoqpn6ZpDguY3rip9W7N7vwCjSw?cluster=",
-	// 			From:            "9B5XszUGdMaxCZ7uSQhPzdks5ZQSmWxrmzCSvtJ6Ns6g",
-	// 			To:              "Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb",
-	// 			ToAlt:           "",
-	// 			ContractAddress: "",
-	// 			Amount:          xc.NewAmountBlockchainFromUint64(1000000000),
-	// 			Fee:             xc.NewAmountBlockchainFromUint64(5000),
-	// 			BlockIndex:      128184605,
-	// 			BlockTime:       1650017168,
-	// 			Confirmations:   1,
-	// 		},
-	// 		"",
-	// 	},
-	// 	{
-	// 		// 0.12 SOL
-	// 		"3XRGeupw3XacNQ4op3TQdWJsX3VvSnzQdjBvQDjGHaTCZs1eJzbuVn67RThFXEBSDBvoCXT5eX7rU1frQLni5AKb",
-	// 		[]string{
-	// 			`{"blockTime":1645123751,"meta":{"err":null,"fee":5000,"innerInstructions":[],"loadedAddresses":{"readonly":[],"writable":[]},"logMessages":["Program 11111111111111111111111111111111 invoke [1]","Program 11111111111111111111111111111111 success"],"postBalances":[879990000,1420000000,1],"postTokenBalances":[],"preBalances":[999995000,1300000000,1],"preTokenBalances":[],"rewards":[],"status":{"Ok":null}},"slot":115310825,"transaction":["AX5EBZa5UnMbHNgzEDz8dn1mcrTjLwLsLC3Ph3tMgQshAb2hEkbkkUQleXVJqmcTYmxnnw3jIXOjfR3lGvw8pQoBAAED/IgIYyGQCEBiNfpMj7sqhtPae2di6sOTI7Kh2MQEpBR3FzzGpO7sbgIIhX1XFeQKpFBxBTrVYewdaBjV/jf96AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZ3rYIt4WDe4pwTzQI6YOAbSxt/Orf5UkTzqKqXN1KMoBAgIAAQwCAAAAAA4nBwAAAAA=","base64"]}`,
-	// 			`{"context":{"slot":115310827},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 		},
-	// 		xc.TxInfo{
-	// 			TxID:            "3XRGeupw3XacNQ4op3TQdWJsX3VvSnzQdjBvQDjGHaTCZs1eJzbuVn67RThFXEBSDBvoCXT5eX7rU1frQLni5AKb",
-	// 			ExplorerURL:     "/tx/3XRGeupw3XacNQ4op3TQdWJsX3VvSnzQdjBvQDjGHaTCZs1eJzbuVn67RThFXEBSDBvoCXT5eX7rU1frQLni5AKb?cluster=",
-	// 			From:            "Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb",
-	// 			To:              "91t4uSdtBiftqsB24W2fRXFCXjUyc6xY3WMGFedAaTHh",
-	// 			ToAlt:           "",
-	// 			ContractAddress: "",
-	// 			Amount:          xc.NewAmountBlockchainFromUint64(120000000),
-	// 			Fee:             xc.NewAmountBlockchainFromUint64(5000),
-	// 			BlockIndex:      115310825,
-	// 			BlockTime:       1645123751,
-	// 			Confirmations:   2,
-	// 			Status:          0,
-	// 		},
-	// 		"",
-	// 	},
-	// 	{
-	// 		// 0.001 USDC
-	// 		"ZJaJTB5oLfPrzEsFE2cEa94KdNb6SGvqMgaLdtqoYFnaqo4zAncVPjkpDqPbVPv85S68zNcaTyYobDcPJuRfhrX",
-	// 		[]string{
-	// 			`{"blockTime":1645120351,"meta":{"err":null,"fee":5000,"innerInstructions":[{"index":0,"instructions":[{"accounts":[0,1],"data":"3Bxs4h24hBtQy9rw","programIdIndex":5},{"accounts":[1],"data":"9krTDU2LzCSUJuVZ","programIdIndex":5},{"accounts":[1],"data":"SYXsBSQy3GeifSEQSGvTbrPNposbSAiSoh1YA85wcvGKSnYg","programIdIndex":5},{"accounts":[1,4,3,7],"data":"2","programIdIndex":6}]}],"loadedAddresses":{"readonly":[],"writable":[]},"logMessages":["Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL invoke [1]","Program log: Transfer 2039280 lamports to the associated token account","Program 11111111111111111111111111111111 invoke [2]","Program 11111111111111111111111111111111 success","Program log: Allocate space for the associated token account","Program 11111111111111111111111111111111 invoke [2]","Program 11111111111111111111111111111111 success","Program log: Assign the associated token account to the SPL Token program","Program 11111111111111111111111111111111 invoke [2]","Program 11111111111111111111111111111111 success","Program log: Initialize the associated token account","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]","Program log: Instruction: InitializeAccount","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 3297 of 169352 compute units","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success","Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 34626 of 200000 compute units","Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [1]","Program log: Instruction: TransferChecked","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 3414 of 200000 compute units","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success"],"postBalances":[4995907578480,2039280,2002039280,0,1461600,1,953185920,1009200,898174080],"postTokenBalances":[{"accountIndex":1,"mint":"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU","owner":"Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb","uiTokenAmount":{"amount":"1000000","decimals":6,"uiAmount":1.0,"uiAmountString":"1"}},{"accountIndex":2,"mint":"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU","owner":"HzcTrHjkEhjFTHEsC6Dsv8DXCh21WgujD4s5M15Sm94g","uiTokenAmount":{"amount":"9437986064320000","decimals":6,"uiAmount":9437986064.32,"uiAmountString":"9437986064.32"}}],"preBalances":[4995909622760,0,2002039280,0,1461600,1,953185920,1009200,898174080],"preTokenBalances":[{"accountIndex":2,"mint":"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU","owner":"HzcTrHjkEhjFTHEsC6Dsv8DXCh21WgujD4s5M15Sm94g","uiTokenAmount":{"amount":"9437986065320000","decimals":6,"uiAmount":9437986065.32,"uiAmountString":"9437986065.32"}}],"rewards":[],"status":{"Ok":null}},"slot":115302132,"transaction":["AWHQR1wAwmzbcOtoAVvDi4tkCQD/n6Pnks/038BYBd5o3oh+QZDKHR0Onl9j+AFGp5wziV4cS96gDbzm4RYebwsBAAYJ/H0x63TSPiBNuaFOZG+ZK2YJNAoqn9Gpp2i1PA5g++W//Q+h80WCx4fF9949OkDj+1D/UUOKp6XPufludArJk2as/hRuCozLqVIK567QNivd/o4dGEy7JdaJah9qp8KU/IgIYyGQCEBiNfpMj7sqhtPae2di6sOTI7Kh2MQEpBQ7RCyzkSFX8TqTPQE0KC0DK1/+zQGi2/G3eQYI3wAupwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABt324ddloZPZy+FGzut5rBy0he1fWzeROoz1hX7/AKkGp9UXGSxcUSGMyUw9SvF/WNruCJuh/UTj29mKAAAAAIyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZNT+YJRqOG5qSK+OHTJJvIkfUNScIwvHTlo4R2xjWx7cCCAcAAQMEBQYHAAYFAgQBAAAKDEBCDwAAAAAABg==","base64"]}`,
-	// 			`{"context":{"slot":115302135},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 			`{"context":{"apiVersion":"1.13.2","slot":169710435},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqf8iAhjIZAIQGI1+kyPuyqG09p7Z2Lqw5MjsqHYxASkFAA1DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":371}}`,
-	// 		},
-	// 		xc.TxInfo{
-	// 			TxID:            "ZJaJTB5oLfPrzEsFE2cEa94KdNb6SGvqMgaLdtqoYFnaqo4zAncVPjkpDqPbVPv85S68zNcaTyYobDcPJuRfhrX",
-	// 			ExplorerURL:     "/tx/ZJaJTB5oLfPrzEsFE2cEa94KdNb6SGvqMgaLdtqoYFnaqo4zAncVPjkpDqPbVPv85S68zNcaTyYobDcPJuRfhrX?cluster=",
-	// 			From:            "HzcTrHjkEhjFTHEsC6Dsv8DXCh21WgujD4s5M15Sm94g",
-	// 			To:              "Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb",
-	// 			ToAlt:           "DvSgNMRxVSMBpLp4hZeBrmQo8ZRFne72actTZ3PYE3AA",
-	// 			ContractAddress: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-	// 			Amount:          xc.NewAmountBlockchainFromUint64(1000000),
-	// 			Fee:             xc.NewAmountBlockchainFromUint64(5000),
-	// 			BlockIndex:      115302132,
-	// 			BlockTime:       1645120351,
-	// 			Confirmations:   3,
-	// 		},
-	// 		"",
-	// 	},
-	// 	{
-	// 		// 0.0002 USDC
-	// 		"5ZrG8iS4RxLXDRQEWkAoddWHzkS1fA1m6ppxaAekgGzskhcFqjkw1ZaFCsLorbhY5V4YUUkjE3SLY2JNLyVanxrM",
-	// 		[]string{
-	// 			`{"blockTime":1645121566,"meta":{"err":null,"fee":5000,"innerInstructions":[],"loadedAddresses":{"readonly":[],"writable":[]},"logMessages":["Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [1]","Program log: Instruction: TransferChecked","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 3285 of 200000 compute units","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success"],"postBalances":[999995000,2039280,2039280,1461600,953185920],"postTokenBalances":[{"accountIndex":1,"mint":"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU","owner":"91t4uSdtBiftqsB24W2fRXFCXjUyc6xY3WMGFedAaTHh","uiTokenAmount":{"amount":"1200000","decimals":6,"uiAmount":1.2,"uiAmountString":"1.2"}},{"accountIndex":2,"mint":"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU","owner":"Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb","uiTokenAmount":{"amount":"800000","decimals":6,"uiAmount":0.8,"uiAmountString":"0.8"}}],"preBalances":[1000000000,2039280,2039280,1461600,953185920],"preTokenBalances":[{"accountIndex":1,"mint":"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU","owner":"91t4uSdtBiftqsB24W2fRXFCXjUyc6xY3WMGFedAaTHh","uiTokenAmount":{"amount":"1000000","decimals":6,"uiAmount":1.0,"uiAmountString":"1"}},{"accountIndex":2,"mint":"4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU","owner":"Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb","uiTokenAmount":{"amount":"1000000","decimals":6,"uiAmount":1.0,"uiAmountString":"1"}}],"rewards":[],"status":{"Ok":null}},"slot":115305244,"transaction":["AeRlYJzP6QA39jotdCCkfUXkwSfdikREPsky500UJkzv9WjwqWJRE1AVBY7gaDVCoHUXzBdRP2HqHa+yk6AOpAIBAAIF/IgIYyGQCEBiNfpMj7sqhtPae2di6sOTI7Kh2MQEpBRSZ7LN9mT5H4I0p8JRr5XuoV6s6jPU4jO/AY/AlB3Scr/9D6HzRYLHh8X33j06QOP7UP9RQ4qnpc+5+W50CsmTO0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqcG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqSRIX/y7kCeqnCwBTRUU6oea3zqDrhoNbdKX6z3IVPmkAQQEAgMBAAoMQA0DAAAAAAAG","base64"]}`,
-	// 			`{"context":{"slot":115305248},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 			`{"context":{"apiVersion":"1.13.2","slot":169710192},"value":{"data":["O0Qss5EhV/E6kz0BNCgtAytf/s0Botvxt3kGCN8ALqd3FzzGpO7sbgIIhX1XFeQKpFBxBTrVYewdaBjV/jf96IBPEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","base64"],"executable":false,"lamports":2039280,"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","rentEpoch":371}}`,
-	// 		},
-	// 		xc.TxInfo{
-	// 			TxID:            "5ZrG8iS4RxLXDRQEWkAoddWHzkS1fA1m6ppxaAekgGzskhcFqjkw1ZaFCsLorbhY5V4YUUkjE3SLY2JNLyVanxrM",
-	// 			ExplorerURL:     "/tx/5ZrG8iS4RxLXDRQEWkAoddWHzkS1fA1m6ppxaAekgGzskhcFqjkw1ZaFCsLorbhY5V4YUUkjE3SLY2JNLyVanxrM?cluster=",
-	// 			From:            "Hzn3n914JaSpnxo5mBbmuCDmGL6mxWN9Ac2HzEXFSGtb",
-	// 			To:              "91t4uSdtBiftqsB24W2fRXFCXjUyc6xY3WMGFedAaTHh",
-	// 			ToAlt:           "6Yg9GttAiHjbHMoiomBuGBDULP7HxQyez45dEiR9CJqw",
-	// 			ContractAddress: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-	// 			Amount:          xc.NewAmountBlockchainFromUint64(200000),
-	// 			Fee:             xc.NewAmountBlockchainFromUint64(5000),
-	// 			BlockIndex:      115305244,
-	// 			BlockTime:       1645121566,
-	// 			Confirmations:   4,
-	// 		},
-	// 		"",
-	// 	},
-	// 	{
-	// 		"5U2YvvKUS6NUrDAJnABHjx2szwLCVmg8LCRK9BDbZwVAbf2q5j8D9Sc9kUoqanoqpn6ZpDguY3rip9W7N7vwCjSw",
-	// 		`{}`,
-	// 		xc.TxInfo{},
-	// 		"invalid transaction in response",
-	// 	},
-	// 	{
-	// 		"5U2YvvKUS6NUrDAJnABHjx2szwLCVmg8LCRK9BDbZwVAbf2q5j8D9Sc9kUoqanoqpn6ZpDguY3rip9W7N7vwCjSw",
-	// 		`null`,
-	// 		xc.TxInfo{},
-	// 		"not found",
-	// 	},
-	// 	{
-	// 		"5U2YvvKUS6NUrDAJnABHjx2szwLCVmg8LCRK9BDbZwVAbf2q5j8D9Sc9kUoqanoqpn6ZpDguY3rip9W7N7vwCjSw",
-	// 		errors.New(`{"message": "custom RPC error", "code": 123}`),
-	// 		xc.TxInfo{},
-	// 		"custom RPC error",
-	// 	},
-	// 	{
-	// 		"",
-	// 		"",
-	// 		xc.TxInfo{},
-	// 		"zero length string",
-	// 	},
-	// 	{
-	// 		"invalid-sig",asset.go
-	// 		"",
-	// 		xc.TxInfo{},
-	// 		"invalid base58 digit",
-	// 	},
-	// 	{
-	// 		// 1 SOL
-	// 		"5U2YvvKUS6NUrDAJnABHjx2szwLCVmg8LCRK9BDbZwVAbf2q5j8D9Sc9kUoqanoqpn6ZpDguY3rip9W7N7vwCjSw",
-	// 		[]string{
-	// 			`{"blockTime":1650017168,"meta":{"err":null,"fee":5000,"innerInstructions":[],"loadedAddresses":{"readonly":[],"writable":[]},"logMessages":["Program 11111111111111111111111111111111 invoke [1]","Program 11111111111111111111111111111111 success"],"postBalances":[19921026477997237,1869985000,1],"postTokenBalances":[],"preBalances":[19921027478002237,869985000,1],"preTokenBalances":[],"rewards":[],"status":{"Ok":null}},"slot":128184605,"transaction":["invalid-binary","base64"]}`,
-	// 			`{"context":{"slot":128184606},"value":{"blockhash":"DvLEyV2GHk86K5GojpqnRsvhfMF5kdZomKMnhVpvHyqK","feeCalculator":{"lamportsPerSignature":5000}}}`,
-	// 		},
-	// 		xc.TxInfo{},
-	// 		"illegal base64 data",
-	// 	},
-	// }
+	vectors := []struct {
+		tx   string
+		resp interface{}
+		val  xc.TxInfo
+		err  string
+	}{
+		{
+			// 1.234 APTOS
+			"0x15940935f6317d7a42085855aa8167106aff03aeff5528bed51da015940d3222",
+			[]string{
+				`{"chain_id":58,"epoch":"61","ledger_version":"3524910","oldest_ledger_version":"0","ledger_timestamp":"1683057860656414","node_role":"full_node","oldest_block_height":"0","block_height":"1317171","git_hash":"57f8b499aead5adf38276acb585cd2c0de398568"}`,
+				`{"version":"3509309","hash":"0x15940935f6317d7a42085855aa8167106aff03aeff5528bed51da015940d3222","state_change_hash":"0xe0e855e3d08f97fc71a5b41b368800588ac7f8b2e49b29daef4d2577c761fe80","event_root_hash":"0x3846412f44cf58865775791b67093d555c854fbffe153965e325f8744c988a71","state_checkpoint_hash":null,"gas_used":"6","success":true,"vm_status":"Executed successfully","accumulator_root_hash":"0x30c4b395b9da13dfdeb74a341798f20d6c65872594f1e22f8fc734c9378c0747","changes":[{"address":"0x2a5ddd8e5ac5e30f61e42e4dc54a2d6a904412810767fa2e1674b08ca3b04365","state_key_hash":"0xe01499453a6e852f925a06b9e38a8bdf534ef104f757b9d84c45587fadbc87dc","data":{"type":"0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>","data":{"coin":{"value":"100189876100"},"deposit_events":{"counter":"731","guid":{"id":{"addr":"0x2a5ddd8e5ac5e30f61e42e4dc54a2d6a904412810767fa2e1674b08ca3b04365","creation_num":"2"}}},"frozen":false,"withdraw_events":{"counter":"728","guid":{"id":{"addr":"0x2a5ddd8e5ac5e30f61e42e4dc54a2d6a904412810767fa2e1674b08ca3b04365","creation_num":"3"}}}}},"type":"write_resource"},{"address":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","state_key_hash":"0x8f0e7c53d3d2b93d3854528797be26b4be8e98c63f558eed57715518930c7c57","data":{"type":"0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>","data":{"coin":{"value":"876098800"},"deposit_events":{"counter":"10","guid":{"id":{"addr":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","creation_num":"2"}}},"frozen":false,"withdraw_events":{"counter":"2","guid":{"id":{"addr":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","creation_num":"3"}}}}},"type":"write_resource"},{"address":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","state_key_hash":"0xefe1a94a04b9d4f93d082e4d13e33d2139a22674e7af2a9fc3e1dbc5a0d6a65e","data":{"type":"0x1::account::Account","data":{"authentication_key":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","coin_register_events":{"counter":"1","guid":{"id":{"addr":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","creation_num":"0"}}},"guid_creation_num":"4","key_rotation_events":{"counter":"0","guid":{"id":{"addr":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","creation_num":"1"}}},"rotation_capability_offer":{"for":{"vec":[]}},"sequence_number":"2","signer_capability_offer":{"for":{"vec":[]}}}},"type":"write_resource"},{"state_key_hash":"0x6e4b28d40f98a106a65163530924c0dcb40c1349d3aa915d108b4d6cfc1ddb19","handle":"0x1b854694ae746cdbd8d44186ca4929b2b337df21d1c74633be19b2710552fdca","key":"0x0619dc29a0aac8fa146714058e8dd6d2d0f3bdf5f6331907bf91f3acd81e6935","value":"0xeb7691bb4cfe08000100000000000000","data":null,"type":"write_table_item"}],"sender":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682","sequence_number":"1","max_gas_amount":"2000","gas_unit_price":"100","expiration_timestamp_secs":"1683055757286067","payload":{"function":"0x1::aptos_account::transfer","type_arguments":[],"arguments":["0x2a5ddd8e5ac5e30f61e42e4dc54a2d6a904412810767fa2e1674b08ca3b04365","123400000"],"type":"entry_function_payload"},"signature":{"public_key":"0xa09bb3957ad788bfcfd3f7c5eda9ab2876ff0de8db38dafdf439cfe3f96673b6","signature":"0xd488cd2fda4ef325c68e3c7503a7075841f5ba08808fa2014407e18680fc3d4f515be9cdf6c619baa0e680990d7aad2f5f066cdba778598b28cc8dc3108f420c","type":"ed25519_signature"},"events":[{"guid":{"creation_number":"3","account_address":"0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682"},"sequence_number":"1","type":"0x1::coin::WithdrawEvent","data":{"amount":"123400000"}},{"guid":{"creation_number":"2","account_address":"0x2a5ddd8e5ac5e30f61e42e4dc54a2d6a904412810767fa2e1674b08ca3b04365"},"sequence_number":"730","type":"0x1::coin::DepositEvent","data":{"amount":"123400000"}}],"timestamp":"1683055759739669","type":"user_transaction"}`,
+				`{"block_height":"1309838","block_hash":"0x77eb1ba86353da0133d76892773ecbf18db68555ada5ab358d451ad23653cc31","block_timestamp":"1683055759739669","first_version":"3509308","last_version":"3509310","transactions":null}`,
+				`{"chain_id":58,"epoch":"61","ledger_version":"3524912","oldest_ledger_version":"0","ledger_timestamp":"1683057861003497","node_role":"full_node","oldest_block_height":"0","block_height":"1317172","git_hash":"57f8b499aead5adf38276acb585cd2c0de398568"}`,
+			},
+			xc.TxInfo{
+				TxID:            "0x15940935f6317d7a42085855aa8167106aff03aeff5528bed51da015940d3222",
+				BlockHash:       "3509309",
+				ExplorerURL:     "/txn/3509309?network=devnet",
+				From:            "0xf08819a2ca002c1da8c6242040607617093f519eb2525201efaba47b0841f682",
+				To:              "0x2a5ddd8e5ac5e30f61e42e4dc54a2d6a904412810767fa2e1674b08ca3b04365",
+				ToAlt:           "",
+				ContractAddress: "",
+				Amount:          xc.NewAmountBlockchainFromUint64(123400000),
+				Fee:             xc.NewAmountBlockchainFromUint64(600),
+				BlockIndex:      3509309,
+				BlockTime:       1683055759,
+				Confirmations:   7334,
+			},
+			"",
+		},
+		{
+			"0x15940935f6317d7a42085855aa8167106aff03aeff5528bed51da015940d3221",
+			[]string{
+				`{"chain_id":58,"epoch":"61","ledger_version":"3532090","oldest_ledger_version":"0","ledger_timestamp":"1683058921700697","node_role":"full_node","oldest_block_height":"0","block_height":"1320608","git_hash":"57f8b499aead5adf38276acb585cd2c0de398568"}`,
+				`{"message":"Transaction not found by Transaction hash(0x15940935f6317d7a42085855aa8167106aff03aeff5528bed51da015940d3221)","error_code":"transaction_not_found","vm_error_code":null}`,
+			},
+			xc.TxInfo{},
+			"Transaction not found by Transaction",
+		},
+	}
 
-	// for _, v := range vectors {
-	// 	server, close := test.MockJSONRPC(&s.Suite, v.resp)
-	// 	defer close()
+	for _, v := range vectors {
+		resp := `{"chain_id":38,"epoch":"133","ledger_version":"13087045","oldest_ledger_version":"0","ledger_timestamp":"1669676013555573","node_role":"full_node","oldest_block_height":"0","block_height":"5435983","git_hash":"2c74a456298fcd520241a562119b6fe30abdaae2"}`
+		server, close := test.MockHTTP(&s.Suite, resp)
 
-	// 	client, _ := NewClient(xc.AssetConfig{URL: server.URL})
-	// 	txInfo, err := client.FetchTxInfo(s.Ctx, xc.TxHash(v.tx))
+		asset := &xc.NativeAssetConfig{Net: "devnet"}
+		asset.URL = server.URL
+		client, _ := NewClient(asset)
+		if v.err != "" {
+			// errors should return 400 status code.
+			server.StatusCodes = []int{400, 400, 400, 400, 400}
+		}
+		server.Response = v.resp
+		txInfo, err := client.FetchTxInfo(s.Ctx, xc.TxHash(v.tx))
 
-	// 	if v.err != "" {
-	// 		require.Equal(xc.TxInfo{}, txInfo)
-	// 		require.ErrorContains(err, v.err)
-	// 	} else {
-	// 		require.Nil(err)
-	// 		require.NotNil(txInfo)
-	// 		require.Equal(v.val, txInfo)
-	// 	}
-	// }
+		if v.err != "" {
+			require.Equal(xc.TxInfo{}, txInfo)
+			require.ErrorContains(err, v.err)
+		} else {
+			require.Nil(err)
+			require.NotNil(txInfo)
+			require.Equal(v.val, txInfo)
+		}
+		close()
+	}
 }
 
 func (s *CrosschainTestSuite) TestFetchBalance() {
 	require := s.Require()
 
 	vectors := []struct {
-		asset *xc.AssetConfig
+		asset xc.ITask
 		resp  interface{}
 		val   string
 		err   string
 	}{
 		{
-			&xc.AssetConfig{Type: xc.AssetTypeNative},
+			&xc.NativeAssetConfig{Type: xc.AssetTypeNative},
 			`{"type":"0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>","data":{"coin":{"value":"1000000"},"deposit_events":{"counter":"2","guid":{"id":{"addr":"0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85","creation_num":"2"}}},"frozen":false,"withdraw_events":{"counter":"0","guid":{"id":{"addr":"0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85","creation_num":"3"}}}}}`,
 			"1000000",
 			"",
 		},
 		{
-			&xc.AssetConfig{Type: xc.AssetTypeToken},
-			`{"type":"0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>","data":{"coin":{"value":"1000000"},"deposit_events":{"counter":"2","guid":{"id":{"addr":"0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85","creation_num":"2"}}},"frozen":false,"withdraw_events":{"counter":"0","guid":{"id":{"addr":"0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85","creation_num":"3"}}}}}`,
+			// TODO I can't find any tokens on aptos
+			&xc.TokenAssetConfig{Type: xc.AssetTypeToken, Contract: "0x1234::coin:USDC", NativeAssetConfig: &xc.AssetConfig{NativeAsset: xc.APTOS}},
+			[]string{
+				`{}`,
+				`{"message":"failed to parse path : failed to parse \"string(MoveStructTag)\": invalid struct tag: 0x1::coin::CoinStore<0x1::coin:USDC>, unrecognized token","error_code":"web_framework_error","vm_error_code":null}`,
+			},
 			"1000000",
-			"",
+			"failed to parse",
 		},
 		{
-			&xc.AssetConfig{Type: xc.AssetTypeNative},
+			&xc.NativeAssetConfig{Type: xc.AssetTypeNative},
 			`null`,
 			"0",
 			"",
 		},
-		// {
-		// 	xc.AssetConfig{Type: xc.AssetTypeNative},
-		// 	`{}`,
-		// 	"0",
-		// 	"failed to get account balance",
-		// },
-		// {
-		// 	xc.AssetConfig{Type: xc.AssetTypeNative},
-		// 	errors.New(`{"message": "custom RPC error", "code": 123}`),
-		// 	"",
-		// 	"",
-		// },
-		// {
-		// 	xc.AssetConfig{Type: xc.AssetTypeToken},
-		// 	`{"message":"Resource not found by Address(0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85), Struct tag(0x1::coin::CoinStore) and Ledger version(13106860)","error_code":"resource_not_found","vm_error_code":null}`,
-		// 	"0",
-		// 	"",
-		// },
 	}
 
 	for _, v := range vectors {
@@ -396,11 +253,15 @@ func (s *CrosschainTestSuite) TestFetchBalance() {
 		defer close()
 
 		asset := v.asset
-		asset.URL = server.URL
+		asset.GetNativeAsset().URL = server.URL
 		client, _ := NewClient(asset)
-
+		if v.err != "" {
+			// errors should return 400 status code.
+			server.StatusCodes = []int{400, 400, 400}
+		}
 		server.Response = v.resp
 		from := xc.Address("0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85")
+		fmt.Println(v.asset)
 		balance, err := client.FetchBalance(s.Ctx, from)
 
 		if v.err != "" {
@@ -412,4 +273,87 @@ func (s *CrosschainTestSuite) TestFetchBalance() {
 			require.Equal(v.val, balance.String())
 		}
 	}
+}
+
+func (s *CrosschainTestSuite) TestNewNativeTransfer() {
+	require := s.Require()
+
+	asset := &xc.AssetConfig{NativeAsset: xc.APTOS, Net: "devnet"}
+	builder, _ := NewTxBuilder(asset)
+	from := xc.Address("0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85")
+	to := xc.Address("0xbb89a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab00")
+	amount := xc.NewAmountBlockchainFromUint64(1)
+	pubkey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8}
+	input := &TxInput{
+		TxInputEnvelope: *xc.NewTxInputEnvelope(xc.DriverAptos),
+		SequenceNumber:  3,
+		GasLimit:        2000,
+		GasPrice:        10,
+		Timestamp:       12345,
+		ChainId:         1,
+		Pubkey:          pubkey,
+	}
+	tf, err := builder.NewTransfer(from, to, amount, input)
+	require.NoError(err)
+	require.NotNil(tf)
+	hash := tf.Hash()
+	require.Len(hash, 64)
+
+	// add signature
+	sig := []byte{}
+	for i := 0; i < 64; i++ {
+		sig = append(sig, byte(i))
+	}
+	err = tf.AddSignatures(xc.TxSignature(sig))
+	require.NoError(err)
+
+	ser, err := tf.Serialize()
+	require.NoError(err)
+	require.True(len(ser) > 64)
+	require.Equal("a589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab8503000000000000000200000000000000000000000000000000000000000000000000000000000000010d6170746f735f6163636f756e74087472616e73666572000220bb89a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab00080100000000000000d0070000000000000a00000000000000493e000000000000010020010203040506070801020304050607080102030405060708010203040506070840000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f", hex.EncodeToString(ser))
+}
+
+func (s *CrosschainTestSuite) TestNewTokenTransfer() {
+	require := s.Require()
+
+	native_asset := &xc.AssetConfig{NativeAsset: xc.APTOS, Net: "devnet"}
+	asset := &xc.TokenAssetConfig{Asset: "USDC", Contract: "0x1::Coin::USDC", NativeAssetConfig: native_asset}
+	builder, _ := NewTxBuilder(asset)
+	from := xc.Address("0xa589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85")
+	to := xc.Address("0xbb89a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab00")
+	amount := xc.NewAmountBlockchainFromUint64(1)
+	pubkey := []byte{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8}
+	input := &TxInput{
+		TxInputEnvelope: *xc.NewTxInputEnvelope(xc.DriverAptos),
+		SequenceNumber:  3,
+		GasLimit:        2000,
+		GasPrice:        10,
+		Timestamp:       12345,
+		ChainId:         1,
+		Pubkey:          pubkey,
+	}
+	tf, err := builder.(xc.TxTokenBuilder).NewTokenTransfer(from, to, amount, input)
+	require.NoError(err)
+	require.NotNil(tf)
+	hash := tf.Hash()
+	require.Len(hash, 64)
+
+	// add signature
+	sig := []byte{}
+	for i := 0; i < 64; i++ {
+		sig = append(sig, byte(i))
+	}
+	err = tf.AddSignatures(xc.TxSignature(sig))
+	require.NoError(err)
+
+	ser, err := tf.Serialize()
+	require.NoError(err)
+	require.True(len(ser) > 64)
+	require.Equal("a589a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab85030000000000000002000000000000000000000000000000000000000000000000000000000000000104636f696e087472616e736665720107000000000000000000000000000000000000000000000000000000000000000104436f696e0455534443000220bb89a80d61ec380c24a5fdda109c3848c082584e6cb725e5ab19b18354b2ab00080100000000000000d0070000000000000a00000000000000493e000000000000010020010203040506070801020304050607080102030405060708010203040506070840000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f", hex.EncodeToString(ser))
+
+	// use invalid contract address
+	bad_asset := &xc.TokenAssetConfig{Asset: "USDC", Contract: "0x112345", NativeAssetConfig: native_asset}
+	builder, _ = NewTxBuilder(bad_asset)
+	_, err = builder.(xc.TxTokenBuilder).NewTokenTransfer(from, to, amount, input)
+	require.ErrorContains(err, "Invalid struct tag string literal")
 }

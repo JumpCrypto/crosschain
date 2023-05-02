@@ -9,6 +9,8 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45
+	github.com/coming-chat/go-sui v1.0.0
+	github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-sdk v0.45.12
 	github.com/cosmos/go-bip39 v1.0.0
@@ -70,6 +72,7 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
+	github.com/fardream/go-bcs v0.2.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -172,6 +175,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/tklauser/numcpus v0.4.0 // indirect
+	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.23.0 // indirect
@@ -199,6 +203,8 @@ require (
 replace (
 	filippo.io/edwards25519 => filippo.io/edwards25519 v1.0.0-beta.3
 	github.com/CosmWasm/wasmd => github.com/terra-money/wasmd v0.27.0-terra.1
+
+	github.com/coming-chat/go-sui => ../../../go-sui-sdk/
 
 	// The only way to compile terra dependency is to replace with their fork of cosmos-sdk.
 	// This isn't a large deal as we're just using types, but for projects using this library as a dependency,

@@ -78,20 +78,27 @@ func MockJSONRPC(s *suite.Suite, response interface{}) (mock *MockJSONRPCServer,
 // MockHTTPServer is a mocked HTTP server
 type MockHTTPServer struct {
 	*httptest.Server
-	body     []byte
-	Counter  int
-	Response interface{}
+	body        []byte
+	Counter     int
+	Response    interface{}
+	StatusCodes []int
 }
 
 // MockHTTP creates a new MockHTTPServer given a response, or array of responses
 func MockHTTP(s *suite.Suite, response interface{}) (mock *MockHTTPServer, close func()) {
 	require := s.Require()
 	mock = &MockHTTPServer{
-		Response: response,
+		Response:    response,
+		StatusCodes: []int{},
 		Server: httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			curResponse := mock.Response
 			if a, ok := mock.Response.([]string); ok {
 				curResponse = a[mock.Counter]
+			}
+			// default success
+			status := 200
+			if mock.Counter < len(mock.StatusCodes) {
+				status = mock.StatusCodes[mock.Counter]
 			}
 			mock.Counter++
 
@@ -104,6 +111,7 @@ func MockHTTP(s *suite.Suite, response interface{}) (mock *MockHTTPServer, close
 
 			// string => convert to JSON
 			if s, ok := curResponse.(string); ok {
+				rw.WriteHeader(status)
 				curResponse = json.RawMessage(s)
 			}
 
