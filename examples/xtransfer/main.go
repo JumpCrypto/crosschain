@@ -60,7 +60,7 @@ func main() {
 
 	// (no network, no private key needed)
 	builder, _ := xc.NewTxBuilder(asset)
-	tx, err := builder.NewXTransfer(from, to, amount, input)
+	tx, err := builder.NewTransfer(from, to, amount, input)
 	if err != nil {
 		panic(err)
 	}
