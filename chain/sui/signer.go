@@ -5,8 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/coming-chat/go-aptos/crypto/derivation"
-	"github.com/cosmos/go-bip39"
+	"github.com/coming-chat/go-sui/account"
 	xc "github.com/jumpcrypto/crosschain"
 	"golang.org/x/crypto/sha3"
 )
@@ -36,15 +35,12 @@ func (signer Signer) ImportPrivateKey(privateKeyString string) (xc.PrivateKey, e
 			return []byte{}, err
 		}
 	} else {
-		rootSeed, err := bip39.NewSeedWithErrorChecking(privateKeyString, "")
+		// mnemonic
+		acc, err := account.NewAccountWithMnemonic(privateKeyString)
 		if err != nil {
 			return nil, err
 		}
-		key, err := derivation.DeriveForPath("m/44'/784'/0'/0'/0'", rootSeed)
-		if err != nil {
-			return nil, err
-		}
-		seed = key.Key
+		seed = acc.KeyPair.PrivateKey()
 	}
 	privateKey := ed25519.NewKeyFromSeed(seed)
 	publicKey := privateKey.Public().(ed25519.PublicKey)
