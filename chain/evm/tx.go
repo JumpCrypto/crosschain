@@ -238,8 +238,9 @@ func (tx Tx) ParseERC20TransferTx() (parsedTxInfo, error) {
 		}},
 		// destination
 		Destinations: []*xc.TxInfoEndpoint{{
-			Address: to,
-			Amount:  xc.AmountBlockchain(*amount),
+			Address:         to,
+			ContractAddress: tx.ContractAddress(),
+			Amount:          xc.AmountBlockchain(*amount),
 		}},
 	}, nil
 }
