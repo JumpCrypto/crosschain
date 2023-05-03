@@ -50,8 +50,9 @@ type FactoryContext interface {
 	PutAssetConfig(config ITask) (ITask, error)
 	Config() interface{}
 
-	GetTaskConfig(taskName string, assetID AssetID) (ITask, error)
 	GetMultiAssetConfig(srcAssetID AssetID, dstAssetID AssetID) ([]ITask, error)
+	GetTaskConfig(taskName string, assetID AssetID) (ITask, error)
+	GetTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([]ITask, error)
 }
 
 // Factory is the main Factory implementation, holding the config
@@ -148,19 +149,9 @@ func (f *Factory) findTask(taskName string) (*TaskConfig, error) {
 	return &TaskConfig{}, fmt.Errorf("invalid task: '%s'", taskName)
 }
 
-func (f *Factory) cfgFromMultiAsset(srcAssetID AssetID, dstAssetID AssetID) ([]ITask, error) {
-	srcAsset, err := f.cfgFromAsset(srcAssetID)
-	if err != nil {
-		return []ITask{}, fmt.Errorf("invalid src asset in: '%s -> %s'", srcAssetID, dstAssetID)
-	}
-	if dstAssetID == "" {
-		return []ITask{srcAsset}, err
-	}
-	_, err = f.cfgFromAsset(dstAssetID)
-	if err != nil {
-		return []ITask{}, fmt.Errorf("invalid dst asset in: '%s -> %s'", srcAssetID, dstAssetID)
-	}
-
+func (f *Factory) getTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([]ITask, error) {
+	srcAssetID := srcAsset.ID()
+	dstAssetID := dstAsset.ID()
 	for _, task := range f.AllTasks {
 		for _, entry := range task.AllowList {
 			if entry.Src == srcAssetID && entry.Dst == dstAssetID {
@@ -185,12 +176,28 @@ func (f *Factory) cfgFromMultiAsset(srcAssetID AssetID, dstAssetID AssetID) ([]I
 					}
 					result = append(result, newTask)
 				}
-				return result, err
+				return result, nil
 			}
 		}
 	}
 
 	return []ITask{}, fmt.Errorf("invalid path: '%s -> %s'", srcAssetID, dstAssetID)
+}
+
+func (f *Factory) cfgFromMultiAsset(srcAssetID AssetID, dstAssetID AssetID) ([]ITask, error) {
+	srcAsset, err := f.cfgFromAsset(srcAssetID)
+	if err != nil {
+		return []ITask{}, fmt.Errorf("invalid src asset in: '%s -> %s'", srcAssetID, dstAssetID)
+	}
+	if dstAssetID == "" {
+		return []ITask{srcAsset}, err
+	}
+	dstAsset, err := f.cfgFromAsset(dstAssetID)
+	if err != nil {
+		return []ITask{}, fmt.Errorf("invalid dst asset in: '%s -> %s'", srcAssetID, dstAssetID)
+	}
+
+	return f.getTaskConfigBySrcDstAssets(srcAsset, dstAsset)
 }
 
 func (f *Factory) cfgEnrichAssetConfig(partialCfg *TokenAssetConfig) (*TokenAssetConfig, error) {
@@ -357,6 +364,11 @@ func (f *Factory) GetAssetConfig(asset string, nativeAsset string) (ITask, error
 // GetTaskConfig returns an AssetConfig by task name and assetID
 func (f *Factory) GetTaskConfig(taskName string, assetID AssetID) (ITask, error) {
 	return f.cfgFromTask(taskName, assetID)
+}
+
+// GetTaskConfigBySrcDstAssets returns an AssetConfig by source and destination assets
+func (f *Factory) GetTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([]ITask, error) {
+	return f.getTaskConfigBySrcDstAssets(srcAsset, srcAsset)
 }
 
 // GetMultiAssetConfig returns an AssetConfig by source and destination assetIDs

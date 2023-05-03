@@ -102,6 +102,11 @@ func (f *TestFactory) GetTaskConfig(taskName string, assetID xc.AssetID) (xc.ITa
 	return f.DefaultFactory.GetTaskConfig(taskName, assetID)
 }
 
+// GetTaskConfigBySrcDstAssets returns an AssetConfig by source and destination assets
+func (f *TestFactory) GetTaskConfigBySrcDstAssets(srcAsset xc.ITask, dstAsset xc.ITask) ([]xc.ITask, error) {
+	return f.DefaultFactory.GetTaskConfigBySrcDstAssets(srcAsset, srcAsset)
+}
+
 // GetMultiAssetConfig returns an AssetConfig by source and destination assetIDs
 func (f *TestFactory) GetMultiAssetConfig(srcAssetID xc.AssetID, dstAssetID xc.AssetID) ([]xc.ITask, error) {
 	return f.DefaultFactory.GetMultiAssetConfig(srcAssetID, dstAssetID)
