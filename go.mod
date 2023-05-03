@@ -13,7 +13,6 @@ require (
 	github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-sdk v0.45.12
-	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v3 v3.4.0
 	github.com/ethereum/go-ethereum v1.11.5
 	github.com/evmos/ethermint v0.19.3
@@ -56,6 +55,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
+	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
@@ -204,13 +204,14 @@ replace (
 	filippo.io/edwards25519 => filippo.io/edwards25519 v1.0.0-beta.3
 	github.com/CosmWasm/wasmd => github.com/terra-money/wasmd v0.27.0-terra.1
 
-	github.com/coming-chat/go-sui => ../../../go-sui-sdk/
+	github.com/coming-chat/go-sui => github.com/conorpp/go-sui-sdk v1.0.0
 
 	// The only way to compile terra dependency is to replace with their fork of cosmos-sdk.
 	// This isn't a large deal as we're just using types, but for projects using this library as a dependency,
 	// they will need to replace/patch/fork terra or have to use the same replace here.
 	github.com/cosmos/cosmos-sdk => github.com/terra-money/cosmos-sdk v0.45.12-terra.1
 	github.com/cosmos/ledger-cosmos-go => github.com/terra-money/ledger-terra-go v0.11.2
+	// solana-go needs to make a release past v1.8.2
 	github.com/gagliardetto/solana-go => github.com/conorpp/solana-go v1.0.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
