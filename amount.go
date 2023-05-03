@@ -27,6 +27,11 @@ func (amount AmountBlockchain) Int() *big.Int {
 	return &bigInt
 }
 
+func (amount AmountBlockchain) Sign() int {
+	bigInt := big.Int(amount)
+	return bigInt.Sign()
+}
+
 // Uint64 converts an AmountBlockchain into uint64
 func (amount AmountBlockchain) Uint64() uint64 {
 	bigInt := big.Int(amount)

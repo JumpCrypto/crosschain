@@ -16,6 +16,6 @@ func (s *CrosschainTestSuite) SetupTest() {
 	s.Ctx = context.Background()
 }
 
-func TestExampleTestSuite(t *testing.T) {
+func TestSuiTestSuite(t *testing.T) {
 	suite.Run(t, new(CrosschainTestSuite))
 }

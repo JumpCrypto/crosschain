@@ -18,6 +18,7 @@ import (
 	"github.com/jumpcrypto/crosschain/chain/cosmos"
 	"github.com/jumpcrypto/crosschain/chain/evm"
 	"github.com/jumpcrypto/crosschain/chain/solana"
+	"github.com/jumpcrypto/crosschain/chain/sui"
 	"github.com/jumpcrypto/crosschain/config"
 )
 
@@ -567,6 +568,8 @@ func newClient(cfg ITask) (Client, error) {
 		return solana.NewClient(cfg)
 	case DriverAptos:
 		return aptos.NewClient(cfg)
+	case DriverSui:
+		return sui.NewClient(cfg)
 	case DriverBitcoin:
 		return bitcoin.NewClient(cfg)
 	}
@@ -585,6 +588,8 @@ func newTxBuilder(cfg ITask) (TxBuilder, error) {
 		return solana.NewTxBuilder(cfg)
 	case DriverAptos:
 		return aptos.NewTxBuilder(cfg)
+	case DriverSui:
+		return sui.NewTxBuilder(cfg)
 	case DriverBitcoin:
 		return bitcoin.NewTxBuilder(cfg)
 	}
@@ -603,6 +608,8 @@ func newSigner(cfg ITask) (Signer, error) {
 		return aptos.NewSigner(cfg)
 	case DriverBitcoin:
 		return bitcoin.NewSigner(cfg)
+	case DriverSui:
+		return sui.NewSigner(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
@@ -619,6 +626,8 @@ func newAddressBuilder(cfg ITask) (AddressBuilder, error) {
 		return aptos.NewAddressBuilder(cfg)
 	case DriverBitcoin:
 		return bitcoin.NewAddressBuilder(cfg)
+	case DriverSui:
+		return sui.NewAddressBuilder(cfg)
 	}
 	return nil, errors.New("unsupported asset")
 }
@@ -653,6 +662,10 @@ func UnmarshalTxInput(data []byte) (TxInput, error) {
 		return &txInput, err
 	case DriverBitcoin:
 		var txInput bitcoin.TxInput
+		err := json.Unmarshal(buf, &txInput)
+		return &txInput, err
+	case DriverSui:
+		var txInput sui.TxInput
 		err := json.Unmarshal(buf, &txInput)
 		return &txInput, err
 	default:

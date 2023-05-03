@@ -48,6 +48,7 @@ func (asset Asset) AssetType() AssetType {
 		OptETH,
 		ROSE,
 		SOL,
+		SUI,
 		XPLA:
 		return AssetTypeNative
 	default:
@@ -95,6 +96,7 @@ func (native NativeAsset) ChainType() ChainType {
 		OptETH,
 		ROSE,
 		SOL,
+		SUI,
 		XPLA:
 		return ChainTypeAccount
 	default:
@@ -140,6 +142,7 @@ const (
 	OptETH    = NativeAsset("OptETH")    // Optimism
 	ROSE      = NativeAsset("ROSE")      // Rose (Oasis Emerald parachain)
 	SOL       = NativeAsset("SOL")       // Solana
+	SUI       = NativeAsset("SUI")       // SUI
 	XPLA      = NativeAsset("XPLA")      // XPLA
 )
 
@@ -149,6 +152,7 @@ type Driver string
 // List of supported Driver
 const (
 	DriverAptos       = Driver("aptos")
+	DriverSui         = Driver("sui")
 	DriverBitcoin     = Driver("bitcoin")
 	DriverCosmos      = Driver("cosmos")
 	DriverCosmosEvmos = Driver("evmos")
@@ -164,6 +168,8 @@ var SupportedDrivers = []Driver{
 	DriverEVM,
 	DriverEVMLegacy,
 	DriverSolana,
+	DriverSui,
+	DriverAptos,
 }
 
 // AssetID is an internal identifier for each asset

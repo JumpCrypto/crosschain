@@ -113,6 +113,13 @@ crosschain:
     chain_name: Aptos (Devnet)
     explorer_url: 'https://explorer.devnet.aptos.dev'
     decimals: 8
+  - asset: SUI
+    driver: sui
+    net: devnet
+    url: 'https://fullnode.devnet.sui.io:443'
+    chain_name: Sui (Devnet)
+    explorer_url: 'https://explorer.sui.io'
+    decimals: 9
   # Bitcoin
   - asset: BTC
     driver: bitcoin

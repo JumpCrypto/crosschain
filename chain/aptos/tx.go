@@ -1,6 +1,7 @@
 package aptos
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 
@@ -113,9 +114,18 @@ func (input *TxInput) SetPublicKey(pubkey xc.PublicKey) error {
 }
 
 func (input *TxInput) SetPublicKeyFromStr(pubkeyStr string) error {
-	pubkey, err := hex.DecodeString(pubkeyStr)
-	if err != nil {
-		return err
+	var err error
+	var pubkey []byte
+	if len(pubkeyStr) == 128 || len(pubkeyStr) == 130 {
+		pubkey, err = hex.DecodeString(pubkeyStr)
+		if err != nil {
+			return err
+		}
+	} else {
+		pubkey, err = base64.RawStdEncoding.DecodeString(pubkeyStr)
+		if err != nil {
+			return err
+		}
 	}
 	input.Pubkey = pubkey
 	return nil
