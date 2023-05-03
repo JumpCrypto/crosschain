@@ -108,6 +108,12 @@ func (f *Factory) enrichTask(task *TaskConfig, srcAssetID AssetID, dstAssetID As
 	return &newTask, nil
 }
 
+func (f *Factory) enrichTaskBySrcDstAssets(task *TaskConfig, srcAsset ITask, dstAsset ITask) (*TaskConfig, error) {
+	task.SrcAsset = srcAsset
+	task.DstAsset = dstAsset
+	return task, nil
+}
+
 func (f *Factory) cfgFromTask(taskName string, assetID AssetID) (ITask, error) {
 	IsAllowedFunc := func(task *TaskConfig, assetID AssetID) (*TaskConfig, error) {
 		allowed := false
@@ -155,7 +161,7 @@ func (f *Factory) getTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([
 	for _, task := range f.AllTasks {
 		for _, entry := range task.AllowList {
 			if entry.Src == srcAssetID && entry.Dst == dstAssetID {
-				newTask, err := f.enrichTask(task, srcAssetID, dstAssetID)
+				newTask, err := f.enrichTaskBySrcDstAssets(task, srcAsset, dstAsset)
 				return []ITask{newTask}, err
 			}
 		}
@@ -170,7 +176,7 @@ func (f *Factory) getTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([
 					if err != nil {
 						return []ITask{}, fmt.Errorf("pipeline '%s' has invalid task: '%s'", pipeline.ID, taskName)
 					}
-					newTask, err := f.enrichTask(task, srcAssetID, dstAssetID)
+					newTask, err := f.enrichTaskBySrcDstAssets(task, srcAsset, dstAsset)
 					if err != nil {
 						return []ITask{}, fmt.Errorf("pipeline '%s' can't enrich task: '%s' %s -> %s", pipeline.ID, taskName, srcAssetID, dstAssetID)
 					}
@@ -368,7 +374,7 @@ func (f *Factory) GetTaskConfig(taskName string, assetID AssetID) (ITask, error)
 
 // GetTaskConfigBySrcDstAssets returns an AssetConfig by source and destination assets
 func (f *Factory) GetTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([]ITask, error) {
-	return f.getTaskConfigBySrcDstAssets(srcAsset, srcAsset)
+	return f.getTaskConfigBySrcDstAssets(srcAsset, dstAsset)
 }
 
 // GetMultiAssetConfig returns an AssetConfig by source and destination assetIDs
