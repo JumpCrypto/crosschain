@@ -127,6 +127,22 @@ func (f *TestFactory) EnrichDestinations(activity xc.ITask, txInfo xc.TxInfo) (x
 	return f.DefaultFactory.EnrichDestinations(activity, txInfo)
 }
 
+func (f *TestFactory) RegisterGetAssetConfigCallback(callback func(assetID xc.AssetID) (xc.ITask, error)) {
+	f.DefaultFactory.RegisterGetAssetConfigCallback(callback)
+}
+
+func (f *TestFactory) UnregisterGetAssetConfigCallback() {
+	f.DefaultFactory.UnregisterGetAssetConfigCallback()
+}
+
+func (f *TestFactory) RegisterGetAssetConfigByContractCallback(callback func(contract string, nativeAsset string) (xc.ITask, error)) {
+	f.DefaultFactory.RegisterGetAssetConfigByContractCallback(callback)
+}
+
+func (f *TestFactory) UnregisterGetAssetConfigByContractCallback() {
+	f.DefaultFactory.UnregisterGetAssetConfigByContractCallback()
+}
+
 // PutAssetConfig adds an AssetConfig to the current Config cache
 func (f *TestFactory) PutAssetConfig(config xc.ITask) (xc.ITask, error) {
 	return f.DefaultFactory.PutAssetConfig(config)

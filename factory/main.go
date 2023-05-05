@@ -53,13 +53,20 @@ type FactoryContext interface {
 	GetMultiAssetConfig(srcAssetID AssetID, dstAssetID AssetID) ([]ITask, error)
 	GetTaskConfig(taskName string, assetID AssetID) (ITask, error)
 	GetTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([]ITask, error)
+
+	RegisterGetAssetConfigCallback(callback func(assetID AssetID) (ITask, error))
+	UnregisterGetAssetConfigCallback()
+	RegisterGetAssetConfigByContractCallback(callback func(contract string, nativeAsset string) (ITask, error))
+	UnregisterGetAssetConfigByContractCallback()
 }
 
 // Factory is the main Factory implementation, holding the config
 type Factory struct {
-	AllAssets    sync.Map
-	AllTasks     []*TaskConfig
-	AllPipelines []*PipelineConfig
+	AllAssets                        sync.Map
+	AllTasks                         []*TaskConfig
+	AllPipelines                     []*PipelineConfig
+	callbackGetAssetConfig           func(assetID AssetID) (ITask, error)
+	callbackGetAssetConfigByContract func(contract string, nativeAsset string) (ITask, error)
 }
 
 var _ FactoryContext = &Factory{}
@@ -78,6 +85,9 @@ func (f *Factory) GetAllAssets() []ITask {
 func (f *Factory) cfgFromAsset(assetID AssetID) (ITask, error) {
 	cfgI, found := f.AllAssets.Load(assetID)
 	if !found {
+		if f.callbackGetAssetConfig != nil {
+			return f.callbackGetAssetConfig(assetID)
+		}
 		return &NativeAssetConfig{}, fmt.Errorf("invalid asset: '%s'", assetID)
 	}
 	if cfg, ok := cfgI.(*NativeAssetConfig); ok {
@@ -94,6 +104,34 @@ func (f *Factory) cfgFromAsset(assetID AssetID) (ITask, error) {
 		return cfg, nil
 	}
 	return &NativeAssetConfig{}, fmt.Errorf("invalid asset: '%s'", assetID)
+}
+
+func (f *Factory) cfgFromAssetByContract(contract string, nativeAsset string) (ITask, error) {
+	var res ITask
+	nativeAsset = strings.ToUpper(nativeAsset)
+	contract = NormalizeAddressString(contract, nativeAsset)
+	f.AllAssets.Range(func(key, value interface{}) bool {
+		cfg := value.(ITask).GetAssetConfig()
+		if cfg.Chain == nativeAsset {
+			cfgContract := NormalizeAddressString(cfg.Contract, nativeAsset)
+			if cfgContract == contract {
+				res = value.(ITask)
+				return false
+			}
+		} else if cfg.Asset == nativeAsset && cfg.ChainCoin == contract {
+			res = value.(ITask)
+			return false
+		}
+		return true
+	})
+	if res != nil {
+		return f.cfgFromAsset(res.ID())
+	} else {
+		if f.callbackGetAssetConfigByContract != nil {
+			return f.callbackGetAssetConfigByContract(contract, nativeAsset)
+		}
+	}
+	return &TokenAssetConfig{}, fmt.Errorf("invalid contract: '%s'", contract)
 }
 
 func (f *Factory) enrichTask(task *TaskConfig, srcAssetID AssetID, dstAssetID AssetID) (*TaskConfig, error) {
@@ -222,11 +260,9 @@ func (f *Factory) cfgEnrichAssetConfig(partialCfg *TokenAssetConfig) (*TokenAsse
 		chain := chainI.(*NativeAssetConfig)
 		cfg.NativeAssetConfig = chain
 		if cfg.NativeAssetConfig.NativeAsset == "" {
-			cfg.NativeAssetConfig.NativeAsset = NativeAsset(cfg.NativeAssetConfig.Chain)
-			if cfg.NativeAssetConfig.NativeAsset == "" {
-				cfg.NativeAssetConfig.NativeAsset = NativeAsset(cfg.NativeAssetConfig.Asset)
-			}
+			cfg.NativeAssetConfig.NativeAsset = NativeAsset(cfg.NativeAssetConfig.Asset)
 		}
+		// deprecated fields below
 		cfg.Driver = chain.Driver
 		cfg.Net = chain.Net
 		cfg.URL = chain.URL
@@ -266,30 +302,6 @@ func (f *Factory) cfgEnrichDestinations(activity ITask, txInfo TxInfo) (TxInfo, 
 		result.Destinations[i] = dst
 	}
 	return result, nil
-}
-
-func (f *Factory) cfgFromAssetByContract(contract string, nativeAsset string) (ITask, error) {
-	var res ITask
-	nativeAsset = strings.ToUpper(nativeAsset)
-	contract = NormalizeAddressString(contract, nativeAsset)
-	f.AllAssets.Range(func(key, value interface{}) bool {
-		cfg := value.(ITask).GetAssetConfig()
-		if cfg.Chain == nativeAsset {
-			cfgContract := NormalizeAddressString(cfg.Contract, nativeAsset)
-			if cfgContract == contract {
-				res = value.(ITask)
-				return false
-			}
-		} else if cfg.Asset == nativeAsset && cfg.ChainCoin == contract {
-			res = value.(ITask)
-			return false
-		}
-		return true
-	})
-	if res != nil {
-		return f.cfgFromAsset(res.ID())
-	}
-	return &TokenAssetConfig{}, fmt.Errorf("invalid contract: '%s'", contract)
 }
 
 // NewClient creates a new Client
@@ -375,6 +387,22 @@ func (f *Factory) GetTaskConfig(taskName string, assetID AssetID) (ITask, error)
 // GetTaskConfigBySrcDstAssets returns an AssetConfig by source and destination assets
 func (f *Factory) GetTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([]ITask, error) {
 	return f.getTaskConfigBySrcDstAssets(srcAsset, dstAsset)
+}
+
+func (f *Factory) RegisterGetAssetConfigCallback(callback func(assetID AssetID) (ITask, error)) {
+	f.callbackGetAssetConfig = callback
+}
+
+func (f *Factory) UnregisterGetAssetConfigCallback() {
+	f.callbackGetAssetConfig = nil
+}
+
+func (f *Factory) RegisterGetAssetConfigByContractCallback(callback func(contract string, nativeAsset string) (ITask, error)) {
+	f.callbackGetAssetConfigByContract = callback
+}
+
+func (f *Factory) UnregisterGetAssetConfigByContractCallback() {
+	f.callbackGetAssetConfigByContract = nil
 }
 
 // GetMultiAssetConfig returns an AssetConfig by source and destination assetIDs
