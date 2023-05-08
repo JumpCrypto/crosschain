@@ -77,6 +77,11 @@ func (amount *AmountBlockchain) Div(x *AmountBlockchain) AmountBlockchain {
 	return AmountBlockchain(*quot.Int().Div(quot.Int(), x.Int()))
 }
 
+func (amount *AmountBlockchain) Abs() AmountBlockchain {
+	abs := *amount
+	return AmountBlockchain(*abs.Int().Abs(abs.Int()))
+}
+
 func (amount *AmountBlockchain) ToHuman(decimals int32) AmountHumanReadable {
 	dec := decimal.NewFromBigInt(amount.Int(), -decimals)
 	return AmountHumanReadable(dec)
@@ -105,8 +110,9 @@ func NewAmountBlockchainFromStr(str string) AmountBlockchain {
 }
 
 func (amount AmountHumanReadable) ToBlockchain(decimals int32) AmountBlockchain {
-	dec := decimal.NewFromBigInt(((decimal.Decimal)(amount)).BigInt(), decimals)
-	return AmountBlockchain(*dec.BigInt())
+	factor := decimal.NewFromInt32(10).Pow(decimal.NewFromInt32(decimals))
+	raised := ((decimal.Decimal)(amount)).Mul(factor)
+	return AmountBlockchain(*raised.BigInt())
 }
 
 func (amount AmountHumanReadable) String() string {

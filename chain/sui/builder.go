@@ -3,7 +3,6 @@ package sui
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	xc "github.com/jumpcrypto/crosschain"
 	"github.com/jumpcrypto/crosschain/chain/sui/generated/bcs"
@@ -34,8 +33,12 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 		}
 		local_input = *ptr
 	}
-	from = xc.Address(strings.Replace(string(from), "0x", "", 1))
-	to = xc.Address(strings.Replace(string(to), "0x", "", 1))
+	if len(local_input.Pubkey) == 0 {
+		return &Tx{}, errors.New("must set public key on TxInput for SUI")
+	}
+
+	// from = xc.Address(strings.Replace(string(from), "0x", "", 1))
+	// to = xc.Address(strings.Replace(string(to), "0x", "", 1))
 
 	fromData, err := hexToAddress(string(from))
 	if err != nil {
@@ -45,74 +48,133 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 	if err != nil {
 		return &Tx{}, fmt.Errorf("could not decode to address: %v", err)
 	}
+
 	gasObjectId, err := hexToObjectID(local_input.GasCoin.CoinObjectId.String())
+	// gasObjectId, err := hexToObjectID("0x26b1fb28f2b0d543b17ffd0034c6e446cf998dc05ffe376ee8b9e00f4934a21c")
 	if err != nil {
 		return &Tx{}, fmt.Errorf("could not decode gas coin object id: %v", err)
 	}
-	gasDigest, err := base58ToObjectDigest(local_input.GasCoin.CoinObjectId.String())
+	gasDigest, err := base58ToObjectDigest(local_input.GasCoin.Digest)
+	// gasDigest, err := base58ToObjectDigest("GtxXCYfW7v3Z7HLQdCNQ6ZMVuK6Ek8VDwr1AVE423CTd")
 	if err != nil {
 		return &Tx{}, fmt.Errorf("could not decode gas coin digest: %v", err)
 	}
+	gasVersion := local_input.GasCoin.Version.BigInt().Uint64()
 
-	local_input.SortCoins()
+	local_input.ExcludeGasCoin()
+
+	// Our universal transaction goes like this:
+	// I. We start with the gas coin and we split it.
+	//  	a. The primary of the split is used for paying gas.  It can't be using for anything else
+	//	 	   or Sui we have multiple mutating errors.  It should should have enough to cover our total
+	//		   gas budget.
+	//	    b. The result of the split gets used in the result of the transaction IFF it's the same currency/type.
+	// II. We merge the rest of our coins together into one coin (up to say, 50).
+	// III. We split this result merged coin into another coin that is the amount we wish to transfer.
+	// IV. We send this newly minted coin.
+	// So there should always be 4 tx total.
 
 	cmd_inputs := []bcs.CallArg{}
-	commands := []bcs.Command{
-		&bcs.Command__TransferObjects{
-			Field0: []bcs.Argument{
-				ArgumentResult(0),
-			},
-			Field1: ArgumentInput(1),
-		},
-	}
-	// first input is our primary object that we're merging into, and that we're sending from.
-	first_coin := local_input.Coins[0]
-	id, err := hexToPure(first_coin.CoinObjectId.String())
-	if err != nil {
-		return &Tx{}, fmt.Errorf("could not decode coin id: %v", err)
-	}
-	cmd_inputs = append(cmd_inputs, id)
+	commands := []bcs.Command{}
+	var gasRemainderResult bcs.Argument
+	// I. Split the gas coin if necessary
+	// Check to see if we can afford the gas budget.
+	if local_input.GasBudget < local_input.GasCoin.Balance.Uint64() {
+		if len(local_input.Coins) > 0 && local_input.Coins[0].CoinType == local_input.GasCoin.CoinType {
+			// Split off the remainder from gas budget
+			remainder := local_input.GasCoin.Balance.Uint64() - local_input.GasBudget
+			cmd_inputs = append(cmd_inputs, u64ToPure(remainder))
 
-	// Let's merge together up to 50 sui inputs into our largest input.
-	if len(local_input.Coins) > 1 {
-		for i, coin := range local_input.Coins[1:50] {
-			id, err := hexToPure(coin.CoinObjectId.String())
-			if err != nil {
-				return &Tx{}, fmt.Errorf(": %v", err)
-			}
-			cmd_inputs = append(cmd_inputs, id)
-			commands = append(commands, &bcs.Command__MergeCoins{
-				Field0: ArgumentInput(0),
+			commands = append(commands, &bcs.Command__SplitCoins{
+				Field0: &bcs.Argument__GasCoin{},
 				Field1: []bcs.Argument{
-					ArgumentInput(uint16(i)),
+					ArgumentInput(uint16(0)),
 				},
 			})
+			gasRemainderResult = ArgumentResult(uint16(len(commands) - 1))
 		}
+	} else {
+		// lower the gas budget to whatever balance is on the gas coin.  no need to split it.
+		local_input.GasBudget = local_input.GasCoin.Balance.Uint64()
+		if local_input.GasBudget < amount.Uint64() {
+			// not enough funds!
+			return &Tx{}, fmt.Errorf("not enough funds to send after paying for sui gas: budget=%d tf=%d", local_input.GasBudget, amount.Uint64())
+		}
+		local_input.GasBudget -= amount.Uint64()
 	}
 
-	// now let's spend the first coin by splitting `amt` from it
-	cmd_inputs = append(cmd_inputs, u64ToPure(amount.Uint64()))
+	primaryCoinInput := gasRemainderResult
+
+	// II. merge together rest of coins if needed
+	if len(local_input.Coins) > 0 {
+		// The first coin becomes our "primary coin"
+		primaryCoinInput = ArgumentInput(uint16(len(cmd_inputs)))
+
+		obj, err := coinToObject(local_input.Coins[0])
+		if err != nil {
+			return &Tx{}, err
+		}
+		cmd_inputs = append(cmd_inputs, &bcs.CallArg__Object{
+			Value: obj,
+		})
+
+		merge_inputs := []bcs.Argument{}
+
+		if gasRemainderResult != nil {
+			merge_inputs = append(merge_inputs, ArgumentResult(uint16(len(commands)-1)))
+		}
+
+		for i, coin := range local_input.Coins[1:] {
+			if i > MaxCoinObjects {
+				break
+			}
+			obj, err := coinToObject(coin)
+			if err != nil {
+				return &Tx{}, err
+			}
+			merge_inputs = append(merge_inputs, ArgumentInput(uint16(len(cmd_inputs))))
+
+			cmd_inputs = append(cmd_inputs, &bcs.CallArg__Object{
+				Value: obj,
+			})
+		}
+		commands = append(commands, &bcs.Command__MergeCoins{
+			Field0: primaryCoinInput,
+			Field1: merge_inputs,
+		})
+	}
+
+	if primaryCoinInput == nil {
+		// if we only have one coin.. than the primary coin should be the gas coin
+		primaryCoinInput = &bcs.Argument__GasCoin{}
+	}
+
+	// now let's spend the primary coin by splitting `amt` from it
 	commands = append(commands, &bcs.Command__SplitCoins{
-		Field0: ArgumentInput(0),
+		Field0: primaryCoinInput,
 		Field1: []bcs.Argument{
 			// the last input has the amount
-			ArgumentInput(uint16(len(cmd_inputs) - 1)),
+			ArgumentInput(uint16(len(cmd_inputs))),
 		},
 	})
+	cmd_inputs = append(cmd_inputs, u64ToPure(amount.Uint64()))
 
-	// send the new object that is the result of split
-	cmd_inputs = append(cmd_inputs, toPure)
-	commands = append(commands, &bcs.Command__SplitCoins{
-		Field0: ArgumentResult(0),
-		Field1: []bcs.Argument{
-			// the last input has the destination
-			ArgumentInput(uint16(len(cmd_inputs) - 1)),
+	// send the new split object
+	commands = append(commands, &bcs.Command__TransferObjects{
+		Field0: []bcs.Argument{
+			// last cmd result has the coin to send
+			ArgumentResult(uint16(len(commands) - 1)),
 		},
+		Field1: ArgumentInput(uint16(len(cmd_inputs))),
 	})
+	cmd_inputs = append(cmd_inputs, toPure)
+
+	// expires after current epoch
+	expiration := bcs.TransactionExpiration__Epoch(local_input.CurrentEpoch)
 
 	gasCoin := ObjectRef{
 		Field0: gasObjectId,
-		Field1: bcs.SequenceNumber(local_input.GasCoin.Version.BigInt().Uint64()),
+		Field1: bcs.SequenceNumber(gasVersion),
 		Field2: gasDigest,
 	}
 
@@ -131,7 +193,7 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 				Budget: local_input.GasBudget,
 			},
 			Sender:     fromData,
-			Expiration: &bcs.TransactionExpiration__None{},
+			Expiration: &expiration,
 			Kind: &bcs.TransactionKind__ProgrammableTransaction{
 				Value: bcs.ProgrammableTransaction{
 					Inputs:   cmd_inputs,
@@ -142,8 +204,8 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 	}
 
 	return &Tx{
-		Input: local_input,
-		tx:    tx,
+		Tx:         tx,
+		public_key: local_input.Pubkey,
 	}, nil
 }
 

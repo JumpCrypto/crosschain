@@ -4,8 +4,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/coming-chat/go-sui/types"
 	"github.com/jumpcrypto/crosschain/chain/sui/generated/bcs"
 )
 
@@ -13,6 +15,13 @@ type ObjectRef struct {
 	Field0 bcs.ObjectID
 	Field1 bcs.SequenceNumber
 	Field2 bcs.ObjectDigest
+}
+
+func decodeHex(str string) ([]byte, error) {
+	if strings.HasPrefix(str, "0x") {
+		return hex.DecodeString(str[2:])
+	}
+	return hex.DecodeString(str)
 }
 
 func toObjectID(slice []byte) (bcs.ObjectID, error) {
@@ -26,7 +35,7 @@ func toObjectID(slice []byte) (bcs.ObjectID, error) {
 }
 
 func hexToObjectID(str string) (bcs.ObjectID, error) {
-	bytes, err := hex.DecodeString(str)
+	bytes, err := decodeHex(str)
 	if err != nil {
 		return bcs.ObjectID{}, err
 	}
@@ -41,13 +50,45 @@ func u64ToPure(x uint64) *bcs.CallArg__Pure {
 	return &pure
 }
 
+func coinToObject(coin *types.Coin) (*bcs.ObjectArg__ImmOrOwnedObject, error) {
+	id, err := hexToObjectID(coin.CoinObjectId.String())
+	if err != nil {
+		return &bcs.ObjectArg__ImmOrOwnedObject{}, fmt.Errorf("could not decode coin id: %v", err)
+	}
+	digest, err := base58ToObjectDigest(coin.Digest)
+	if err != nil {
+		return &bcs.ObjectArg__ImmOrOwnedObject{}, fmt.Errorf("could not decode coin digest: %v", err)
+	}
+	seq := coin.Version.BigInt().Uint64()
+
+	return &bcs.ObjectArg__ImmOrOwnedObject{
+		Field0: id,
+		Field1: bcs.SequenceNumber(seq),
+		Field2: digest,
+	}, nil
+}
+func mustCoinToObject(coin *types.Coin) *bcs.ObjectArg__ImmOrOwnedObject {
+	obj, err := coinToObject(coin)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
 func hexToPure(str string) (*bcs.CallArg__Pure, error) {
-	bytes, err := hex.DecodeString(str)
+	bytes, err := decodeHex(str)
 	if err != nil {
 		return &bcs.CallArg__Pure{}, err
 	}
 	pure := bcs.CallArg__Pure(bytes)
 	return &pure, nil
+}
+
+func mustHexToPure(str string) *bcs.CallArg__Pure {
+	data, err := hexToPure(str)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 func toAddress(slice []byte) bcs.SuiAddress {
@@ -59,7 +100,7 @@ func toAddress(slice []byte) bcs.SuiAddress {
 }
 
 func hexToAddress(str string) (bcs.SuiAddress, error) {
-	bytes, err := hex.DecodeString(str)
+	bytes, err := decodeHex(str)
 	if err != nil {
 		return bcs.SuiAddress{}, err
 	}

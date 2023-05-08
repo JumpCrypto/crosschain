@@ -3,11 +3,9 @@ package sui
 import (
 	"crypto/ed25519"
 	"encoding/hex"
-	"fmt"
 
 	"github.com/coming-chat/go-sui/account"
 	xc "github.com/jumpcrypto/crosschain"
-	"golang.org/x/crypto/sha3"
 )
 
 // Signer for Sui
@@ -43,22 +41,22 @@ func (signer Signer) ImportPrivateKey(privateKeyString string) (xc.PrivateKey, e
 		seed = acc.KeyPair.PrivateKey()
 	}
 	// to generate address:
-	privateKey := ed25519.NewKeyFromSeed(seed)
-	publicKey := privateKey.Public().(ed25519.PublicKey)
+	// privateKey := ed25519.NewKeyFromSeed(seed)
+	// publicKey := privateKey.Public().(ed25519.PublicKey)
 
-	// indicate ed25519 sig scheme
-	tmp := []byte{0}
-	tmp = append(tmp, publicKey...)
-	addrBytes := sha3.Sum256(tmp)
-	// address length is 40
-	address := "0x" + hex.EncodeToString(addrBytes[:])[:40]
-	fmt.Println("Sui address = ", address)
-	fmt.Println("Sui public key = ", hex.EncodeToString(publicKey))
+	// // indicate ed25519 sig scheme
+	// tmp := []byte{0}
+	// tmp = append(tmp, publicKey...)
+	// addrBytes := sha3.Sum256(tmp)
+	// // address length is 40
+	// address := "0x" + hex.EncodeToString(addrBytes[:])[:40]
+	// fmt.Println("Sui address = ", address)
+	// fmt.Println("Sui public key = ", hex.EncodeToString(publicKey))
 
 	return seed, nil
 }
 
-// Sign an Aptos tx
+// Sign an Sui tx
 func (signer Signer) Sign(privateKeyBz xc.PrivateKey, data xc.TxDataToSign) (xc.TxSignature, error) {
 	privateKey := ed25519.NewKeyFromSeed(privateKeyBz)
 	return ed25519.Sign(privateKey, data), nil

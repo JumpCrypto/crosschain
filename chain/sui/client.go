@@ -2,7 +2,6 @@ package sui
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
@@ -10,7 +9,6 @@ import (
 	"github.com/coming-chat/go-sui/client"
 	"github.com/coming-chat/go-sui/types"
 	xc "github.com/jumpcrypto/crosschain"
-	suibcs "github.com/jumpcrypto/crosschain/chain/sui/generated/bcs"
 )
 
 // Client for Sui
@@ -35,9 +33,10 @@ var _ xc.FullClientWithGas = &Client{}
 type SuiMethod string
 
 var (
-	getTransactionBlock SuiMethod = "sui_getTransactionBlock"
-	getCheckpoint       SuiMethod = "sui_getCheckpoint"
-	getCheckpoints      SuiMethod = "sui_getCheckpoints"
+	// getTransactionBlock SuiMethod = "sui_getTransactionBlock"
+	getCheckpoint  SuiMethod = "sui_getCheckpoint"
+	getCheckpoints SuiMethod = "sui_getCheckpoints"
+	MaxCoinObjects int       = 50
 )
 
 func (m SuiMethod) String() string {
@@ -104,6 +103,7 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 	if err != nil {
 		return xc.TxInfo{}, err
 	}
+	// latestCheckpoint.Epoch
 	sources := []*xc.TxInfoEndpoint{}
 	destinations := []*xc.TxInfoEndpoint{}
 
@@ -124,11 +124,12 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 		}
 		if amt.Sign() < 0 {
 			from = bal.Owner.AddressOwner.String()
-			totalSent = totalSent.Add(&amt)
+			abs := amt.Abs()
+			totalSent = totalSent.Add(&abs)
 			sources = append(sources, &xc.TxInfoEndpoint{
 				Asset:           xc.Asset(asset),
 				ContractAddress: xc.ContractAddress(contract),
-				Amount:          amt,
+				Amount:          abs,
 				Address:         xc.Address(from),
 			})
 		} else {
@@ -187,11 +188,6 @@ func (c *Client) EstimateGas(ctx context.Context) (xc.AmountBlockchain, error) {
 	return xc.NewAmountBlockchainFromUint64(ref.Uint64()), nil
 }
 
-func argumentInput(index uint16) *suibcs.Argument__Input {
-	x := suibcs.Argument__Input(index)
-	return &x
-}
-
 func (c *Client) GetAllCoinsFor(ctx context.Context, address xc.Address, contract string) ([]*types.Coin, error) {
 	fromData, err := types.NewHexData(string(address))
 	if err != nil {
@@ -207,10 +203,11 @@ func (c *Client) GetAllCoinsFor(ctx context.Context, address xc.Address, contrac
 			return []*types.Coin{}, err
 		}
 		for _, coin := range coins.Data {
-			all_coins = append(all_coins, &coin)
+			c := coin
+			all_coins = append(all_coins, &c)
 		}
 		next = coins.NextCursor
-		if next == nil {
+		if next == nil || !coins.HasNextPage {
 			break
 		}
 	}
@@ -231,10 +228,21 @@ func (c *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.Addres
 		return TxInput{}, err
 	}
 
+	latestCheckpoint, err := c.FetchLatestCheckpoint(ctx)
+	if err != nil {
+		return xc.TxInfo{}, err
+	}
+	epoch := xc.NewAmountBlockchainFromStr(latestCheckpoint.Epoch)
+
 	// store the object id's for the transfer
 	input := NewTxInput()
+	input.CurrentEpoch = epoch.Uint64()
 	input.Coins = all_coins
 	input.SortCoins()
+	// take max 50 to bound the tx_input size.
+	if len(input.Coins) > MaxCoinObjects {
+		input.Coins = input.Coins[:MaxCoinObjects]
+	}
 
 	if contract == native {
 		// gas coin should just be the largest object
@@ -283,10 +291,16 @@ func (c *Client) SubmitTx(ctx context.Context, tx xc.Tx) error {
 		return errors.New("cannot get signatures to submit sui transaction, must implement GetSignatures()")
 	}
 	for _, sig := range sigs {
-		sigsB64 = append(sigsB64, base64.RawStdEncoding.EncodeToString(sig))
+		sigsB64 = append(sigsB64, types.Base64Data(sig))
 	}
 
-	newTxn, err := c.SuiClient.ExecuteTransactionBlock(ctx, types.Base64Data(tx_bz), sigsB64, &types.SuiTransactionBlockResponseOptions{}, types.TxnRequestTypeWaitForEffectsCert)
+	newTxn, err := c.SuiClient.ExecuteTransactionBlock(
+		ctx,
+		types.Base64Data(tx_bz),
+		sigsB64,
+		&types.SuiTransactionBlockResponseOptions{},
+		types.TxnRequestTypeWaitForLocalExecution,
+	)
 	_ = newTxn
 	return err
 }

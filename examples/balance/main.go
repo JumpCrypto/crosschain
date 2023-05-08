@@ -8,6 +8,22 @@ import (
 	"github.com/jumpcrypto/crosschain/factory"
 )
 
+func getBalanceSui(ctx context.Context, xc *factory.Factory) {
+	asset, err := xc.GetAssetConfig("", "SUI")
+	if err != nil {
+		panic("unsupported asset")
+	}
+	address := xc.MustAddress(asset, "0x7d20dcdb2bca4f508ea9613994683eb4e76e9c4ed371169677c1be02aaf0b58e")
+	client, _ := xc.NewClient(asset)
+	balance, err := client.(crosschain.ClientBalance).FetchBalance(ctx, address)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Sui machine: %s\n", balance)
+	humanBalance, _ := xc.ConvertAmountToHuman(asset, balance)
+	fmt.Printf("Sui: %s\n", humanBalance)
+}
+
 func getBalanceAptos(ctx context.Context, xc *factory.Factory) {
 	asset, err := xc.GetAssetConfig("", "APTOS")
 	if err != nil {
@@ -100,8 +116,9 @@ func main() {
 	// initialize crosschain
 	xc := factory.NewDefaultFactory()
 	ctx := context.Background()
+	getBalanceSui(ctx, xc)
 	// getBalanceAptos(ctx, xc)
 	// getBalanceInjective(ctx, xc)
 	// getBalanceEthereum(ctx, xc)
-	getBalanceBitcoin(ctx, xc)
+	// getBalanceBitcoin(ctx, xc)
 }
