@@ -99,6 +99,9 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 	if err != nil {
 		return xc.TxInfo{}, err
 	}
+	if resp.Checkpoint == nil {
+		return xc.TxInfo{}, errors.New("sui endpoint failed to provide checkpoint")
+	}
 	txCheckpoint, err := c.FetchCheckpoint(ctx, resp.Checkpoint.Uint64())
 	if err != nil {
 		return xc.TxInfo{}, err
@@ -273,6 +276,7 @@ func (c *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.Addres
 	input.GasPrice = gasPrice.Uint64()
 	// 2 SUI
 	input.GasBudget = 2_000_000_000
+	input.ExcludeGasCoin()
 
 	return input, nil
 }

@@ -334,6 +334,12 @@ func (s *CrosschainTestSuite) TestTransfer() {
 		local_input := input.(*TxInput)
 		local_input.SetPublicKeyFromStr(from_pk)
 
+		// check that the gas coin was not also included in
+		// the list of coins to spend.
+		for _, coin := range local_input.Coins {
+			require.NotEqualValues(coin.CoinObjectId, local_input.GasCoin.CoinObjectId)
+		}
+
 		builder, err := NewTxBuilder(asset)
 		require.NoError(err)
 		amount_human_dec, err := decimal.NewFromString(v.amount)
