@@ -66,6 +66,14 @@ const (
 	ChainTypeAccount = ChainType("account")
 )
 
+type SignatureType string
+
+const (
+	K256    = SignatureType("k256")
+	Ed255   = SignatureType("ed255")
+	Schnorr = SignatureType("schnorr")
+)
+
 // ChainType returns the type of a chain, represented as its NativeAsset
 func (native NativeAsset) ChainType() ChainType {
 	switch native {
@@ -170,6 +178,36 @@ var SupportedDrivers = []Driver{
 	DriverSolana,
 	DriverSui,
 	DriverAptos,
+}
+
+func (native NativeAsset) Driver() Driver {
+	switch native {
+	case BCH, BTC, DOGE, LTC:
+		return DriverBitcoin
+	case AVAX, CELO, ETH, ETHW, MATIC, OasisROSE, OptETH:
+		return DriverEVM
+	case BNB, FTM, ETC, ROSE, AurETH, ACA, KAR, KLAY, OAS, CHZ, XDC:
+		return DriverEVMLegacy
+	case APTOS:
+		return DriverAptos
+	case ATOM, XPLA, INJ, LUNC, LUNA:
+		return DriverCosmos
+	case SUI:
+		return DriverSui
+	case SOL:
+		return DriverSolana
+	}
+	return ""
+}
+
+func (driver Driver) SignatureAlgorithm() SignatureType {
+	switch driver {
+	case DriverBitcoin, DriverEVM, DriverEVMLegacy, DriverCosmos, DriverCosmosEvmos:
+		return K256
+	case DriverAptos, DriverSolana, DriverSui:
+		return Ed255
+	}
+	return ""
 }
 
 // AssetID is an internal identifier for each asset

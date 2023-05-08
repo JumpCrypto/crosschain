@@ -499,6 +499,8 @@ func (s *CrosschainTestSuite) TestAllTxInputSerDeser() {
 			input = aptos.NewTxInput()
 		case xc.DriverBitcoin:
 			input = bitcoin.NewTxInput()
+		case xc.DriverSui:
+			input = bitcoin.NewTxInput()
 		default:
 			require.Fail("must add driver to test: " + string(driver))
 		}
@@ -506,5 +508,12 @@ func (s *CrosschainTestSuite) TestAllTxInputSerDeser() {
 		require.NoError(err)
 		_, err = UnmarshalTxInput(bz)
 		require.NoError(err)
+	}
+}
+
+func (s *CrosschainTestSuite) TestSigAlg() {
+	require := s.Require()
+	for _, driver := range xc.SupportedDrivers {
+		require.NotEmpty(driver.SignatureAlgorithm())
 	}
 }
