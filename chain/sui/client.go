@@ -151,6 +151,11 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 	// fee is difference between total sent and recieved in balance changes
 	fee := totalSent.Sub(&totalReceived)
 
+	status := xc.TxStatusSuccess
+	if resp.Effects.Data.V1.Status.Error != "" {
+		status = xc.TxStatusFailure
+	}
+
 	return xc.TxInfo{
 		BlockHash:       txCheckpoint.Digest,
 		TxID:            resp.Digest,
@@ -166,6 +171,8 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 		ExplorerURL:  fmt.Sprintf("https://explorer.sui.io/txblock/%s?network=%s", resp.Digest, c.Asset.GetAssetConfig().Net),
 		Sources:      sources,
 		Destinations: destinations,
+		Error:        resp.Effects.Data.V1.Status.Error,
+		Status:       status,
 	}, nil
 }
 

@@ -61,6 +61,8 @@ type TxInfo struct {
 	Destinations    []*TxInfoEndpoint
 	Time            int64
 	TimeReceived    int64
+	// If this transaction failed, this is the reason why.
+	Error string
 }
 
 // TxHash is a tx hash or id
