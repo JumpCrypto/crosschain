@@ -32,6 +32,7 @@ func (asset Asset) AssetType() AssetType {
 		BNB,
 		CELO,
 		CHZ,
+		CHZ2,
 		ETC,
 		ETH,
 		ETHW,
