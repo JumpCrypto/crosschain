@@ -67,6 +67,22 @@ func (input *TxInput) ExcludeGasCoin() {
 	}
 }
 
+func (input *TxInput) TotalBalance() xc.AmountBlockchain {
+	amount := xc.NewAmountBlockchainFromUint64(0)
+	coinType := ""
+	for _, coin := range input.Coins {
+		coinType = coin.CoinType
+		coinBal := xc.NewAmountBlockchainFromUint64(coin.Balance.Uint64())
+		amount = amount.Add(&coinBal)
+	}
+	// add gas coin if it's same type
+	if coinType == "" || coinType == input.GasCoin.CoinType {
+		coinBal := xc.NewAmountBlockchainFromUint64(input.GasCoin.Balance.Uint64())
+		amount = amount.Add(&coinBal)
+	}
+	return amount
+}
+
 // Sort coins in place from highest to lowest
 func (input *TxInput) SortCoins() {
 	SortCoins(input.Coins)

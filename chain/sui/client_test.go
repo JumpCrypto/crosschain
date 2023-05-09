@@ -349,6 +349,79 @@ func (s *CrosschainTestSuite) TestTransfer() {
 			0,
 			errors.New("not enough funds"),
 		},
+
+		// Test with sending almost all of the balance and expect that the gas_budget is reduced to the remainder accordingly.
+		{
+			"Test_gas_budget_remainder",
+			"95.0",
+			[]string{
+				// get coins
+				` {"data":[
+					{"coinType":"0x2::sui::SUI","coinObjectId":"0x3150377d1db0395abfd3b19cfeca94eaf5987a12b95a0aab431195e77399f092","version":"1852505","digest":"7xvFhTk5r3RCLQPcybUeTuwAUKAy8ozXN5EbKsnvp9Qb","balance":"10000000000","previousTransaction":"APAAcvLGmcXFTjMwv7iAJ2hwETQyQFDkfVzs4tEyE43F"},
+					{"coinType":"0x2::sui::SUI","coinObjectId":"0x5a23ee6e22faa7017b11ad24e7c8ced1d33465cfd06656bc028eb21c6f4cad97","version":"1852505","digest":"67APB8hNkhBWmARr49RRXwQGgCC3A8VMxcLKbftUiYQF","balance":"10000000000","previousTransaction":"APAAcvLGmcXFTjMwv7iAJ2hwETQyQFDkfVzs4tEyE43F"},
+					{"coinType":"0x2::sui::SUI","coinObjectId":"0x7d1775d7f791554b25933fde2b91d578ddc2874d1f402b55a7b8f5fb270b845d","version":"1852505","digest":"GP2Uc7u6uCa8QnxQz2kkiPnz3hBaS3z17vcuVyLYGDPh","balance":"10000000000","previousTransaction":"APAAcvLGmcXFTjMwv7iAJ2hwETQyQFDkfVzs4tEyE43F"},
+					{"coinType":"0x2::sui::SUI","coinObjectId":"0x8192d5c2b5722c60866761927d5a0737cd55d0c2b1150eabf818253795b38998","version":"1852505","digest":"5MYcnxjPkzxG3bwPaLkDKG9snzeZVLFwQ25pePL1vDH7","balance":"1997992240","previousTransaction":"APAAcvLGmcXFTjMwv7iAJ2hwETQyQFDkfVzs4tEyE43F"},
+					{"coinType":"0x2::sui::SUI","coinObjectId":"0x92e60b8b39e5f3ecd57f6ed98de382549f50ab64ddfe8643b8c9b4b12a77cee1","version":"1852505","digest":"HveRBbXj1nLo6rQioHAKV9TtmqnQvvuuKfG5BMDbM3TX","balance":"10000000000","previousTransaction":"APAAcvLGmcXFTjMwv7iAJ2hwETQyQFDkfVzs4tEyE43F"},
+					{"coinType":"0x2::sui::SUI","coinObjectId":"0xc587db1fbe680b769c1a562a09f2c871a087bafa542c7cb73db6064e2b791bdf","version":"1852505","digest":"ENUoMU2gFeLZEPxxQxdMwrNGtvJLFry2HvgXVCnCB1k9","balance":"33827025240","previousTransaction":"APAAcvLGmcXFTjMwv7iAJ2hwETQyQFDkfVzs4tEyE43F"},
+					{"coinType":"0x2::sui::SUI","coinObjectId":"0xd65a04388a0b9378e87d0195e98bd0f9f7b460aac22ebd89fb3ba19e1759f414","version":"1852505","digest":"DSoevdHtFsNV8M1rCeFMW4GU8sEczqtJYJnm921Vv7gF","balance":"10000000000","previousTransaction":"APAAcvLGmcXFTjMwv7iAJ2hwETQyQFDkfVzs4tEyE43F"},
+					{"coinType":"0x2::sui::SUI","coinObjectId":"0xe33119108d864f4169d7ed7fa963f51aaed7ef7107d8785cca237916e5079d7c","version":"1852505","digest":"FUzqDFoq73G1WecQacFv2WmX83ezk16DGZkkzLTwCbvJ","balance":"10000000000","previousTransaction":"APAAcvLGmcXFTjMwv7iAJ2hwETQyQFDkfVzs4tEyE43F"}],"nextCursor":"0xe33119108d864f4169d7ed7fa963f51aaed7ef7107d8785cca237916e5079d7c","hasNextPage":false}`,
+				// get checkpoint
+				`{"data":[{"epoch":"21","sequenceNumber":"2206686","digest":"HtsAAgd1ajMR8qMocnNF6XbAtiBHrxdauGhWtXqKouF3","networkTotalTransactions":"5164703","previousDigest":"H8oYvb73KoG7TWXpw4JPy2qZk7ddvHY3rYQ8kHcNmcua","epochRollingGasCostSummary":{"computationCost":"130960164300","storageCost":"499151462400","storageRebate":"422717709348","nonRefundableStorageFee":"4269875852"},"timestampMs":"1683320609521","transactions":["3yVjcHqKwLN8K8TrZZZMpMUp4VSGg4LRp4uuzvvzzrFD","Cv2NH6zJiRJMtPMzxzZABgDpBfNmb9eniWW9t5v2kPtz","GJaDtfzHap6V8ARdQTstkJm7PiWsEXWkUapXHA2nbmbD"],"checkpointCommitments":[],"validatorSignature":"i3aT5RVtIOvX0pEc/HU+xFTHbw2zV5SdT7q5n6GfS+e85CtkC8qqseeK2Hx9Nhia"}],"nextCursor":"2206686","hasNextPage":true}`,
+				//reference gas
+				"1000",
+				// submit tx
+				`{"digest":"5NVoZeHas2s7go1wiSMXtM2g1KitDwu2eksvEt1jRcWj","confirmedLocalExecution":true}`,
+			},
+			// split, merge, split, transfer
+			[]bcs.CallArg{
+				// remainder split
+				u64ToPure(33002007760),
+				// merged coins after gas coin (sorted by value)
+				&bcs.CallArg__Object{Value: mustCoinToObject(suiCoin("0x3150377d1db0395abfd3b19cfeca94eaf5987a12b95a0aab431195e77399f092", "7xvFhTk5r3RCLQPcybUeTuwAUKAy8ozXN5EbKsnvp9Qb", 10000000000, 1852505))},
+				&bcs.CallArg__Object{Value: mustCoinToObject(suiCoin("0x5a23ee6e22faa7017b11ad24e7c8ced1d33465cfd06656bc028eb21c6f4cad97", "67APB8hNkhBWmARr49RRXwQGgCC3A8VMxcLKbftUiYQF", 10000000000, 1852505))},
+				&bcs.CallArg__Object{Value: mustCoinToObject(suiCoin("0x7d1775d7f791554b25933fde2b91d578ddc2874d1f402b55a7b8f5fb270b845d", "GP2Uc7u6uCa8QnxQz2kkiPnz3hBaS3z17vcuVyLYGDPh", 10000000000, 1852505))},
+				&bcs.CallArg__Object{Value: mustCoinToObject(suiCoin("0x92e60b8b39e5f3ecd57f6ed98de382549f50ab64ddfe8643b8c9b4b12a77cee1", "HveRBbXj1nLo6rQioHAKV9TtmqnQvvuuKfG5BMDbM3TX", 10000000000, 1852505))},
+				&bcs.CallArg__Object{Value: mustCoinToObject(suiCoin("0xd65a04388a0b9378e87d0195e98bd0f9f7b460aac22ebd89fb3ba19e1759f414", "DSoevdHtFsNV8M1rCeFMW4GU8sEczqtJYJnm921Vv7gF", 10000000000, 1852505))},
+				&bcs.CallArg__Object{Value: mustCoinToObject(suiCoin("0xe33119108d864f4169d7ed7fa963f51aaed7ef7107d8785cca237916e5079d7c", "FUzqDFoq73G1WecQacFv2WmX83ezk16DGZkkzLTwCbvJ", 10000000000, 1852505))},
+				&bcs.CallArg__Object{Value: mustCoinToObject(suiCoin("0x8192d5c2b5722c60866761927d5a0737cd55d0c2b1150eabf818253795b38998", "5MYcnxjPkzxG3bwPaLkDKG9snzeZVLFwQ25pePL1vDH7", 1997992240, 1852505))},
+				// split amt (transfer amount)
+				u64ToPure(95_000_000_000),
+				// destination address
+				mustHexToPure(to),
+			},
+			[]bcs.Command{
+				&bcs.Command__SplitCoins{
+					Field0: &bcs.Argument__GasCoin{},
+					Field1: []bcs.Argument{ArgumentInput(0)},
+				},
+				&bcs.Command__MergeCoins{
+					Field0: ArgumentInput(1),
+					Field1: []bcs.Argument{
+						ArgumentResult(0),
+						ArgumentInput(2),
+						ArgumentInput(3),
+						ArgumentInput(4),
+						ArgumentInput(5),
+						ArgumentInput(6),
+						ArgumentInput(7),
+					},
+				},
+				&bcs.Command__SplitCoins{
+					Field0: ArgumentInput(1),
+					Field1: []bcs.Argument{
+						ArgumentInput(8),
+					},
+				},
+				&bcs.Command__TransferObjects{
+					Field0: []bcs.Argument{
+						ArgumentResult(2),
+					},
+					Field1: ArgumentInput(9),
+				},
+			},
+			825017480,
+			nil,
+		},
 	}
 
 	for _, v := range vectors {
@@ -417,6 +490,7 @@ func (s *CrosschainTestSuite) TestTransfer() {
 		require.Len(commands, len(v.commands))
 		require.Len(inputs, len(v.inputs))
 		for i, cmd := range v.commands {
+			fmt.Println("checking command", i)
 			require.Equal(cmd, commands[i])
 		}
 

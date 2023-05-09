@@ -62,6 +62,28 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 	gasVersion := local_input.GasCoin.Version.BigInt().Uint64()
 
 	local_input.ExcludeGasCoin()
+	// Our gas budget should be the minimum of:
+	//  - normal budget (2sui)
+	//  - balance of the gas coin
+	//  - total sui balance remainder after transfering `amount`.
+
+	normal_budget := local_input.GasBudget
+	gas_coin_balance := local_input.GasCoin.Balance.Uint64()
+	if local_input.TotalBalance().Uint64() < amount.Uint64() {
+		return &Tx{}, fmt.Errorf("not enough funds to send after paying for sui gas: budget=%d tf=%d", local_input.GasBudget, amount.Uint64())
+	}
+	total_remainder := local_input.TotalBalance().Uint64() - amount.Uint64()
+
+	budget := normal_budget
+	if gas_coin_balance < budget {
+		budget = gas_coin_balance
+	}
+	if total_remainder < budget {
+		budget = total_remainder
+	}
+
+	// lower the gas budget to whatever balance is on the gas coin.  no need to split it.
+	local_input.GasBudget = budget
 
 	// Our universal transaction goes like this:
 	// I. We start with the gas coin and we split it.
@@ -79,28 +101,19 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 	var gasRemainderResult bcs.Argument
 	// I. Split the gas coin if necessary
 	// Check to see if we can afford the gas budget.
-	if local_input.GasBudget < local_input.GasCoin.Balance.Uint64() {
-		if len(local_input.Coins) > 0 && local_input.Coins[0].CoinType == local_input.GasCoin.CoinType {
-			// Split off the remainder from gas budget
-			remainder := local_input.GasCoin.Balance.Uint64() - local_input.GasBudget
-			cmd_inputs = append(cmd_inputs, u64ToPure(remainder))
+	if len(local_input.Coins) > 0 && local_input.Coins[0].CoinType == local_input.GasCoin.CoinType {
+		// Split off the remainder from gas budget
+		remainder := local_input.GasCoin.Balance.Uint64() - local_input.GasBudget
+		cmd_inputs = append(cmd_inputs, u64ToPure(remainder))
 
-			commands = append(commands, &bcs.Command__SplitCoins{
-				Field0: &bcs.Argument__GasCoin{},
-				Field1: []bcs.Argument{
-					ArgumentInput(uint16(0)),
-				},
-			})
-			gasRemainderResult = ArgumentResult(uint16(len(commands) - 1))
-		}
-	} else {
-		// lower the gas budget to whatever balance is on the gas coin.  no need to split it.
-		local_input.GasBudget = local_input.GasCoin.Balance.Uint64()
-		if local_input.GasBudget < amount.Uint64() {
-			// not enough funds!
-			return &Tx{}, fmt.Errorf("not enough funds to send after paying for sui gas: budget=%d tf=%d", local_input.GasBudget, amount.Uint64())
-		}
-		local_input.GasBudget -= amount.Uint64()
+		commands = append(commands, &bcs.Command__SplitCoins{
+			Field0: &bcs.Argument__GasCoin{},
+			Field1: []bcs.Argument{
+				ArgumentInput(uint16(0)),
+			},
+		})
+		gasRemainderResult = ArgumentResult(uint16(len(commands) - 1))
+
 	}
 
 	primaryCoinInput := gasRemainderResult
