@@ -88,6 +88,7 @@ func (native NativeAsset) ChainType() ChainType {
 		BNB,
 		CELO,
 		CHZ,
+		CHZ2,
 		ETC,
 		ETH,
 		ETHW,
@@ -134,6 +135,7 @@ const (
 	BNB       = NativeAsset("BNB")       // Binance Coin
 	CELO      = NativeAsset("CELO")      // Celo
 	CHZ       = NativeAsset("CHZ")       // Chiliz
+	CHZ2      = NativeAsset("CHZ2")      // Chiliz 2.0
 	ETC       = NativeAsset("ETC")       // Ethereum Classic
 	ETH       = NativeAsset("ETH")       // Ethereum
 	ETHW      = NativeAsset("ETHW")      // Ethereum PoW
@@ -186,7 +188,7 @@ func (native NativeAsset) Driver() Driver {
 		return DriverBitcoin
 	case AVAX, CELO, ETH, ETHW, MATIC, OasisROSE, OptETH:
 		return DriverEVM
-	case BNB, FTM, ETC, ROSE, AurETH, ACA, KAR, KLAY, OAS, CHZ, XDC:
+	case BNB, FTM, ETC, ROSE, AurETH, ACA, KAR, KLAY, OAS, CHZ, XDC, CHZ2:
 		return DriverEVMLegacy
 	case APTOS:
 		return DriverAptos

@@ -38,6 +38,17 @@ crosschain:
     chain_name: Binance Smart Chain (Testnet)
     explorer_url: 'https://testnet.bscscan.com'
     decimals: 18
+  # Chiliz v2 chain
+  - asset: CHZ2
+    driver: "evm-legacy"
+    net: mainnet
+    url: 'https://rpc.chiliz.com'
+    chain_id: 88888
+    chain_name: Chiliz 2.0
+    explorer_url: 'https://scan.chiliz.com'
+    indexer_url: 'https://scan.chiliz.com'
+    indexer_type: "blockscout"
+    decimals: 18
   - asset: FTM
     driver: evm-legacy
     net: testnet

@@ -740,7 +740,7 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 	// hex formatted addresses
 	case ETH,
 		AVAX, ArbETH, CELO, MATIC, OptETH,
-		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ,
+		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ, CHZ2,
 		APTOS:
 		if strings.HasPrefix(address, "0x") {
 			return strings.ToLower(address)
