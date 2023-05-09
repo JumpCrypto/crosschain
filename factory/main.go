@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sort"
 	"strings"
 	"sync"
 
@@ -51,6 +52,7 @@ type FactoryContext interface {
 	PutAssetConfig(config ITask) (ITask, error)
 	Config() interface{}
 
+	GetAllAssets() []ITask
 	GetMultiAssetConfig(srcAssetID AssetID, dstAssetID AssetID) ([]ITask, error)
 	GetTaskConfig(taskName string, assetID AssetID) (ITask, error)
 	GetTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([]ITask, error)
@@ -79,6 +81,14 @@ func (f *Factory) GetAllAssets() []ITask {
 		task, _ := f.cfgFromAsset(asset.ID())
 		tasks = append(tasks, task)
 		return true
+	})
+	// sort so it's deterministc
+	sort.Slice(tasks, func(i, j int) bool {
+		asset_i := tasks[i].GetAssetConfig()
+		asset_j := tasks[j].GetAssetConfig()
+		key1 := asset_i.Asset + string(asset_i.NativeAsset) + asset_i.Chain
+		key2 := asset_j.Asset + string(asset_j.NativeAsset) + asset_j.Chain
+		return key1 < key2
 	})
 	return tasks
 }

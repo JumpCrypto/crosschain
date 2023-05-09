@@ -169,6 +169,10 @@ func (f *TestFactory) MustPrivateKey(asset xc.ITask, privateKeyStr string) xc.Pr
 	return f.DefaultFactory.MustPrivateKey(asset, privateKeyStr)
 }
 
+func (f *TestFactory) GetAllAssets() []xc.ITask {
+	return f.DefaultFactory.GetAllAssets()
+}
+
 // NewDefaultFactory creates a new Factory
 func NewDefaultFactory() TestFactory {
 	f := factory.NewDefaultFactory()
