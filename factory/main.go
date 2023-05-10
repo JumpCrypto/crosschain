@@ -695,10 +695,7 @@ func getAddressFromPublicKey(cfg ITask, publicKey []byte) (Address, error) {
 
 func convertAmountExponent(cfgI ITask) (int32, error) {
 	cfg := cfgI.GetAssetConfig()
-	if cfg.Decimals > 0 {
-		return cfg.Decimals, nil
-	}
-	return 0, errors.New("unsupported asset")
+	return cfg.Decimals, nil
 }
 
 func convertAmountToHuman(cfg ITask, blockchainAmount AmountBlockchain) (AmountHumanReadable, error) {

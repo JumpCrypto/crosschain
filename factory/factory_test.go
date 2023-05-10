@@ -185,6 +185,11 @@ func (s *CrosschainTestSuite) TestConvertAmountToHuman() {
 		require.Nil(err)
 		require.Equal("10.3", amount.String(), "Error on: "+asset.NativeAsset)
 	}
+	asset, _ := s.Factory.PutAssetConfig(&xc.AssetConfig{Asset: "TEST", Decimals: 0})
+	amountBlockchain = xc.NewAmountBlockchainFromUint64(103)
+	amount, err := s.Factory.ConvertAmountToHuman(asset, amountBlockchain)
+	require.NoError(err)
+	require.EqualValues("103", amount.String())
 }
 
 func (s *CrosschainTestSuite) TestConvertAmountToBlockchain() {
@@ -239,9 +244,10 @@ func (s *CrosschainTestSuite) TestConvertAmountStrToBlockchain() {
 		require.Equal(expected, amount, "Error on: "+asset.NativeAsset)
 	}
 
-	asset, _ := s.Factory.PutAssetConfig(&xc.AssetConfig{Asset: "TEST"})
-	_, err := s.Factory.ConvertAmountStrToBlockchain(asset, "10.3")
-	require.EqualError(err, "unsupported asset")
+	asset, _ := s.Factory.PutAssetConfig(&xc.AssetConfig{Asset: "TEST", Decimals: 0})
+	amount, err := s.Factory.ConvertAmountStrToBlockchain(asset, "103")
+	require.NoError(err)
+	require.EqualValues(103, amount.Uint64())
 }
 
 func (s *CrosschainTestSuite) TestConvertAmountStrToBlockchainErr() {

@@ -50,6 +50,10 @@ func (s *CrosschainTestSuite) TestParseAssetAndNativeAsset() {
 	require.Equal("ETH", asset)
 	require.Equal("ETH", native)
 
+	asset, native = parseAssetAndNativeAsset("ETH", "ETH")
+	require.Equal("ETH", asset)
+	require.Equal("ETH", native)
+
 	asset, native = parseAssetAndNativeAsset("USDC", "SOL")
 	require.Equal("USDC", asset)
 	require.Equal("SOL", native)
