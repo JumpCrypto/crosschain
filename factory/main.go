@@ -264,7 +264,7 @@ func (f *Factory) cfgEnrichAssetConfig(partialCfg *TokenAssetConfig) (*TokenAsse
 		nativeAsset := cfg.Chain
 		cfg.NativeAsset = NativeAsset(nativeAsset)
 
-		chainI, found := f.AllAssets.Load(AssetID(nativeAsset))
+		chainI, found := f.AllAssets.Load(AssetID(strings.ToUpper(nativeAsset))) // AssetId's are stored uppercase
 		if !found {
 			return cfg, fmt.Errorf("unsupported native asset: %s", nativeAsset)
 		}
