@@ -692,29 +692,12 @@ func getAddressFromPublicKey(cfg ITask, publicKey []byte) (Address, error) {
 }
 
 // Amount converter
-
-func convertAmountExponent(cfgI ITask) (int32, error) {
-	cfg := cfgI.GetAssetConfig()
-	return cfg.Decimals, nil
-}
-
 func convertAmountToHuman(cfg ITask, blockchainAmount AmountBlockchain) (AmountHumanReadable, error) {
-	exponent, err := convertAmountExponent(cfg)
-	if err != nil {
-		return AmountHumanReadable(decimal.NewFromInt(0)), err
-	}
-	blockchainAmountInt := big.Int(blockchainAmount)
-	result := decimal.NewFromBigInt(&blockchainAmountInt, -exponent)
-	return AmountHumanReadable(result), nil
+	return blockchainAmount.ToHuman(cfg.GetAssetConfig().Decimals), nil
 }
 
 func convertAmountToBlockchain(cfg ITask, humanAmount AmountHumanReadable) (AmountBlockchain, error) {
-	exponent, err := convertAmountExponent(cfg)
-	if err != nil {
-		return AmountBlockchain(*big.NewInt(0)), err
-	}
-	result := decimal.Decimal(humanAmount).Shift(exponent).BigInt()
-	return AmountBlockchain(*result), nil
+	return humanAmount.ToBlockchain(cfg.GetAssetConfig().Decimals), nil
 }
 
 func convertAmountStrToBlockchain(cfg ITask, humanAmountStr string) (AmountBlockchain, error) {
