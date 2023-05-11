@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -224,7 +225,10 @@ func (tx Tx) ParseERC20TransferTx() (parsedTxInfo, error) {
 
 	var buf1 [20]byte
 	copy(buf1[:], payload[4+12:4+32])
-	to := xc.Address("0x" + common.Address(buf1).String())
+	to := xc.Address(common.Address(buf1).String())
+	if !strings.HasPrefix(string(to), "0x") {
+		to = "0x" + to
+	}
 
 	var buf2 [32]byte
 	copy(buf2[:], payload[4+32:4+2*32])
