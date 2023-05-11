@@ -92,12 +92,17 @@ func (tx *Tx) ParseTransfer(receipt *types.Receipt, nativeAsset xc.NativeAsset) 
 	}
 
 	// 3. use to/from/amount from the tf
+	amount := tx.Amount()
 	return parsedTxInfo{
 		Sources: []*xc.TxInfoEndpoint{{
-			Address: tx.From(),
+			Address:     tx.From(),
+			NativeAsset: nativeAsset,
+			Amount:      amount,
 		}},
 		Destinations: []*xc.TxInfoEndpoint{{
-			Address: tx.To(),
+			Address:     tx.To(),
+			NativeAsset: nativeAsset,
+			Amount:      amount,
 		}},
 	}
 }
