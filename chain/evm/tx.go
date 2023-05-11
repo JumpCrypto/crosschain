@@ -77,7 +77,7 @@ func (tx *Tx) ParseTransfer(receipt *types.Receipt, nativeAsset xc.NativeAsset) 
 			return info
 		}
 
-		info, err = tx.ParseERC20TransferTx()
+		info, err = tx.ParseERC20TransferTx(nativeAsset)
 		if err != nil {
 			// ignore
 		} else {
@@ -167,7 +167,7 @@ func (tx Tx) To() xc.Address {
 		return xc.Address("")
 	}
 	if tx.IsContract() {
-		info, err := tx.ParseERC20TransferTx()
+		info, err := tx.ParseERC20TransferTx("")
 		if err != nil {
 			// ignore
 		} else {
@@ -184,7 +184,7 @@ func (tx Tx) Amount() xc.AmountBlockchain {
 	if tx.EthTx == nil {
 		return xc.NewAmountBlockchainFromUint64(0)
 	}
-	info, err := tx.ParseERC20TransferTx()
+	info, err := tx.ParseERC20TransferTx("")
 	if err != nil {
 		// ignore
 	} else {
@@ -222,7 +222,7 @@ func (tx Tx) Fee(baseFeeUint uint64, gasUsedUint uint64) xc.AmountBlockchain {
 }
 
 // ParseERC20TransferTx parses the tx payload as ERC20 transfer
-func (tx Tx) ParseERC20TransferTx() (parsedTxInfo, error) {
+func (tx Tx) ParseERC20TransferTx(nativeAsset xc.NativeAsset) (parsedTxInfo, error) {
 	payload := tx.EthTx.Data()
 	if len(payload) != 4+32*2 || hex.EncodeToString(payload[:4]) != "a9059cbb" {
 		return parsedTxInfo{}, errors.New("payload is not ERC20.transfer(address,uint256)")
@@ -242,14 +242,17 @@ func (tx Tx) ParseERC20TransferTx() (parsedTxInfo, error) {
 	return parsedTxInfo{
 		// the from should be the tx sender
 		Sources: []*xc.TxInfoEndpoint{{
-			Address: tx.From(),
-			Amount:  xc.AmountBlockchain(*amount),
+			Address:         tx.From(),
+			Amount:          xc.AmountBlockchain(*amount),
+			ContractAddress: tx.ContractAddress(),
+			NativeAsset:     xc.NativeAsset(nativeAsset),
 		}},
 		// destination
 		Destinations: []*xc.TxInfoEndpoint{{
 			Address:         to,
 			ContractAddress: tx.ContractAddress(),
 			Amount:          xc.AmountBlockchain(*amount),
+			NativeAsset:     xc.NativeAsset(nativeAsset),
 		}},
 	}, nil
 }
