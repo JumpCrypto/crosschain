@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -709,6 +710,25 @@ func convertAmountStrToBlockchain(cfg ITask, humanAmountStr string) (AmountBlock
 	return convertAmountToBlockchain(cfg, AmountHumanReadable(humanAmount))
 }
 
+// Given an address like coin::Coin<0x11AAbbCCdd::coin::NAME>,
+// we only want to normalize the 0x11AAbbCCdd part.
+func NormalizeMoveAddress(address string) string {
+	// find a hexadecimal string
+	r, err := regexp.Compile("0[xX][0-9a-fA-F]+")
+	if err != nil {
+		panic(err)
+	}
+	match := r.FindString(address)
+	if match != "" {
+		// replace the hexadeciaml portion of the string with lowercase
+		match_lower := strings.ToLower(match)
+		address = strings.Replace(address, match, match_lower, 1)
+		return address
+	} else {
+		return address
+	}
+}
+
 // NormalizeAddressString normalizes an address, e.g. returns lowercase when possible
 func NormalizeAddressString(address string, nativeAsset string) string {
 	if nativeAsset == "" {
@@ -720,8 +740,7 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 	// hex formatted addresses
 	case ETH,
 		AVAX, ArbETH, CELO, MATIC, OptETH,
-		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ, CHZ2,
-		APTOS, SUI:
+		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ, CHZ2:
 		if strings.HasPrefix(address, "0x") {
 			return strings.ToLower(address)
 		}
@@ -734,6 +753,8 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 		if strings.Contains(address, ":") {
 			return strings.Split(address, ":")[1]
 		}
+	case APTOS, SUI:
+		return NormalizeMoveAddress(address)
 	default:
 	}
 	return address

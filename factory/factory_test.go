@@ -523,3 +523,20 @@ func (s *CrosschainTestSuite) TestSigAlg() {
 		require.NotEmpty(driver.SignatureAlgorithm())
 	}
 }
+
+func (s *CrosschainTestSuite) TestMoveAddressNormalize() {
+	require := s.Require()
+	// Test that only the hexadecimal string part of move addresses
+	// gets normalized
+	naddr := NormalizeMoveAddress("0x11AAbbCCdd")
+	require.Equal("0x11aabbccdd", naddr)
+
+	naddr = NormalizeMoveAddress("0x11AAbbCCdd::coin::NAME")
+	require.Equal("0x11aabbccdd::coin::NAME", naddr)
+
+	naddr = NormalizeMoveAddress("coin::Coin<0x11AAbbCCdd::coin::NAME>")
+	require.Equal("coin::Coin<0x11aabbccdd::coin::NAME>", naddr)
+
+	naddr = NormalizeMoveAddress("coin::Coin<0x1::coin::NAME>")
+	require.Equal("coin::Coin<0x1::coin::NAME>", naddr)
+}
