@@ -88,6 +88,13 @@ func (input *TxInput) SortCoins() {
 	SortCoins(input.Coins)
 }
 
+func (input *TxInput) IsNativeTransfer() bool {
+	if len(input.Coins) > 0 && input.Coins[0].CoinType != input.GasCoin.CoinType {
+		return false
+	}
+	return true
+}
+
 func NewTxInput() *TxInput {
 	return &TxInput{
 		TxInputEnvelope: xc.TxInputEnvelope{

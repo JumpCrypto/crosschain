@@ -134,3 +134,12 @@ func ArgumentResult(index uint16) *bcs.Argument__Result {
 	x := bcs.Argument__Result(index)
 	return &x
 }
+
+// Strip the coin::Coin<_> wrapper if present
+func NormalizeCoinContract(contract string) string {
+	if strings.HasPrefix(contract, "coin::Coin<") {
+		contract = strings.Replace(contract, "coin::Coin<", "", 1)
+		contract = strings.Replace(contract, ">", "", 1)
+	}
+	return contract
+}

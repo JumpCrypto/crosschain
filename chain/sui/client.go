@@ -121,7 +121,7 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 		amt := xc.NewAmountBlockchainFromStr(bal.Amount)
 		asset := ""
 		contract = bal.CoinType
-		if strings.HasSuffix(bal.CoinType, "sui::SUI") {
+		if strings.HasSuffix(bal.CoinType, "sui::SUI") && (strings.HasPrefix(bal.CoinType, "0x0000000000000000000000000000000000000000000000000000000000") || len(contract) < 16) {
 			contract = ""
 			asset = "SUI"
 		}
@@ -134,6 +134,7 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 				ContractAddress: xc.ContractAddress(contract),
 				Amount:          abs,
 				Address:         xc.Address(from),
+				NativeAsset:     c.Asset.GetNativeAsset().NativeAsset,
 			})
 		} else {
 			to = bal.Owner.AddressOwner.String()
@@ -144,6 +145,7 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 				ContractAddress: xc.ContractAddress(contract),
 				Amount:          amt,
 				Address:         xc.Address(to),
+				NativeAsset:     c.Asset.GetNativeAsset().NativeAsset,
 			})
 		}
 	}
@@ -230,7 +232,7 @@ func (c *Client) FetchTxInput(ctx context.Context, from xc.Address, to xc.Addres
 	native := "0x2::sui::SUI"
 	contract := native
 	if token, ok := c.Asset.(*xc.TokenAssetConfig); ok {
-		contract = token.Contract
+		contract = NormalizeCoinContract(token.Contract)
 	}
 
 	all_coins, err := c.GetAllCoinsFor(ctx, from, contract)

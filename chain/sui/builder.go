@@ -69,10 +69,13 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 
 	normal_budget := local_input.GasBudget
 	gas_coin_balance := local_input.GasCoin.Balance.Uint64()
-	if local_input.TotalBalance().Uint64() < amount.Uint64() {
-		return &Tx{}, fmt.Errorf("not enough funds to send after paying for sui gas: budget=%d tf=%d", local_input.GasBudget, amount.Uint64())
+	total_remainder := gas_coin_balance
+	if local_input.IsNativeTransfer() {
+		if local_input.TotalBalance().Uint64() < amount.Uint64() {
+			return &Tx{}, fmt.Errorf("not enough funds to send after paying for sui gas: budget=%d tf=%d", local_input.GasBudget, amount.Uint64())
+		}
+		total_remainder = local_input.TotalBalance().Uint64() - amount.Uint64()
 	}
-	total_remainder := local_input.TotalBalance().Uint64() - amount.Uint64()
 
 	budget := normal_budget
 	if gas_coin_balance < budget {
@@ -101,7 +104,7 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 	var gasRemainderResult bcs.Argument
 	// I. Split the gas coin if necessary
 	// Check to see if we can afford the gas budget.
-	if len(local_input.Coins) > 0 && local_input.Coins[0].CoinType == local_input.GasCoin.CoinType {
+	if local_input.IsNativeTransfer() && len(local_input.Coins) > 0 {
 		// Split off the remainder from gas budget
 		remainder := local_input.GasCoin.Balance.Uint64() - local_input.GasBudget
 		cmd_inputs = append(cmd_inputs, u64ToPure(remainder))
@@ -151,10 +154,12 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 				Value: obj,
 			})
 		}
-		commands = append(commands, &bcs.Command__MergeCoins{
-			Field0: primaryCoinInput,
-			Field1: merge_inputs,
-		})
+		if len(merge_inputs) > 0 {
+			commands = append(commands, &bcs.Command__MergeCoins{
+				Field0: primaryCoinInput,
+				Field1: merge_inputs,
+			})
+		}
 	}
 
 	if primaryCoinInput == nil {

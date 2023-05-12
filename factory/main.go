@@ -721,7 +721,7 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 	case ETH,
 		AVAX, ArbETH, CELO, MATIC, OptETH,
 		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ, CHZ2,
-		APTOS:
+		APTOS, SUI:
 		if strings.HasPrefix(address, "0x") {
 			return strings.ToLower(address)
 		}

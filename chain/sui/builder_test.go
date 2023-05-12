@@ -16,9 +16,9 @@ func (s *CrosschainTestSuite) TestTransferHash() {
 	builder, err := NewTxBuilder(&xc.NativeAssetConfig{})
 	require.NoError(err)
 
-	gasCoin := *suiCoin("0x8192d5c2b5722c60866761927d5a0737cd55d0c2b1150eabf818253795b38998", "HmMNQCsgudhDdXGe9X75WVyPbJnjFApq1EvFhaRzNB1n", 10_000_000_000)
+	gasCoin := *suiCoin("0x8192d5c2b5722c60866761927d5a0737cd55d0c2b1150eabf818253795b38998", "HmMNQCsgudhDdXGe9X75WVyPbJnjFApq1EvFhaRzNB1n", 10_000_000_000, 1852477)
 	spendCoins := []*types.Coin{
-		suiCoin("0xc587db1fbe680b769c1a562a09f2c871a087bafa542c7cb73db6064e2b791bdf", "HmMNQCsgudhDdXGe9X75WVyPbJnjFApq1EvFhaRzNB1n", 10_000_000_000),
+		suiCoin("0xc587db1fbe680b769c1a562a09f2c871a087bafa542c7cb73db6064e2b791bdf", "HmMNQCsgudhDdXGe9X75WVyPbJnjFApq1EvFhaRzNB1n", 10_000_000_000, 1852477),
 	}
 
 	input := &TxInput{
