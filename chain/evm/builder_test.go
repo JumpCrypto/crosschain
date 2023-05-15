@@ -10,13 +10,13 @@ func (s *CrosschainTestSuite) TestNewTxBuilder() {
 	require.Nil(err)
 	require.NotNil(builder)
 	require.False(builder.(TxBuilder).Legacy)
-	require.Equal("USDC", builder.(TxBuilder).Asset.Asset)
+	require.Equal("USDC", builder.(TxBuilder).Asset.GetAssetConfig().Asset)
 
 	builder, err = NewLegacyTxBuilder(&xc.AssetConfig{Asset: "USDC"})
 	require.Nil(err)
 	require.NotNil(builder)
 	require.True(builder.(TxBuilder).Legacy)
-	require.Equal("USDC", builder.(TxBuilder).Asset.Asset)
+	require.Equal("USDC", builder.(TxBuilder).Asset.GetAssetConfig().Asset)
 }
 
 // func (s *CrosschainTestSuite) TestNewNativeTransfer() {

@@ -8,7 +8,7 @@ import (
 
 // TxBuilder for Template
 type TxBuilder struct {
-	Asset *xc.AssetConfig
+	Asset xc.ITask
 }
 
 // NewTxBuilder creates a new Template TxBuilder
@@ -20,7 +20,7 @@ func NewTxBuilder(cfgI xc.ITask) (xc.TxBuilder, error) {
 
 // NewTransfer creates a new transfer for an Asset, either native or token
 func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
-	if txBuilder.Asset.Type == xc.AssetTypeToken {
+	if _, ok := txBuilder.Asset.(*xc.TokenAssetConfig); ok {
 		return txBuilder.NewTokenTransfer(from, to, amount, input)
 	}
 	return txBuilder.NewNativeTransfer(from, to, amount, input)

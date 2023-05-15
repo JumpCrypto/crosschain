@@ -11,7 +11,7 @@ import (
 
 // TxBuilder for EVM
 type TxBuilder struct {
-	Asset  xc.AssetConfig
+	Asset  xc.ITask
 	Legacy bool
 }
 
@@ -20,7 +20,7 @@ var _ xc.TxBuilder = &TxBuilder{}
 // NewTxBuilder creates a new EVM TxBuilder
 func NewTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 	return TxBuilder{
-		Asset:  *asset.GetAssetConfig(),
+		Asset:  asset,
 		Legacy: false,
 	}, nil
 }
@@ -28,14 +28,14 @@ func NewTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 // NewTxBuilder creates a new EVM TxBuilder for legacy tx
 func NewLegacyTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 	return TxBuilder{
-		Asset:  *asset.GetAssetConfig(),
+		Asset:  asset,
 		Legacy: true,
 	}, nil
 }
 
 // NewTransfer creates a new transfer for an Asset, either native or token
 func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
-	if txBuilder.Asset.Type == xc.AssetTypeToken {
+	if _, ok := txBuilder.Asset.(*xc.TokenAssetConfig); ok {
 		return txBuilder.NewTokenTransfer(from, to, amount, input)
 	}
 	return txBuilder.NewNativeTransfer(from, to, amount, input)
@@ -46,7 +46,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 	txInput := input.(*TxInput)
 
 	txInput.GasLimit = 21_000
-	if txBuilder.Asset.NativeAsset == xc.OasisROSE {
+	if txBuilder.Asset.GetNativeAsset().NativeAsset == xc.OasisROSE {
 		txInput.GasLimit = 30_000
 	}
 
@@ -58,12 +58,12 @@ func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amou
 	txInput := input.(*TxInput)
 
 	txInput.GasLimit = 205_000
-	if txBuilder.Asset.NativeAsset == xc.OasisROSE {
+	if txBuilder.Asset.GetNativeAsset().NativeAsset == xc.OasisROSE {
 		txInput.GasLimit = 500_000
 	}
 
 	zero := xc.NewAmountBlockchainFromUint64(0)
-	contract := xc.Address(txBuilder.Asset.Contract)
+	contract := xc.Address(txBuilder.Asset.GetAssetConfig().Contract)
 	payload, err := txBuilder.buildERC20Payload(to, amount)
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (txBuilder TxBuilder) buildEvmTxWithPayload(to xc.Address, value *big.Int, 
 	if err != nil {
 		return nil, err
 	}
-	chainID := new(big.Int).SetInt64(txBuilder.Asset.ChainID)
+	chainID := new(big.Int).SetInt64(txBuilder.Asset.GetNativeAsset().ChainID)
 	// fmt.Println("chainID", chainID)
 
 	if txBuilder.Legacy {
