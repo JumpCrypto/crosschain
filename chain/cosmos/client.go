@@ -18,6 +18,7 @@ import (
 	// injectivecryptocodec "github.com/InjectiveLabs/sdk-go/chain/crypto/codec"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	classicwasmtypes "github.com/classic-terra/core/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -185,7 +186,6 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxI
 	if err != nil {
 		return result, err
 	}
-	// log.Println(resultRaw)
 
 	blockResultRaw, err := client.Ctx.Client.Block(ctx, &resultRaw.Height)
 	if err != nil {
@@ -322,15 +322,16 @@ func (client *Client) RegisterEstimateGasCallback(fn xc.EstimateGasFunc) {
 
 // FetchBalance fetches balance for input asset for a Cosmos address
 func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	if isNativeAsset(client.Asset.GetNativeAsset()) {
-		return client.FetchNativeBalance(ctx, address)
+	contract := client.Asset.GetAssetConfig().Contract
+	if token, ok := client.Asset.(*xc.TokenAssetConfig); ok {
+		contract = token.Contract
 	}
-	_, err := types.GetFromBech32(client.Asset.GetNativeAsset().Contract, client.Prefix)
+	_, err := types.GetFromBech32(contract, client.Prefix)
 	if err != nil {
 		// could be a custom denom.  Try querying as a native balance.
 		return client.fetchBankModuleBalance(ctx, address, client.Asset)
 	}
-	return client.fetchContractBalance(ctx, address, client.Asset.GetAssetConfig().Contract)
+	return client.fetchContractBalance(ctx, address, contract)
 }
 
 func (client *Client) fetchContractBalance(ctx context.Context, address xc.Address, contractAddress string) (xc.AmountBlockchain, error) {
@@ -342,21 +343,34 @@ func (client *Client) fetchContractBalance(ctx context.Context, address xc.Addre
 	}
 
 	input := json.RawMessage(`{"balance": {"address": "` + string(address) + `"}}`)
-	balResp, err := wasmtypes.NewQueryClient(client.Ctx).SmartContractState(ctx, &wasmtypes.QuerySmartContractStateRequest{
-		QueryData: wasmtypes.RawContractMessage(input),
-		Address:   contractAddress,
-	})
-	if err != nil {
-		return zero, fmt.Errorf("failed to get token balance: '%v': %v", address, err)
-	}
-
 	type TokenBalance struct {
 		Balance string
 	}
 	var balResult TokenBalance
-	err = json.Unmarshal(balResp.Data.Bytes(), &balResult)
-	if err != nil {
-		return zero, fmt.Errorf("failed to parse token balance: '%v': %v", address, err)
+	if client.Asset.GetNativeAsset().NativeAsset == xc.LUNC {
+		balResp, err := classicwasmtypes.NewQueryClient(client.Ctx).ContractStore(ctx, &classicwasmtypes.QueryContractStoreRequest{
+			ContractAddress: contractAddress,
+			QueryMsg:        json.RawMessage(input),
+		})
+		if err != nil {
+			return zero, fmt.Errorf("failed to get classic token balance: '%v': %v", address, err)
+		}
+		err = json.Unmarshal(balResp.QueryResult, &balResult)
+		if err != nil {
+			return zero, fmt.Errorf("failed to parse token balance: '%v': %v", address, err)
+		}
+	} else {
+		balResp, err := wasmtypes.NewQueryClient(client.Ctx).SmartContractState(ctx, &wasmtypes.QuerySmartContractStateRequest{
+			QueryData: wasmtypes.RawContractMessage(input),
+			Address:   contractAddress,
+		})
+		if err != nil {
+			return zero, fmt.Errorf("failed to get token balance: '%v': %v", address, err)
+		}
+		err = json.Unmarshal(balResp.Data.Bytes(), &balResult)
+		if err != nil {
+			return zero, fmt.Errorf("failed to parse token balance: '%v': %v", address, err)
+		}
 	}
 
 	balance := xc.NewAmountBlockchainFromStr(balResult.Balance)

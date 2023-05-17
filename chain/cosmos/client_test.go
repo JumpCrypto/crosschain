@@ -356,7 +356,7 @@ func (s *CrosschainTestSuite) TestFetchBalance() {
 	require := s.Require()
 
 	vectors := []struct {
-		asset   xc.AssetConfig
+		asset   xc.ITask
 		address string
 		resp    interface{}
 		val     string
@@ -364,7 +364,7 @@ func (s *CrosschainTestSuite) TestFetchBalance() {
 	}{
 		{
 			// Terra
-			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: "LUNA", ChainCoin: "uluna", ChainPrefix: "terra"},
+			&xc.NativeAssetConfig{Type: xc.AssetTypeNative, NativeAsset: "LUNA", ChainCoin: "uluna", ChainPrefix: "terra"},
 			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
 			`{"response": {"code": 0,"log": "","info": "","index": "0","key": null,"value": "ChAKBXVsdW5hEgc0OTc5MDYz","proofOps": null,"height": "2803726","codespace": ""}}`,
 			"4979063",
@@ -372,35 +372,71 @@ func (s *CrosschainTestSuite) TestFetchBalance() {
 		},
 		{
 			// XPLA
-			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
+			&xc.NativeAssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
 			"xpla1hdvf6vv5amc7wp84js0ls27apekwxpr0ge96kg",
 			`{"response": {"code": 0,"log": "","info": "","index": "0","key": null,"value": "Ch0KBWF4cGxhEhQ5OTY0ODQwMDAwMDAwMDAwMDAwMA==","proofOps": null,"height": "1329788","codespace": ""}}`,
 			"99648400000000000000",
 			"",
 		},
 		{
-			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
+			// Injective peggy asset
+			&xc.TokenAssetConfig{Type: xc.AssetTypeNative, Asset: "USDT", Contract: "peggy0x3506424F91fD33084466F402d5D97f05F8e3b4AF", Decimals: 6, NativeAssetConfig: &xc.NativeAssetConfig{
+				NativeAsset: "INJ", ChainCoin: "uinj", ChainPrefix: "inj",
+			}},
+			"inj162x3ax7z6ksquhshlqh6d498kr60qdx7wqf9we",
+			`{
+				"jsonrpc": "2.0",
+				"id": 0,
+				"result": {
+				  "response": {
+					"code": 0,
+					"log": "",
+					"info": "",
+					"index": "0",
+					"key": null,
+					"value": "Ch4KA2luahIXMzc0NTY3NDI4OTk5MjUwMDAwMDAwMDA=",
+					"proofOps": null,
+					"height": "11528367",
+					"codespace": ""
+				  }
+				}
+			  }`,
+			"37456742899925000000000",
+			"",
+		},
+		{
+			// Terra cw20 asset
+			&xc.TokenAssetConfig{Type: xc.AssetTypeToken, Asset: "USDC", Contract: "terra1pepwcav40nvj3kh60qqgrk8k07ydmc00xyat06", Decimals: 6, NativeAssetConfig: &xc.NativeAssetConfig{
+				NativeAsset: "LUNC", ChainCoin: "uluna", ChainPrefix: "terra",
+			}},
+			"terra1dp3q305hgttt8n34rt8rg9xpanc42z4ye7upfg",
+			`{"jsonrpc":"2.0","id":0,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"ChZ7ImJhbGFuY2UiOiI0Mzk4NDEyNyJ9","proofOps":null,"height":"12817698","codespace":""}}}`,
+			"43984127",
+			"",
+		},
+		{
+			&xc.NativeAssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
 			"xpla-invalid",
 			`null`,
 			"0",
 			"bad address",
 		},
 		{
-			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
+			&xc.NativeAssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
 			"xpla1hdvf6vv5amc7wp84js0ls27apekwxpr0ge96kg",
 			`null`,
 			"0",
 			"failed to get account balance",
 		},
 		{
-			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
+			&xc.NativeAssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
 			"xpla1hdvf6vv5amc7wp84js0ls27apekwxpr0ge96kg",
 			`{}`,
 			"0",
 			"failed to get account balance",
 		},
 		{
-			xc.AssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
+			&xc.NativeAssetConfig{Type: xc.AssetTypeNative, NativeAsset: "XPLA", ChainCoin: "axpla", ChainPrefix: "xpla"},
 			"xpla1hdvf6vv5amc7wp84js0ls27apekwxpr0ge96kg",
 			errors.New(`{"message": "custom RPC error", "code": 123}`),
 			"",
@@ -413,8 +449,8 @@ func (s *CrosschainTestSuite) TestFetchBalance() {
 		defer close()
 
 		asset := v.asset
-		asset.URL = server.URL
-		client, _ := NewClient(&asset)
+		asset.GetNativeAsset().URL = server.URL
+		client, _ := NewClient(asset)
 		from := xc.Address(v.address)
 		balance, err := client.FetchBalance(s.Ctx, from)
 
