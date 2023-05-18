@@ -138,12 +138,15 @@ func (txBuilder TxBuilder) createTxWithMsg(from xc.Address, to xc.Address, amoun
 	if err != nil {
 		return nil, err
 	}
-
+	gasDenom := asset.GetNativeAsset().GasCoin
+	if gasDenom == "" {
+		gasDenom = asset.GetNativeAsset().ChainCoin
+	}
 	cosmosBuilder.SetMemo(input.Memo)
 	cosmosBuilder.SetGasLimit(input.GasLimit)
 	cosmosBuilder.SetFeeAmount(types.Coins{
 		{
-			Denom:  asset.GetNativeAsset().ChainCoin,
+			Denom:  gasDenom,
 			Amount: types.NewIntFromUint64(uint64(input.GasPrice * float64(input.GasLimit))),
 		},
 	})

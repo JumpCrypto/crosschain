@@ -242,6 +242,7 @@ type AssetConfig struct {
 	ChainName            string  `yaml:"chain_name"`
 	ChainPrefix          string  `yaml:"chain_prefix"`
 	ChainCoin            string  `yaml:"chain_coin"`
+	GasCoin              string  `yaml:"gas_coin"`
 	ChainCoinHDPath      uint32  `yaml:"chain_coin_hd_path"`
 	ChainGasPriceDefault float64 `yaml:"chain_gas_price_default"`
 	ChainGasMultiplier   float64 `yaml:"chain_gas_multiplier"`

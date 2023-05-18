@@ -275,7 +275,11 @@ func (client *Client) estimateGasFcd(ctx context.Context) (xc.AmountBlockchain, 
 		return zero, err
 	}
 
-	denom := asset.GetNativeAsset().ChainCoin
+	denom := asset.GetNativeAsset().GasCoin
+	if denom == "" {
+		denom = asset.GetNativeAsset().ChainCoin
+	}
+
 	priceStr, ok := prices[denom]
 	if !ok {
 		return zero, fmt.Errorf("could not find %s in /gas_prices", denom)
