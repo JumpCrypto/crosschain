@@ -379,7 +379,7 @@ func (client *Client) fetchContractBalance(ctx context.Context, address xc.Addre
 
 // FetchNativeBalance fetches account balance for a Cosmos address
 func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	return client.fetchBankModuleBalance(ctx, address, client.Asset)
+	return client.fetchBankModuleBalance(ctx, address, client.Asset.GetNativeAsset())
 }
 
 // Cosmos chains can have multiple native assets.  This helper is necessary to query the
@@ -391,13 +391,17 @@ func (client *Client) fetchBankModuleBalance(ctx context.Context, address xc.Add
 	if err != nil {
 		return zero, fmt.Errorf("bad address: '%v': %v", address, err)
 	}
-	denom := asset.GetNativeAsset().ChainCoin
+	denom := asset.GetAssetConfig().Contract
+
 	if denom == "" {
 		if token, ok := asset.(*xc.TokenAssetConfig); ok {
 			if token.Contract != "" {
 				denom = token.Contract
 			}
 		}
+	}
+	if denom == "" {
+		denom = asset.GetAssetConfig().ChainCoin
 	}
 	if denom == "" {
 		return zero, fmt.Errorf("failed to account balance: no denom on asset %s.%s", asset.GetAssetConfig().Asset, asset.GetNativeAsset().NativeAsset)
