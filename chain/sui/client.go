@@ -320,6 +320,7 @@ func (c *Client) SubmitTx(ctx context.Context, tx xc.Tx) error {
 
 func (c *Client) FetchBalanceFor(ctx context.Context, address xc.Address, contract string) (xc.AmountBlockchain, error) {
 	total := xc.NewAmountBlockchainFromUint64(0)
+	contract = NormalizeCoinContract(contract)
 	all_coins, err := c.GetAllCoinsFor(ctx, address, contract)
 	if err != nil {
 		return total, err
