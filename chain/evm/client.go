@@ -200,12 +200,16 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Ad
 	result.Nonce = nonce
 
 	// Gas
-	gas, err := client.EstimateGas(ctx)
-	if err != nil {
-		// pass, return err later
+	if !client.Asset.NoGasFees {
+		gas, err := client.EstimateGas(ctx)
+		if err != nil {
+			// pass, return err later
+		}
+		result.GasPrice = gas  // legacy
+		result.GasFeeCap = gas // new
+	} else {
+		result.GasTipCap = zero
 	}
-	result.GasPrice = gas  // legacy
-	result.GasFeeCap = gas // new
 
 	return result, err
 }

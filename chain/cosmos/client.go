@@ -141,11 +141,13 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Ad
 	txInput.AccountNumber = account.GetAccountNumber()
 	txInput.Sequence = account.GetSequence()
 
-	gasPrice, err := client.EstimateGas(ctx)
-	if err != nil {
-		return txInput, fmt.Errorf("failed to estimate gas: %v", err)
+	if !client.Asset.GetNativeAsset().NoGasFees {
+		gasPrice, err := client.EstimateGas(ctx)
+		if err != nil {
+			return txInput, fmt.Errorf("failed to estimate gas: %v", err)
+		}
+		txInput.GasPrice = gasPrice.UnmaskFloat64()
 	}
-	txInput.GasPrice = gasPrice.UnmaskFloat64()
 
 	return txInput, nil
 }

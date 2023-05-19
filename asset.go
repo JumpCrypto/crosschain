@@ -251,7 +251,7 @@ type AssetConfig struct {
 	Name                 string  `yaml:"name"`
 	IndexerUrl           string  `yaml:"indexer_url"`
 	IndexerType          string  `yaml:"indexer_type"`
-	SkipGasBalanceCheck  bool    `yaml:"skip_gas_balance_check"`
+	NoGasFees            bool    `yaml:"no_gas_fees"`
 
 	// Tokens
 	Chain    string `yaml:"chain"`
