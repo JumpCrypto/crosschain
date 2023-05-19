@@ -286,6 +286,9 @@ func (f *Factory) cfgEnrichAssetConfig(partialCfg *TokenAssetConfig) (*TokenAsse
 		cfg.ChainIDStr = chain.ChainIDStr
 		cfg.ChainGasMultiplier = chain.ChainGasMultiplier
 		cfg.ExplorerURL = chain.ExplorerURL
+		cfg.NoGasFees = chain.NoGasFees
+		cfg.GasCoin = chain.GasCoin
+		cfg.ChainPrefix = chain.ChainPrefix
 	} else {
 		return cfg, fmt.Errorf("unsupported native asset: (empty)")
 	}
