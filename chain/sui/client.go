@@ -166,9 +166,10 @@ func (c *Client) FetchTxInfo(ctx context.Context, txHash xc.TxHash) (xc.TxInfo, 
 		ContractAddress: xc.ContractAddress(contract),
 		Amount:          destinationAmount,
 		Fee:             fee,
-		BlockTime:       resp.TimestampMs.Int64(),
-		BlockIndex:      resp.Checkpoint.Int64(),
-		Confirmations:   int64(latestCheckpoint.GetSequenceNumber()) - int64(txCheckpoint.GetSequenceNumber()),
+		// should be in seconds
+		BlockTime:     resp.TimestampMs.Int64() / 1000,
+		BlockIndex:    resp.Checkpoint.Int64(),
+		Confirmations: int64(latestCheckpoint.GetSequenceNumber()) - int64(txCheckpoint.GetSequenceNumber()),
 
 		ExplorerURL:  fmt.Sprintf("https://explorer.sui.io/txblock/%s?network=%s", resp.Digest, c.Asset.GetAssetConfig().Net),
 		Sources:      sources,

@@ -38,7 +38,7 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 				From:          "0x7d20dcdb2bca4f508ea9613994683eb4e76e9c4ed371169677c1be02aaf0b58e",
 				To:            "0xbb8a8269cf96ba2ec27dc9becd79836394dbe7946c7ac211928be4a0b1de66b9",
 				BlockIndex:    1953362,
-				BlockTime:     1683124849673,
+				BlockTime:     1683124849,
 				Confirmations: 15705,
 				Sources: []*xc.TxInfoEndpoint{
 					{
@@ -79,7 +79,7 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 				From:          "0xbb8a8269cf96ba2ec27dc9becd79836394dbe7946c7ac211928be4a0b1de66b9",
 				To:            "",
 				BlockIndex:    2652859,
-				BlockTime:     1683667808812,
+				BlockTime:     1683667808,
 				Confirmations: 15705,
 				Sources: []*xc.TxInfoEndpoint{
 					{
@@ -113,7 +113,7 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 				From:            "0xbb8a8269cf96ba2ec27dc9becd79836394dbe7946c7ac211928be4a0b1de66b9",
 				To:              "0xfe33ab3ab64a92088402fc22d850f04f0770d899695104447ffd93d7b83cfeb8",
 				BlockIndex:      213114,
-				BlockTime:       1683903105617,
+				BlockTime:       1683903105,
 				Confirmations:   8838,
 				ContractAddress: "0x3821e4ae13d37a1c55a03a86eab613450c1302e6b4df461e1c79bdf8381dde47::iusdc::IUSDC",
 				Sources: []*xc.TxInfoEndpoint{
