@@ -141,6 +141,7 @@ crosschain:
     chain_name: Bitcoin (Testnet)
     explorer_url: 'https://blockchair.com/bitcoin/testnet'
     decimals: 8
+
   tokens:
   - asset: DAI
     chain: ETH
@@ -210,11 +211,12 @@ crosschain:
       - WSOL.SOL -> SOL
     # Ethereum
     - name: eth-wrap
-      chain: ETH
       allow:
       - ETH -> WETH.ETH
+      - WETH.ETH  # for compatibility
       operations:
       - function: deposit
+        contract: dst_asset
         signature: d0e30db0
         payable: true
     - name: eth-unwrap
@@ -230,12 +232,12 @@ crosschain:
           bind: amount
     - name: proxy-transfer-eth
       code: ProxyTransferTx
-      chain: ETH
-      allow: ETH
+      allow:
+      - ETH
     - name: proxy-transfer-erc20
       code: ProxyTransferTx
-      chain: ETH
-      allow: "*"
+      allow:
+      - "*"
     - name: coinbase-multisend-eth
       code: MultisendTransferTx
       operations:
@@ -295,21 +297,55 @@ crosschain:
             value: 0x0e082F06FF657D94310cB8cE8B0D9a04541d8052
           - match: "*.FTM"
             value: 0x7C9Fc5741288cDFdD83CeB07f3ea7e22618D79D2
+          value:
+            ETH: 0x3ee18B2214AFF97000D974cf647E7C347E8fa585
+            FTM: 0x7C9Fc5741288cDFdD83CeB07f3ea7e22618D79D2
+            AVAX: 0x0e082F06FF657D94310cB8cE8B0D9a04541d8052
         - name: amount
           type: uint256
           bind: amount
     - name: wormhole-transfer
       code: WormholeTransferTx
+      default_params:
+        arbiter_fee_usd: 5
+      operations:
+      - function: transfer
+        signature: 0f5287b0
+        contract:
+          ETH: 0x3ee18B2214AFF97000D974cf647E7C347E8fa585
+          FTM: 0x7C9Fc5741288cDFdD83CeB07f3ea7e22618D79D2
+          AVAX: 0x0e082F06FF657D94310cB8cE8B0D9a04541d8052
+        params:
+        - name: token
+          type: address
+          bind: contract
+        - name: amount
+          type: uint256
+          bind: amount
+        - name: chain
+          type: uint256
+          match: dst_asset
+          value:
+            SOL: 1
+            ETH: 2
+            MATIC: 5
+        - name: recipient
+          type: address
+          bind: to
+
     # example to show that erc20.transfer can be written as a task
     - name: erc20-transfer
       chain: ETH
-      allow: ["USDC", "WETH"]
+      allow:
+      - USDC.ETH
+      - WETH.ETH
       operations:
       - function: transfer
         signature: a9059cbb
         params:
         - name: addr
           type: address
+          bind: to
         - name: qty
           type: uint256
           bind: amount
@@ -319,10 +355,6 @@ crosschain:
         - WETH.ETH -> WETH.MATIC
         - WETH.ETH -> WETH.SOL
         - WETH.MATIC -> WETH.SOL
-        # src undefined
-        - WBTC.ETH -> WBTC.MATIC
-        # dst undefined
-        - WETH.ETH -> WETH.BNB
       tasks:
         - wormhole-approve
         - wormhole-transfer

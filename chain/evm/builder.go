@@ -35,40 +35,47 @@ func NewLegacyTxBuilder(asset xc.ITask) (xc.TxBuilder, error) {
 
 // NewTransfer creates a new transfer for an Asset, either native or token
 func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
+	if _, ok := txBuilder.Asset.(*xc.TaskConfig); ok {
+		return txBuilder.NewTask(from, to, amount, input)
+	}
+
 	if _, ok := txBuilder.Asset.(*xc.TokenAssetConfig); ok {
 		return txBuilder.NewTokenTransfer(from, to, amount, input)
 	}
+
 	return txBuilder.NewNativeTransfer(from, to, amount, input)
 }
 
 // NewNativeTransfer creates a new transfer for a native asset
 func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
 	txInput := input.(*TxInput)
+	asset := txBuilder.Asset.GetAssetConfig()
 
 	txInput.GasLimit = 21_000
-	if txBuilder.Asset.GetNativeAsset().NativeAsset == xc.OasisROSE {
-		txInput.GasLimit = 30_000
+	if asset.NativeAsset != xc.ETH {
+		txInput.GasLimit = 90_000
 	}
 
-	return txBuilder.buildEvmTxWithPayload(to, amount.Int(), []byte{}, txInput)
+	return txBuilder.buildEvmTxWithPayload(to, amount, []byte{}, txInput)
 }
 
 // NewTokenTransfer creates a new transfer for a token asset
 func (txBuilder TxBuilder) NewTokenTransfer(from xc.Address, to xc.Address, amount xc.AmountBlockchain, input xc.TxInput) (xc.Tx, error) {
 	txInput := input.(*TxInput)
+	asset := txBuilder.Asset.GetAssetConfig()
 
-	txInput.GasLimit = 205_000
-	if txBuilder.Asset.GetNativeAsset().NativeAsset == xc.OasisROSE {
+	txInput.GasLimit = 350_000
+	if asset.NativeAsset == xc.OasisROSE {
 		txInput.GasLimit = 500_000
 	}
 
 	zero := xc.NewAmountBlockchainFromUint64(0)
-	contract := xc.Address(txBuilder.Asset.GetAssetConfig().Contract)
+	contract := xc.Address(asset.Contract)
 	payload, err := txBuilder.buildERC20Payload(to, amount)
 	if err != nil {
 		return nil, err
 	}
-	return txBuilder.buildEvmTxWithPayload(contract, zero.Int(), payload, txInput)
+	return txBuilder.buildEvmTxWithPayload(contract, zero, payload, txInput)
 }
 
 func (txBuilder TxBuilder) buildERC20Payload(to xc.Address, amount xc.AmountBlockchain) ([]byte, error) {
@@ -96,7 +103,7 @@ func (txBuilder TxBuilder) buildERC20Payload(to xc.Address, amount xc.AmountBloc
 	return data, nil
 }
 
-func (txBuilder TxBuilder) buildEvmTxWithPayload(to xc.Address, value *big.Int, data []byte, input *TxInput) (xc.Tx, error) {
+func (txBuilder TxBuilder) buildEvmTxWithPayload(to xc.Address, value xc.AmountBlockchain, data []byte, input *TxInput) (xc.Tx, error) {
 	address, err := HexToAddress(to)
 	if err != nil {
 		return nil, err
@@ -109,7 +116,7 @@ func (txBuilder TxBuilder) buildEvmTxWithPayload(to xc.Address, value *big.Int, 
 			EthTx: types.NewTransaction(
 				input.Nonce,
 				address,
-				value,
+				value.Int(),
 				input.GasLimit,
 				input.GasPrice.Int(),
 				data,
@@ -126,7 +133,7 @@ func (txBuilder TxBuilder) buildEvmTxWithPayload(to xc.Address, value *big.Int, 
 			GasFeeCap: input.GasFeeCap.Int(),
 			Gas:       input.GasLimit,
 			To:        &address,
-			Value:     value,
+			Value:     value.Int(),
 			Data:      data,
 		}),
 		Signer: types.LatestSignerForChainID(chainID),

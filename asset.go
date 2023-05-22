@@ -265,12 +265,13 @@ type AssetConfig struct {
 type NativeAssetConfig = AssetConfig
 
 type TokenAssetConfig struct {
-	Asset    string    `yaml:"asset"`
-	Chain    string    `yaml:"chain"`
-	Net      string    `yaml:"net"`
-	Decimals int32     `yaml:"decimals"`
-	Contract string    `yaml:"contract"`
-	Type     AssetType `yaml:"type"`
+	Asset    string              `yaml:"asset"`
+	Chain    string              `yaml:"chain"`
+	Net      string              `yaml:"net"`
+	Decimals int32               `yaml:"decimals"`
+	Contract string              `yaml:"contract"`
+	Type     AssetType           `yaml:"type"`
+	PriceUSD AmountHumanReadable `yaml:"-"`
 
 	AssetConfig       `yaml:"-"`
 	NativeAssetConfig *NativeAssetConfig `yaml:"-"`
@@ -323,7 +324,7 @@ func (c TokenAssetConfig) String() string {
 	)
 }
 
-func (asset *TokenAssetConfig) ID() AssetID {
+func (asset TokenAssetConfig) ID() AssetID {
 	return GetAssetIDFromAsset(asset.Asset, asset.Chain)
 }
 

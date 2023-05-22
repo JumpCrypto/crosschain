@@ -484,10 +484,8 @@ func (s *CrosschainTestSuite) TestTxInputSerDeser() {
 	require.Equal(inputBtc.UnspentOutputs[1].Value.String(), "200")
 	require.EqualValues(inputBtc2.(*bitcoin.TxInput).UnspentOutputs[0].Outpoint.Index, 1)
 	require.EqualValues(inputBtc2.(*bitcoin.TxInput).UnspentOutputs[1].Outpoint.Index, 2)
-	fmt.Println("SERDE:\n", string(btcBz))
 	require.Equal(inputBtc2.(*bitcoin.TxInput).UnspentOutputs[0].Value.String(), "100")
 	require.Equal(inputBtc2.(*bitcoin.TxInput).UnspentOutputs[1].Value.String(), "200")
-
 }
 
 func (s *CrosschainTestSuite) TestAllTxInputSerDeser() {

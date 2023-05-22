@@ -318,5 +318,4 @@ func (s *CrosschainTestSuite) TestFetchTxInfo() {
 			require.Equal(v.val, txInfo)
 		}
 	}
-
 }

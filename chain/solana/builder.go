@@ -33,7 +33,6 @@ func (txBuilder TxBuilder) NewTransfer(from xc.Address, to xc.Address, amount xc
 		if asset.Type == xc.AssetTypeNative {
 			return txBuilder.NewNativeTransfer(from, to, amount, input)
 		} else {
-			fmt.Println("new token tf")
 			return txBuilder.NewTokenTransfer(from, to, amount, input)
 		}
 	}

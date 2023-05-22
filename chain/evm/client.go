@@ -37,7 +37,7 @@ func init() {
 
 // Client for EVM
 type Client struct {
-	Asset           *xc.AssetConfig
+	Asset           xc.ITask
 	EthClient       *ethclient.Client
 	RpcClient       *rpc.Client
 	ChainId         *big.Int
@@ -58,6 +58,8 @@ type TxInput struct {
 	GasFeeCap xc.AmountBlockchain // maxFeePerGas
 	// LegacyTx
 	GasPrice xc.AmountBlockchain // wei per gas
+	// Task params
+	Params []string
 }
 
 func NewTxInput() *TxInput {
@@ -134,10 +136,9 @@ func configToEVMClientURL(cfgI xc.ITask) string {
 }
 
 // NewClient returns a new EVM Client
-func NewClient(cfgI xc.ITask) (*Client, error) {
-	asset := cfgI.GetAssetConfig()
-	cfg := cfgI.GetNativeAsset()
-	url := configToEVMClientURL(cfgI)
+func NewClient(asset xc.ITask) (*Client, error) {
+	nativeAsset := asset.GetNativeAsset()
+	url := configToEVMClientURL(asset)
 
 	// c, err := rpc.DialContext(context.Background(), url)
 	interceptor := &HttpInterceptor{http.DefaultTransport, false}
@@ -146,7 +147,7 @@ func NewClient(cfgI xc.ITask) (*Client, error) {
 	}
 	c, err := rpc.DialHTTPWithClient(url, httpClient)
 	if err != nil {
-		return nil, fmt.Errorf(fmt.Sprintf("dialing url: %v", cfg.URL))
+		return nil, fmt.Errorf(fmt.Sprintf("dialing url: %v", nativeAsset.URL))
 	}
 
 	client := ethclient.NewClient(c)
@@ -182,6 +183,9 @@ func NewLegacyClient(cfg xc.ITask) (*Client, error) {
 
 // FetchTxInput returns tx input for a EVM tx
 func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Address) (xc.TxInput, error) {
+	nativeAsset := client.Asset.GetNativeAsset()
+	task := client.Asset.GetTask()
+
 	zero := xc.NewAmountBlockchainFromUint64(0)
 	result := NewTxInput()
 	result.GasTipCap = xc.NewAmountBlockchainFromUint64(DEFAULT_GAS_TIP)
@@ -189,7 +193,13 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Ad
 	result.GasPrice = zero
 
 	// Nonce
-	targetAddr, err := HexToAddress(from)
+	var targetAddr common.Address
+	var err error
+	if task != nil && task.Signer != "" {
+		targetAddr, err = HexToAddress(xc.Address(task.Signer))
+	} else {
+		targetAddr, err = HexToAddress(from)
+	}
 	if err != nil {
 		return zero, fmt.Errorf("bad to address '%v': %v", from, err)
 	}
@@ -200,7 +210,7 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Ad
 	result.Nonce = nonce
 
 	// Gas
-	if !client.Asset.NoGasFees {
+	if !nativeAsset.NoGasFees {
 		gas, err := client.EstimateGas(ctx)
 		if err != nil {
 			// pass, return err later
@@ -234,12 +244,13 @@ func (client *Client) SubmitTx(ctx context.Context, tx xc.Tx) error {
 
 // FetchTxInfo returns tx info for a EVM tx
 func (client *Client) FetchTxInfo(ctx context.Context, txHashStr xc.TxHash) (xc.TxInfo, error) {
+	nativeAsset := client.Asset.GetNativeAsset()
 	txHashHex := TrimPrefixes(string(txHashStr))
 	txHash := common.HexToHash(txHashHex)
 
 	result := xc.TxInfo{
 		TxID:        txHashHex,
-		ExplorerURL: client.Asset.ExplorerURL + "/tx/0x" + txHashHex,
+		ExplorerURL: nativeAsset.ExplorerURL + "/tx/0x" + txHashHex,
 	}
 
 	tx, pending, err := client.EthClient.TransactionByHash(ctx, txHash)
@@ -253,7 +264,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHashStr xc.TxHash) (xc.
 		}
 	}
 
-	chainID := new(big.Int).SetInt64(client.Asset.ChainID)
+	chainID := new(big.Int).SetInt64(nativeAsset.ChainID)
 	// chainID, err := client.EthClient.ChainID(ctx)
 	// if err != nil {
 	// 	return result, fmt.Errorf("fetching chain ID: %v", err)
@@ -321,7 +332,7 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHashStr xc.TxHash) (xc.
 		Signer: types.LatestSignerForChainID(chainID),
 	}
 
-	info := confirmedTx.ParseTransfer(receipt, client.Asset.NativeAsset)
+	info := confirmedTx.ParseTransfer(receipt, nativeAsset.NativeAsset)
 
 	result.From = confirmedTx.From()
 	result.To = confirmedTx.To()
@@ -336,9 +347,11 @@ func (client *Client) FetchTxInfo(ctx context.Context, txHashStr xc.TxHash) (xc.
 
 // EstimateGas estimates gas price for a Cosmos chain
 func (client *Client) EstimateGas(ctx context.Context) (xc.AmountBlockchain, error) {
+	asset := client.Asset.GetNativeAsset()
+
 	// invoke EstimateGasFunc callback, if registered
 	if client.EstimateGasFunc != nil {
-		nativeAsset := client.Asset.NativeAsset
+		nativeAsset := asset.NativeAsset
 		res, err := client.EstimateGasFunc(nativeAsset)
 		if err != nil {
 			// continue with default implementation as fallback
@@ -348,7 +361,7 @@ func (client *Client) EstimateGas(ctx context.Context) (xc.AmountBlockchain, err
 	}
 
 	// KLAY has fixed gas price of 250 ston
-	if client.Asset.NativeAsset == xc.KLAY {
+	if asset.NativeAsset == xc.KLAY {
 		return xc.NewAmountBlockchainFromUint64(250_000_000_000), nil
 	}
 
@@ -374,8 +387,8 @@ func (client *Client) EstimateGas(ctx context.Context) (xc.AmountBlockchain, err
 		baseFee = DEFAULT_GAS_PRICE
 	}
 	multiplier := 2.0
-	if client.Asset.ChainGasMultiplier > 0.0 {
-		multiplier = client.Asset.ChainGasMultiplier
+	if asset.ChainGasMultiplier > 0.0 {
+		multiplier = asset.ChainGasMultiplier
 	}
 
 	gasPrice := (uint64)((float64)(baseFee+DEFAULT_GAS_TIP) * multiplier)
@@ -404,12 +417,15 @@ func (client *Client) FetchNativeBalance(ctx context.Context, address xc.Address
 
 // Fetch the balance of the asset that this client is configured for
 func (client *Client) FetchBalance(ctx context.Context, address xc.Address) (xc.AmountBlockchain, error) {
-	if client.Asset.Type == xc.AssetTypeNative {
+	// native
+	if _, ok := client.Asset.(*xc.NativeAssetConfig); ok {
 		return client.FetchNativeBalance(ctx, address)
 	}
 
+	// token
+	asset := client.Asset.GetAssetConfig()
 	zero := xc.NewAmountBlockchainFromUint64(0)
-	tokenAddress, _ := HexToAddress(xc.Address(client.Asset.Contract))
+	tokenAddress, _ := HexToAddress(xc.Address(asset.Contract))
 	instance, err := erc20.NewErc20(tokenAddress, client.EthClient)
 	if err != nil {
 		return zero, err

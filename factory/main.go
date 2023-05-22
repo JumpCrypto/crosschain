@@ -164,11 +164,17 @@ func (f *Factory) enrichTaskBySrcDstAssets(task *TaskConfig, srcAsset ITask, dst
 	return task, nil
 }
 
-func (f *Factory) cfgFromTask(taskName string, assetID AssetID) (ITask, error) {
+func (f *Factory) cfgFromTask(taskName string, assetIDIn AssetID) (ITask, error) {
+	assetID := GetAssetIDFromAsset(string(assetIDIn), "")
 	IsAllowedFunc := func(task *TaskConfig, assetID AssetID) (*TaskConfig, error) {
 		allowed := false
 		dstAssetID := AssetID("")
 		for _, entry := range task.AllowList {
+			if entry.Src == "*" {
+				allowed = true
+				dstAssetID = assetID
+				break
+			}
 			if entry.Src == assetID {
 				allowed = true
 				dstAssetID = entry.Dst
@@ -492,15 +498,19 @@ func parseAllowList(allowList []string) []*AllowEntry {
 		var entry AllowEntry
 		values := strings.Split(allow, "->")
 		if len(values) == 1 {
-			value := AssetID(strings.TrimSpace(values[0]))
+			valueStr := strings.TrimSpace(values[0])
+			value := GetAssetIDFromAsset(valueStr, "")
+			if valueStr == "*" {
+				value = "*"
+			}
 			entry = AllowEntry{
 				Src: value,
 				Dst: value,
 			}
 		}
 		if len(values) == 2 {
-			src := AssetID(strings.TrimSpace(values[0]))
-			dst := AssetID(strings.TrimSpace(values[1]))
+			src := GetAssetIDFromAsset(strings.TrimSpace(values[0]), "")
+			dst := GetAssetIDFromAsset(strings.TrimSpace(values[1]), "")
 			entry = AllowEntry{
 				Src: src,
 				Dst: dst,

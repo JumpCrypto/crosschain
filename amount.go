@@ -109,6 +109,12 @@ func NewAmountBlockchainFromStr(str string) AmountBlockchain {
 	return AmountBlockchain(*bigInt)
 }
 
+// NewAmountHumanReadableFromStr creates a new AmountHumanReadable from a string
+func NewAmountHumanReadableFromStr(str string) AmountHumanReadable {
+	decimal, _ := decimal.NewFromString(str)
+	return AmountHumanReadable(decimal)
+}
+
 func (amount AmountHumanReadable) ToBlockchain(decimals int32) AmountBlockchain {
 	factor := decimal.NewFromInt32(10).Pow(decimal.NewFromInt32(decimals))
 	raised := ((decimal.Decimal)(amount)).Mul(factor)
@@ -117,6 +123,10 @@ func (amount AmountHumanReadable) ToBlockchain(decimals int32) AmountBlockchain 
 
 func (amount AmountHumanReadable) String() string {
 	return decimal.Decimal(amount).String()
+}
+
+func (amount AmountHumanReadable) Div(x AmountHumanReadable) AmountHumanReadable {
+	return AmountHumanReadable(decimal.Decimal(amount).Div(decimal.Decimal(x)))
 }
 
 func (b *AmountBlockchain) MarshalJSON() ([]byte, error) {

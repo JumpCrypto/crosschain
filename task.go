@@ -7,12 +7,12 @@ type Task string
 
 // TaskConfig is the model used to represent a task read from config file or db
 type TaskConfig struct {
-	Name  string   `yaml:"name"`
-	Code  string   `yaml:"code"`
-	Chain string   `yaml:"chain"`
-	Allow []string `yaml:"allow"`
-	// Contract   string                `yaml:"contract"`
-	Operations []TaskConfigOperation `yaml:"operations"`
+	Name          string                 `yaml:"name"`
+	Code          string                 `yaml:"code"`
+	Allow         []string               `yaml:"allow"`
+	Signer        string                 `yaml:"signer"`
+	DefaultParams map[string]interface{} `yaml:"default_params"`
+	Operations    []TaskConfigOperation  `yaml:"operations"`
 
 	// internal
 	AllowList []*AllowEntry `yaml:"-"`
@@ -45,16 +45,18 @@ type AllowEntry struct {
 type TaskConfigOperation struct {
 	Function  string                     `yaml:"function"`
 	Signature string                     `yaml:"signature"`
-	Contract  string                     `yaml:"contract"`
+	Contract  interface{}                `yaml:"contract"` // string or map[string]string
 	Payable   bool                       `yaml:"payable"`
 	Params    []TaskConfigOperationParam `yaml:"params"`
 }
 
 type TaskConfigOperationParam struct {
-	Name     string                             `yaml:"name"`
-	Type     string                             `yaml:"type"`
-	Bind     string                             `yaml:"bind"`
-	Defaults []TaskConfigOperationParamDefaults `yaml:"defaults"`
+	Name  string      `yaml:"name"`
+	Type  string      `yaml:"type"`
+	Bind  string      `yaml:"bind"`
+	Match string      `yaml:"match"`
+	Value interface{} `yaml:"value"` // string or map[string]string
+	// Defaults []TaskConfigOperationParamDefaults `yaml:"defaults"`
 	// Fields   []TaskConfigOperationParamField    `yaml:"fields"`
 }
 
