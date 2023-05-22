@@ -258,23 +258,28 @@ type AssetConfig struct {
 	Contract string `yaml:"contract"`
 
 	// Internal
-	AuthSecret  string      `yaml:"-"`
-	Type        AssetType   `yaml:"-"`
-	NativeAsset NativeAsset `yaml:"-"`
+	AuthSecret  string              `yaml:"-"`
+	Type        AssetType           `yaml:"-"`
+	NativeAsset NativeAsset         `yaml:"-"`
+	Metadata    AssetMetadataConfig `yaml:"-"`
 }
 type NativeAssetConfig = AssetConfig
 
 type TokenAssetConfig struct {
-	Asset    string              `yaml:"asset"`
-	Chain    string              `yaml:"chain"`
-	Net      string              `yaml:"net"`
-	Decimals int32               `yaml:"decimals"`
-	Contract string              `yaml:"contract"`
-	Type     AssetType           `yaml:"type"`
-	PriceUSD AmountHumanReadable `yaml:"-"`
+	Asset    string    `yaml:"asset"`
+	Chain    string    `yaml:"chain"`
+	Net      string    `yaml:"net"`
+	Decimals int32     `yaml:"decimals"`
+	Contract string    `yaml:"contract"`
+	Type     AssetType `yaml:"type"`
 
 	AssetConfig       `yaml:"-"`
-	NativeAssetConfig *NativeAssetConfig `yaml:"-"`
+	NativeAssetConfig *NativeAssetConfig  `yaml:"-"`
+	Metadata          AssetMetadataConfig `yaml:"-"`
+}
+
+type AssetMetadataConfig struct {
+	PriceUSD AmountHumanReadable `yaml:"-"`
 }
 
 var _ ITask = &NativeAssetConfig{}

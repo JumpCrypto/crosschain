@@ -252,7 +252,7 @@ func (txBuilder TxBuilder) BuildWormholePayload(taskFrom xc.Address, taskTo xc.A
 
 	// compute arbiterFee
 	dstAsset := task.DstAsset.(*xc.TokenAssetConfig)
-	priceUSD := dstAsset.PriceUSD
+	priceUSD := dstAsset.Metadata.PriceUSD
 	if priceUSD.String() == "0" {
 		return contract, value, payload, fmt.Errorf("token price for %s is required to calculate arbiter fee", dstAsset.ID())
 	}

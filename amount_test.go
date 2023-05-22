@@ -30,3 +30,22 @@ func (s *CrosschainTestSuite) TestAmountHumanReadable() {
 	require.NotNil(amount)
 	require.Equal(amount.String(), "10.3")
 }
+
+func (s *CrosschainTestSuite) TestNewAmountHumanReadableFromStr() {
+	require := s.Require()
+	amount := NewAmountHumanReadableFromStr("10.3")
+	require.NotNil(amount)
+	require.Equal(amount.String(), "10.3")
+
+	amount = NewAmountHumanReadableFromStr("0")
+	require.NotNil(amount)
+	require.Equal(amount.String(), "0")
+
+	amount = NewAmountHumanReadableFromStr("")
+	require.NotNil(amount)
+	require.Equal(amount.String(), "0")
+
+	amount = NewAmountHumanReadableFromStr("invalid")
+	require.NotNil(amount)
+	require.Equal(amount.String(), "0")
+}
