@@ -243,46 +243,6 @@ func (txBuilder TxBuilder) BuildProxyTransferTx(from xc.Address, to xc.Address, 
 }
 
 func (txBuilder TxBuilder) BuildWormholePayload(taskFrom xc.Address, taskTo xc.Address, taskAmount xc.AmountBlockchain, txInput *TxInput) (string, xc.AmountBlockchain, []byte, error) {
-	/*
-		// func BuildWormholeTask(accountInfo account.AccountInfo, txInfo account.TxInfo, tokenInfo account.TokenInfo, destTokenInfo account.TokenInfo, taskConfig account.TaskConfigV2) (pack.Bytes, error) {
-		// payload for contract call
-		var payload []byte
-
-		// methodID == function signature
-		wormholeTransferTokenSig := "0f5287b0"
-		methodID, err := hex.DecodeString(wormholeTransferTokenSig)
-		if err != nil {
-			return pack.NewBytes(payload), fmt.Errorf("invalid signature: %s", wormholeTransferTokenSig)
-		}
-		payload = append(payload, methodID...)
-
-		// encode the args for the wormhole task
-		// encode the evm_operation fields
-		// 	- name: token
-		// 	type: address
-		tokenAddr := common.HexToAddress(string(tokenInfo.Contract))
-		paddedAddr := common.LeftPadBytes(tokenAddr.Bytes(), 32)
-		payload = append(payload, paddedAddr...)
-
-		//   - name: amount
-		// 	type: uint256
-		paddedValue := common.LeftPadBytes(txInfo.Value.Bytes(), 32)
-		payload = append(payload, paddedValue...)
-
-		//   - name: recipientChain
-		// 	type: uint16
-		// 	value: 5
-		recipientChainBytes := make([]byte, 2)
-		binary.BigEndian.PutUint16(recipientChainBytes, 5)
-		paddedValue = common.LeftPadBytes(recipientChainBytes, 32)
-		payload = append(payload, paddedValue...)
-
-		//   - name: recipient
-		// 	type: bytes32
-		recipientAddr := common.HexToAddress(string(accountInfo.To))
-		paddedAddr = common.LeftPadBytes(recipientAddr.Bytes(), 32)
-		payload = append(payload, paddedAddr...)
-	*/
 	task := txBuilder.Asset.GetTask()
 
 	contract, value, payload, err := txBuilder.BuildTaskPayload(taskFrom, taskTo, taskAmount, txInput)
@@ -290,70 +250,27 @@ func (txBuilder TxBuilder) BuildWormholePayload(taskFrom xc.Address, taskTo xc.A
 		return contract, value, payload, err
 	}
 
+	// compute arbiterFee
 	dstAsset := task.DstAsset.(*xc.TokenAssetConfig)
 	priceUSD := dstAsset.PriceUSD
 	if priceUSD.String() == "0" {
 		return contract, value, payload, fmt.Errorf("token price for %s is required to calculate arbiter fee", dstAsset.ID())
 	}
-	fmt.Println("priceUSD", priceUSD)
 	defaultArbiterFeeUsdStr, ok := task.DefaultParams["arbiter_fee_usd"]
 	if !ok {
 		return contract, value, payload, fmt.Errorf("invalid config: wormhole-transfer requires default_params.arbiter_fee_usd")
 	}
 	defaultArbiterFeeUsd := xc.NewAmountHumanReadableFromStr(fmt.Sprintf("%v", defaultArbiterFeeUsdStr))
-	fmt.Println("defaultArbiterFeeUsd", defaultArbiterFeeUsd)
 	numTokens := defaultArbiterFeeUsd.Div(priceUSD)
-	/*
-		//   - name: arbiterFee
-		// 	type: uint256
-		if destTokenInfo.PriceUsd == nil {
-			return pack.NewBytes(payload), fmt.Errorf("token price needed for calculating arbiter fee")
-		}
-		tokenPrice := *destTokenInfo.PriceUsd
 
-		defaultArbiterFeeUsdStr, ok := taskConfig.DefaultParams["arbiter_fee_usd"]
-		if !ok {
-			return pack.NewBytes(payload), fmt.Errorf("required param arbiter_fee_usd not in silo.yaml, we should never get here")
-		}
-
-		defaultArbiterFeeUsd, err := decimal.NewFromString(defaultArbiterFeeUsdStr)
-		if err != nil {
-			return pack.NewBytes(payload), fmt.Errorf("could not parse from silo.yaml, we should never get here: %s", defaultArbiterFeeUsdStr)
-		}
-
-		arbiterFeeStr, ok := taskConfig.Params["arbiterFee"]
-		var numTokens decimal.Decimal
-		if !ok {
-			// use default USD fee to calculate the number of tokens based on the price
-			numTokens = defaultArbiterFeeUsd.Div(tokenPrice)
-		} else {
-			// user provided number of tokens
-			numTokens, err = decimal.NewFromString(arbiterFeeStr)
-			if err != nil {
-				return pack.NewBytes(payload), fmt.Errorf("invalid arbiter fee: %s", arbiterFeeStr)
-			}
-
-			// limit is 3 * default value
-			// ensure user-passed tokens are not above the limit
-			limit := defaultArbiterFeeUsd.Mul(decimal.NewFromInt(3))
-			usdValue := numTokens.Mul(tokenPrice)
-			if usdValue.GreaterThan(limit) {
-				return pack.NewBytes(payload), fmt.Errorf("arbiter fee is too high: %s", arbiterFeeStr)
-			}
-		}
-		parsedArbiterFee := numTokens.Shift(int32(destTokenInfo.Decimals)).BigInt()
-		arbiterFee := pack.NewU256FromInt(parsedArbiterFee)
-		paddedValue = common.LeftPadBytes(arbiterFee.Bytes(), 32)
-		payload = append(payload, paddedValue...)
-	*/
+	// - name: arbiterFee
+	//   type: uint256
 	arbiterFee := numTokens.ToBlockchain(dstAsset.Decimals)
-	fmt.Println("arbiterFee", arbiterFee)
 	paddedValue := common.LeftPadBytes(arbiterFee.Int().Bytes(), 32)
 	payload = append(payload, paddedValue...)
 
-	//   - name: nonce
-	// 	type: uint32
-	// hardcode to some random value
+	// - name: nonce
+	//   type: uint32
 	nonceBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(nonceBytes, uint32(txInput.Nonce))
 	paddedValue = common.LeftPadBytes(nonceBytes, 32)
