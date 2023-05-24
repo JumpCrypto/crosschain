@@ -176,6 +176,9 @@ func (txBuilder TxBuilder) BuildTaskTx(from xc.Address, to xc.Address, amount xc
 	if asset.NativeAsset == xc.KLAY {
 		txInput.GasLimit = 2_000_000
 	}
+	if asset.NativeAsset == xc.ArbETH {
+		txInput.GasLimit = 20_000_000
+	}
 
 	contract, value, payload, err := txBuilder.BuildTaskPayload(from, to, amount, txInput)
 	if err != nil {

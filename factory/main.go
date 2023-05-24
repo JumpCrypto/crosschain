@@ -54,8 +54,10 @@ type FactoryContext interface {
 	Config() interface{}
 
 	GetAllAssets() []ITask
+	GetAllTasks() []*TaskConfig
 	GetMultiAssetConfig(srcAssetID AssetID, dstAssetID AssetID) ([]ITask, error)
 	GetTaskConfig(taskName string, assetID AssetID) (ITask, error)
+	GetTaskConfigByNameSrcDstAssetIDs(taskName string, srcAssetID AssetID, dstAssetID AssetID) (ITask, error)
 	GetTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([]ITask, error)
 
 	RegisterGetAssetConfigCallback(callback func(assetID AssetID) (ITask, error))
@@ -93,6 +95,16 @@ func (f *Factory) GetAllAssets() []ITask {
 	})
 	return tasks
 }
+func (f *Factory) GetAllTasks() []*TaskConfig {
+	tasks := append([]*TaskConfig{}, f.AllTasks...)
+	// sort so it's deterministc
+	sort.Slice(tasks, func(i, j int) bool {
+		key1 := tasks[i].Name
+		key2 := tasks[j].Name
+		return key1 < key2
+	})
+	return tasks
+}
 
 func (f *Factory) cfgFromAsset(assetID AssetID) (ITask, error) {
 	cfgI, found := f.AllAssets.Load(assetID)
@@ -100,7 +112,7 @@ func (f *Factory) cfgFromAsset(assetID AssetID) (ITask, error) {
 		if f.callbackGetAssetConfig != nil {
 			return f.callbackGetAssetConfig(assetID)
 		}
-		return &NativeAssetConfig{}, fmt.Errorf("invalid asset: '%s'", assetID)
+		return &NativeAssetConfig{}, fmt.Errorf("could not lookup asset: '%s'", assetID)
 	}
 	if cfg, ok := cfgI.(*NativeAssetConfig); ok {
 		// native asset
@@ -120,7 +132,6 @@ func (f *Factory) cfgFromAsset(assetID AssetID) (ITask, error) {
 
 func (f *Factory) cfgFromAssetByContract(contract string, nativeAsset string) (ITask, error) {
 	var res ITask
-	nativeAsset = strings.ToUpper(nativeAsset)
 	contract = NormalizeAddressString(contract, nativeAsset)
 	f.AllAssets.Range(func(key, value interface{}) bool {
 		cfg := value.(ITask).GetAssetConfig()
@@ -149,7 +160,7 @@ func (f *Factory) cfgFromAssetByContract(contract string, nativeAsset string) (I
 func (f *Factory) enrichTask(task *TaskConfig, srcAssetID AssetID, dstAssetID AssetID) (*TaskConfig, error) {
 	dstAsset, err := f.cfgFromAsset(dstAssetID)
 	if err != nil {
-		return task, fmt.Errorf("task '%s' has invalid dst asset: '%s'", task.ID(), dstAssetID)
+		return task, fmt.Errorf("unenriched task '%s' has invalid dst asset: '%s': %v", task.ID(), dstAssetID, err)
 	}
 
 	newTask := *task
@@ -246,6 +257,38 @@ func (f *Factory) getTaskConfigBySrcDstAssets(srcAsset ITask, dstAsset ITask) ([
 	return []ITask{}, fmt.Errorf("invalid path: '%s -> %s'", srcAssetID, dstAssetID)
 }
 
+func (f *Factory) cfgFromTaskByNameSrcDstAssetIDs(taskName string, srcAssetID AssetID, dstAssetID AssetID) (ITask, error) {
+	// this function returns a task (instance) handling the two cases where the task comes from config or a pipeline
+
+	// if there's no dst asset, then cfgFromTaskByNameSrcDstAssetIDs is identical to cfgFromTask
+	if dstAssetID == "" {
+		return f.cfgFromTask(taskName, srcAssetID)
+	}
+
+	// if a task is defined in the config, then again cfgFromTaskByNameSrcDstAssetIDs is identical to cfgFromTask
+	task, err := f.cfgFromTask(taskName, srcAssetID)
+	if err != nil {
+		// continue
+	} else {
+		return task, nil
+	}
+
+	// if the task was not found in the config, attempt to load a pipeline by src/dst assets
+	// then find the task by name within the pipeline
+	srcAsset, _ := f.cfgFromAsset(srcAssetID)
+	dstAsset, _ := f.cfgFromAsset(dstAssetID)
+	pipeline, err := f.getTaskConfigBySrcDstAssets(srcAsset, dstAsset)
+	if err != nil {
+		return &TaskConfig{}, err
+	}
+	for _, task := range pipeline {
+		if strings.EqualFold(string(task.ID()), taskName) {
+			return task, nil
+		}
+	}
+	return &TaskConfig{}, fmt.Errorf("invalid task: '%s' path: '%s -> %s'", taskName, srcAssetID, dstAssetID)
+}
+
 func (f *Factory) cfgFromMultiAsset(srcAssetID AssetID, dstAssetID AssetID) ([]ITask, error) {
 	srcAsset, err := f.cfgFromAsset(srcAssetID)
 	if err != nil {
@@ -271,7 +314,7 @@ func (f *Factory) cfgEnrichAssetConfig(partialCfg *TokenAssetConfig) (*TokenAsse
 		nativeAsset := cfg.Chain
 		cfg.NativeAsset = NativeAsset(nativeAsset)
 
-		chainI, found := f.AllAssets.Load(AssetID(strings.ToUpper(nativeAsset))) // AssetId's are stored uppercase
+		chainI, found := f.AllAssets.Load(AssetID(nativeAsset))
 		if !found {
 			return cfg, fmt.Errorf("unsupported native asset: %s", nativeAsset)
 		}
@@ -403,6 +446,10 @@ func (f *Factory) GetAssetConfig(asset string, nativeAsset string) (ITask, error
 // GetTaskConfig returns an AssetConfig by task name and assetID
 func (f *Factory) GetTaskConfig(taskName string, assetID AssetID) (ITask, error) {
 	return f.cfgFromTask(taskName, assetID)
+}
+
+func (f *Factory) GetTaskConfigByNameSrcDstAssetIDs(taskName string, srcAssetID AssetID, dstAssetID AssetID) (ITask, error) {
+	return f.cfgFromTaskByNameSrcDstAssetIDs(taskName, srcAssetID, dstAssetID)
 }
 
 // GetTaskConfigBySrcDstAssets returns an AssetConfig by source and destination assets

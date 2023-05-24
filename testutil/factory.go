@@ -102,6 +102,10 @@ func (f *TestFactory) GetTaskConfig(taskName string, assetID xc.AssetID) (xc.ITa
 	return f.DefaultFactory.GetTaskConfig(taskName, assetID)
 }
 
+func (f *TestFactory) GetTaskConfigByNameSrcDstAssetIDs(taskName string, srcAssetID xc.AssetID, dstAssetID xc.AssetID) (xc.ITask, error) {
+	return f.DefaultFactory.GetTaskConfigByNameSrcDstAssetIDs(taskName, srcAssetID, dstAssetID)
+}
+
 // GetTaskConfigBySrcDstAssets returns an AssetConfig by source and destination assets
 func (f *TestFactory) GetTaskConfigBySrcDstAssets(srcAsset xc.ITask, dstAsset xc.ITask) ([]xc.ITask, error) {
 	return f.DefaultFactory.GetTaskConfigBySrcDstAssets(srcAsset, srcAsset)
@@ -171,6 +175,10 @@ func (f *TestFactory) MustPrivateKey(asset xc.ITask, privateKeyStr string) xc.Pr
 
 func (f *TestFactory) GetAllAssets() []xc.ITask {
 	return f.DefaultFactory.GetAllAssets()
+}
+
+func (f *TestFactory) GetAllTasks() []*xc.TaskConfig {
+	return f.DefaultFactory.GetAllTasks()
 }
 
 // NewDefaultFactory creates a new Factory

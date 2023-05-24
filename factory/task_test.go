@@ -188,6 +188,33 @@ func (s *CrosschainTestSuite) TestERC20Transfer() {
 	require.Equal(hex.EncodeToString(evmTx.Data()), hex.EncodeToString(evmTx2.Data()))
 }
 
+func (s *CrosschainTestSuite) TestWormholeReloadTasks() {
+	// get wormhole pipeline config (approve > transfer)
+	require := s.Require()
+	srcAsset, err := s.Factory.GetAssetConfig("WETH", "ETH")
+	require.Nil(err)
+	require.NotNil(srcAsset)
+	dstAsset, err := s.Factory.GetAssetConfig("WETH", "MATIC")
+	require.Nil(err)
+	require.NotNil(dstAsset)
+
+	tasks, err := s.Factory.GetMultiAssetConfig("WETH.ETH", "WETH.MATIC")
+	require.Nil(err)
+	require.Equal(2, len(tasks))
+
+	for _, task := range tasks {
+		reload, err := s.Factory.GetTaskConfig(string(task.ID()), srcAsset.ID())
+		require.ErrorContains(err, "not allowed: 'WETH.ETH'")
+		require.NotNil(reload)
+		require.Equal(reload.ID(), task.ID())
+
+		reload, err = s.Factory.GetTaskConfigByNameSrcDstAssetIDs(string(task.ID()), srcAsset.ID(), dstAsset.ID())
+		require.Nil(err)
+		require.NotNil(reload)
+		require.Equal(reload.ID(), task.ID())
+	}
+}
+
 func (s *CrosschainTestSuite) TestWormholeApprove() {
 	// get wormhole pipeline config (approve > transfer)
 	require := s.Require()

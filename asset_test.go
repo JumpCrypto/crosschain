@@ -34,7 +34,7 @@ func (s *CrosschainTestSuite) TestAssetConfig() {
 		Provider:    "myprovider",
 		AuthSecret:  "SECRET",
 	}
-	require.Equal("NativeAssetConfig(id=MYASSET asset=myasset chainId=0 driver= type= chainCoin= prefix= net=mynet url=myurl auth=myauth provider=myprovider native_asset=native)", assetConfig.String())
+	require.Equal("NativeAssetConfig(id=myasset asset=myasset chainId=0 driver= type= chainCoin= prefix= net=mynet url=myurl auth=myauth provider=myprovider native_asset=native)", assetConfig.String())
 	require.NotContains(assetConfig.String(), "SECRET")
 }
 
@@ -110,7 +110,7 @@ func (s *CrosschainTestSuite) TestParseAssetAndNativeAssetEdgeCases() {
 
 	asset, native = parseAssetAndNativeAsset("", "test")
 	require.Equal("test", asset)
-	require.Equal("TEST", native) // capitalized
+	require.Equal("test", native)
 
 	asset, native = parseAssetAndNativeAsset("USDC.sol", "") // invalid
 	require.Equal("USDC.sol", asset)
@@ -142,7 +142,13 @@ func (s *CrosschainTestSuite) TestGetAssetIDFromAsset() {
 
 	require.Equal(AssetID("USDC.ETH"), GetAssetIDFromAsset("USDC", ""))
 	require.Equal(AssetID("USDC.ETH"), GetAssetIDFromAsset("USDC", "ETH"))
+	require.Equal(AssetID("USDC.ETH"), GetAssetIDFromAsset("USDC.ETH", ""))
 	require.Equal(AssetID("USDC.SOL"), GetAssetIDFromAsset("USDC", "SOL"))
+	require.Equal(AssetID("USDC.SOL"), GetAssetIDFromAsset("USDC.SOL", ""))
+
+	require.Equal(AssetID("ArbETH"), GetAssetIDFromAsset("", "ArbETH"))
+	require.Equal(AssetID("WETH.ArbETH"), GetAssetIDFromAsset("WETH", "ArbETH"))
+	require.Equal(AssetID("WETH.ArbETH"), GetAssetIDFromAsset("WETH.ArbETH", ""))
 
 	require.Equal(AssetID("INJ"), GetAssetIDFromAsset("INJ", "INJ"))
 	require.Equal(AssetID("INJ.ETH"), GetAssetIDFromAsset("INJ", "ETH"))

@@ -404,7 +404,7 @@ func (s *CrosschainTestSuite) TestPutAssetConfig() {
 	assetName := "TEST"
 
 	assetI, err := s.Factory.GetAssetConfig(assetName, "")
-	require.EqualError(err, "invalid asset: 'TEST.ETH'")
+	require.EqualError(err, "could not lookup asset: 'TEST.ETH'")
 	require.NotNil(assetI)
 
 	assetI, err = s.Factory.PutAssetConfig(&xc.TokenAssetConfig{Asset: assetName, Chain: "ETH"})

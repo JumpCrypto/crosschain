@@ -373,7 +373,6 @@ func parseAssetAndNativeAsset(asset string, nativeAsset string) (string, string)
 			nativeAsset = "ETH"
 		}
 	}
-	nativeAsset = strings.ToUpper(nativeAsset)
 
 	return asset, nativeAsset
 }
@@ -390,7 +389,6 @@ func GetAssetIDFromAsset(asset string, nativeAsset string) AssetID {
 	// id is SYMBOL for ERC20 and SYMBOL.CHAIN for others
 	// e.g. BTC, ETH, USDC, SOL, USDC.SOL
 	asset, nativeAsset = parseAssetAndNativeAsset(asset, nativeAsset)
-	asset = strings.ToUpper(asset)
 	validNative := Asset(asset).AssetType() == AssetTypeNative
 
 	// native asset, e.g. BTC, ETH, SOL
