@@ -299,7 +299,7 @@ func (f *Factory) cfgFromMultiAsset(srcAssetID AssetID, dstAssetID AssetID) ([]I
 	}
 	dstAsset, err := f.cfgFromAsset(dstAssetID)
 	if err != nil {
-		return []ITask{}, fmt.Errorf("invalid dst asset in: '%s -> %s'", srcAssetID, dstAssetID)
+		return []ITask{}, fmt.Errorf("invalid dst asset in: '%s -> %s': %v", srcAssetID, dstAssetID, err)
 	}
 
 	return f.getTaskConfigBySrcDstAssets(srcAsset, dstAsset)

@@ -221,6 +221,13 @@ func (tx Tx) Fee(baseFeeUint uint64, gasUsedUint uint64) xc.AmountBlockchain {
 	return fee2
 }
 
+func ensure0x(address string) string {
+	if !strings.HasPrefix(string(address), "0x") {
+		address = "0x" + address
+	}
+	return address
+}
+
 // ParseERC20TransferTx parses the tx payload as ERC20 transfer
 func (tx Tx) ParseERC20TransferTx(nativeAsset xc.NativeAsset) (parsedTxInfo, error) {
 	payload := tx.EthTx.Data()
@@ -230,11 +237,7 @@ func (tx Tx) ParseERC20TransferTx(nativeAsset xc.NativeAsset) (parsedTxInfo, err
 
 	var buf1 [20]byte
 	copy(buf1[:], payload[4+12:4+32])
-	to := xc.Address(common.Address(buf1).String())
-	if !strings.HasPrefix(string(to), "0x") {
-		to = "0x" + to
-	}
-
+	to := xc.Address(ensure0x(common.Address(buf1).String()))
 	var buf2 [32]byte
 	copy(buf2[:], payload[4+32:4+2*32])
 	amount := new(big.Int).SetBytes(buf2[:])
@@ -297,7 +300,7 @@ func (tx Tx) ParseMultisendTransferTx() (parsedTxInfo, error) {
 			res.Destinations[i].Asset = "ETH"
 			// to
 			copy(buf20[:], payload[offset+12:offset+32])
-			res.Destinations[i].Address = xc.Address("0x" + common.Address(buf20).String())
+			res.Destinations[i].Address = xc.Address(ensure0x(common.Address(buf20).String()))
 			offset += 32
 			// amount
 			copy(buf[:], payload[offset:offset+32])
@@ -306,11 +309,11 @@ func (tx Tx) ParseMultisendTransferTx() (parsedTxInfo, error) {
 		} else if abiSig == abiSigERC20 {
 			// asset
 			copy(buf20[:], payload[offset+12:offset+32])
-			res.Destinations[i].ContractAddress = xc.ContractAddress("0x" + common.Address(buf20).String())
+			res.Destinations[i].ContractAddress = xc.ContractAddress(ensure0x(common.Address(buf20).String()))
 			offset += 32
 			// to
 			copy(buf20[:], payload[offset+12:offset+32])
-			res.Destinations[i].Address = xc.Address("0x" + common.Address(buf20).String())
+			res.Destinations[i].Address = xc.Address(ensure0x(common.Address(buf20).String()))
 			offset += 32
 			// amount
 			copy(buf[:], payload[offset:offset+32])
