@@ -51,10 +51,7 @@ func (txBuilder TxBuilder) NewNativeTransfer(from xc.Address, to xc.Address, amo
 	txInput := input.(*TxInput)
 	asset := txBuilder.Asset.GetAssetConfig()
 
-	txInput.GasLimit = 21_000
-	if asset.NativeAsset != xc.ETH {
-		txInput.GasLimit = 90_000
-	}
+	txInput.GasLimit = 90_000
 	if asset.NativeAsset == xc.ArbETH {
 		txInput.GasLimit = 4_000_000
 	}
