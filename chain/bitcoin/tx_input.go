@@ -63,9 +63,9 @@ func (txInput *TxInput) allocateMinUtxoSet(targetAmount xc.AmountBlockchain, min
 	}
 
 	inputs := []Input{}
-	lenUTXOIndex := len(txInput.UnspentOutputs) - 1
-	for balance.Cmp(&targetAmount) < 0 && lenUTXOIndex >= 0 {
-		o := txInput.UnspentOutputs[lenUTXOIndex]
+	lenUTXOIndex := len(txInput.UnspentOutputs)
+	for balance.Cmp(&targetAmount) < 0 && lenUTXOIndex > 0 {
+		o := txInput.UnspentOutputs[lenUTXOIndex-1]
 		log.Infof("unspent output h2l: %s (%s)", hex.EncodeToString(o.PubKeyScript), o.Value.String())
 		balance = balance.Add(&o.Value)
 
@@ -77,15 +77,13 @@ func (txInput *TxInput) allocateMinUtxoSet(targetAmount xc.AmountBlockchain, min
 
 	// add the smallest utxo until we reach `minUtxo` inputs
 	// lenUTXOIndex wasn't used, so i can grow up to lenUTXOIndex (included)
-	i := 0
-	for len(inputs) < minUtxo && i < lenUTXOIndex {
+	for i := 0; len(inputs) < minUtxo && i < lenUTXOIndex; i++ {
 		o := txInput.UnspentOutputs[i]
 		log.Infof("unspent output l2h: %s (%s)", hex.EncodeToString(o.PubKeyScript), o.Value.String())
 		balance = balance.Add(&o.Value)
 		inputs = append(inputs, Input{
 			Output: o,
 		})
-		i++
 	}
 	txInput.Inputs = inputs
 	return &balance
