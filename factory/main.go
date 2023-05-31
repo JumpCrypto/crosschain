@@ -800,7 +800,7 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 	// hex formatted addresses
 	case ETH,
 		AVAX, ArbETH, CELO, MATIC, OptETH,
-		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ, CHZ2:
+		ETC, FTM, BNB, ROSE, ACA, KAR, KLAY, AurETH, CHZ, CHZ2, OAS:
 		if strings.HasPrefix(address, "0x") {
 			return strings.ToLower(address)
 		}
@@ -815,6 +815,31 @@ func NormalizeAddressString(address string, nativeAsset string) string {
 		}
 	case APTOS, SUI:
 		return NormalizeMoveAddress(address)
+	default:
+	}
+	return address
+}
+
+func NormalizeAddressStringByDriver(address string, driver Driver) string {
+	address = strings.TrimSpace(address)
+	switch driver {
+	// hex formatted addresses
+	case DriverEVM, DriverEVMLegacy:
+		if strings.HasPrefix(address, "0x") {
+			return strings.ToLower(address)
+		}
+		// XDC chain
+		if strings.HasPrefix(address, "xdc") {
+			return strings.ToLower(address)
+		}
+	case DriverBitcoin:
+		// remove bitcoincash: prefix
+		if strings.Contains(address, ":") {
+			return strings.Split(address, ":")[1]
+		}
+	case DriverAptos, DriverSui:
+		return NormalizeMoveAddress(address)
+
 	default:
 	}
 	return address
