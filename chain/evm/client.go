@@ -88,7 +88,6 @@ func (i HttpInterceptor) RoundTrip(req *http.Request) (*http.Response, error) {
 		_ = req.Body.Close()
 	}()
 
-	// log.Printf("[EVM] req: %+v", req)
 	res, err := i.core.RoundTrip(req)
 	if err != nil {
 		return nil, err
@@ -115,6 +114,15 @@ func (i HttpInterceptor) RoundTrip(req *http.Request) (*http.Response, error) {
 			log.Print("Adding KLAY/CELO sha3Uncles")
 			newStr = strings.Replace(bodyStr, "parentHash", "gasLimit\":\"0x0\",\"difficulty\":\"0x0\",\"miner\":\"0x0000000000000000000000000000000000000000\",\"sha3Uncles\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"parentHash", 1)
 		}
+		if newStr == "" {
+			newStr = bodyStr[:]
+		}
+		// XDC returns some values prefixed with "xdc"
+		if strings.Contains(bodyStr, "\"xdc") {
+			log.Print("Replacing xdc prefix with 0x")
+			newStr = strings.Replace(newStr, "\"xdc", "\"0x", -1)
+		}
+
 		if newStr != "" {
 			newBody := []byte(newStr)
 			res.Body = io.NopCloser(bytes.NewReader(newBody))
