@@ -771,13 +771,16 @@ func convertAmountStrToBlockchain(cfg ITask, humanAmountStr string) (AmountBlock
 }
 
 // Given an address like coin::Coin<0x11AAbbCCdd::coin::NAME>,
-// we only want to normalize the 0x11AAbbCCdd part.
+// we only want to normalize the 0x11AAbbCCdd part, and remove the coin::Coin::<> part.
 func NormalizeMoveAddress(address string) string {
 	// find a hexadecimal string
 	r, err := regexp.Compile("0[xX][0-9a-fA-F]+")
 	if err != nil {
 		panic(err)
 	}
+	address = strings.Replace(address, "coin::Coin<", "", 1)
+	address = strings.Replace(address, ">", "", 1)
+
 	match := r.FindString(address)
 	if match != "" {
 		// replace the hexadeciaml portion of the string with lowercase
