@@ -196,7 +196,19 @@ func (client *Client) FetchTxInput(ctx context.Context, from xc.Address, _ xc.Ad
 
 	zero := xc.NewAmountBlockchainFromUint64(0)
 	result := NewTxInput()
-	result.GasTipCap = xc.NewAmountBlockchainFromUint64(DEFAULT_GAS_TIP)
+
+	// Gas tip (priority fee) calculation
+	if nativeAsset.ChainGasTip != 0 {
+		// the config variable is interpreted as gwei
+		gasTipGwei := new(big.Int).SetUint64(nativeAsset.ChainGasTip)
+		base, exp := big.NewInt(10), big.NewInt(9)
+		weiMultiplier := base.Exp(base, exp, nil)
+		gasTip := new(big.Int).Mul(gasTipGwei, weiMultiplier)
+		result.GasTipCap = xc.AmountBlockchain(*gasTip)
+	} else {
+		result.GasTipCap = xc.NewAmountBlockchainFromUint64(DEFAULT_GAS_TIP)
+	}
+
 	result.GasFeeCap = zero
 	result.GasPrice = zero
 
