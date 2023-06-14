@@ -33,7 +33,10 @@ func valueFromTxPayload(payload transactionbuilder.TransactionPayload) xc.Amount
 			return xc.NewAmountBlockchainFromUint64(amount)
 		}
 	case *aptostypes.Payload:
-		if len(payload.Arguments) > 1 {
+		if payload.Function == "0x1::aptos_account::batch_transfer_coins" {
+			// TODO - handle the case. Just skip for now
+			logrus.Error("0x1::aptos_account::batch_transfer_coins not yet supported")
+		} else if len(payload.Arguments) > 1 {
 			return xc.NewAmountBlockchainFromStr(payload.Arguments[1].(string))
 		}
 	default:
@@ -50,7 +53,10 @@ func toFromTxPayload(payload transactionbuilder.TransactionPayload) xc.Address {
 			return xc.Address(hex.EncodeToString(to_addr[:]))
 		}
 	case *aptostypes.Payload:
-		if len(payload.Arguments) > 0 {
+		if payload.Function == "0x1::aptos_account::batch_transfer_coins" {
+			// TODO - handle the case. Just skip for now
+			logrus.Error("0x1::aptos_account::batch_transfer_coins not yet supported")
+		} else if len(payload.Arguments) > 0 {
 			to_addr := payload.Arguments[0].(string)
 			return xc.Address(to_addr)
 		}
