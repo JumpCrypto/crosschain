@@ -419,5 +419,22 @@ func (client *BlockchairClient) EstimateGas(ctx context.Context) (xc.AmountBlock
 
 	satsPerByte := uint64(satsPerByteFloat)
 
+	// Custom BTC Gas multiplier logic
+	// if estimate < 12sats => floor to 60sats
+	// If 12sats <= estimate <= 60sats => 5x estimate
+	// if 60sats < estimate < 2000sats => 2x estimate
+	// if estimate >= 2000sats => 1.1x estimate
+	if satsPerByte < 12 {
+		satsPerByte = 60
+	} else if satsPerByte >= 12 && satsPerByte <= 60 {
+		satsPerByte *= 5
+	} else if satsPerByte > 60 && satsPerByte < 2000 {
+		satsPerByte *= 2
+	} else {
+		satsPerByteFloat := float64(satsPerByte)
+		satsPerByteFloat *= 1.1
+		satsPerByte = uint64(satsPerByteFloat)
+	}
+
 	return xc.NewAmountBlockchainFromUint64(satsPerByte), nil
 }
